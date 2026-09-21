@@ -1,0 +1,510 @@
+{% extends "base.html" %}
+
+{% block title %}Fleet & Network Management - Admin Portal - BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Page Header -->
+  <div class="tf-page-header mb-4">
+    <div>
+      <nav class="tf-breadcrumb" aria-label="breadcrumb">
+        <a href="{{ url_for('views.admin_dashboard') }}">Dashboard</a>
+        <span>/</span>
+        <span>Management</span>
+      </nav>
+      <h2 class="tf-page-title">Fleet &amp; Network Management</h2>
+      <p class="tf-page-subtitle">Complete CRUD management for buses, routes, stops, and drivers — Section 29</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="tf-freshness" id="managementFreshness">
+        <i class="bi bi-circle-fill text-success" style="font-size:0.45rem;"></i> Live Data
+      </span>
+      <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="loadAllCrudData()">
+        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Management Tabs -->
+  <ul class="nav nav-pills mb-4 gap-1 flex-nowrap overflow-auto" id="crudTabs" role="tablist" style="scrollbar-width: none;">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active rounded-pill px-4" id="buses-tab" data-bs-toggle="pill" data-bs-target="#tab-buses" type="button" onclick="loadBusesCrud()">
+        <i class="bi bi-bus-front me-1"></i> Buses <span class="badge bg-secondary ms-1 rounded-pill" id="busCount">—</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill px-4" id="routes-tab" data-bs-toggle="pill" data-bs-target="#tab-routes" type="button" onclick="loadRoutesCrud()">
+        <i class="bi bi-signpost-2 me-1"></i> Routes <span class="badge bg-secondary ms-1 rounded-pill" id="routeCount">—</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill px-4" id="stops-tab" data-bs-toggle="pill" data-bs-target="#tab-stops" type="button" onclick="loadStopsCrud()">
+        <i class="bi bi-geo-alt me-1"></i> Stops <span class="badge bg-secondary ms-1 rounded-pill" id="stopCount">—</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill px-4" id="drivers-tab" data-bs-toggle="pill" data-bs-target="#tab-drivers" type="button" onclick="loadDriversCrud()">
+        <i class="bi bi-person-badge me-1"></i> Drivers <span class="badge bg-secondary ms-1 rounded-pill" id="driverCount">—</span>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- TAB 1: BUSES -->
+    <div class="tab-pane fade show active" id="tab-buses" role="tabpanel">
+      <div class="tf-card p-4 shadow-sm">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <h5 class="fw-bold mb-0">Bus Fleet Registry</h5>
+            <div class="text-muted small">All registered vehicles in the PMPML network</div>
+          </div>
+          <button class="btn btn-tf-primary btn-sm rounded-pill" onclick="openAddBusModal()">
+            <i class="bi bi-plus-lg me-1"></i> Add New Bus
+          </button>
+        </div>
+
+        <!-- Search Filter -->
+        <div class="mb-3">
+          <div class="input-group input-group-sm" style="max-width: 320px;">
+            <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" class="form-control" id="busFilter" placeholder="Filter by bus number..." onkeyup="filterTable('crudBusesTbody', this.value)">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle small mb-0 tf-table">
+            <thead>
+              <tr>
+                <th>Bus Number</th>
+                <th>Registration</th>
+                <th>Capacity</th>
+                <th>Assigned Route</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="crudBusesTbody">
+              <tr><td colspan="6" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading fleet...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: ROUTES -->
+    <div class="tab-pane fade" id="tab-routes" role="tabpanel">
+      <div class="tf-card p-4 shadow-sm">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <h5 class="fw-bold mb-0">Routes Registry</h5>
+            <div class="text-muted small">City and intercity transit routes</div>
+          </div>
+          <button class="btn btn-tf-primary btn-sm rounded-pill" onclick="openAddRouteModal()">
+            <i class="bi bi-plus-lg me-1"></i> Add New Route
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle small mb-0 tf-table">
+            <thead>
+              <tr>
+                <th>Route No.</th>
+                <th>Name</th>
+                <th>Source</th>
+                <th>Destination</th>
+                <th>Distance</th>
+                <th>Est. Duration</th>
+              </tr>
+            </thead>
+            <tbody id="crudRoutesTbody">
+              <tr><td colspan="6" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading routes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: STOPS -->
+    <div class="tab-pane fade" id="tab-stops" role="tabpanel">
+      <div class="tf-card p-4 shadow-sm">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <h5 class="fw-bold mb-0">Transit Stops &amp; Landmarks</h5>
+            <div class="text-muted small">All registered stops with GPS coordinates</div>
+          </div>
+          <button class="btn btn-tf-primary btn-sm rounded-pill" onclick="openAddStopModal()">
+            <i class="bi bi-plus-lg me-1"></i> Add Stop
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle small mb-0 tf-table">
+            <thead>
+              <tr>
+                <th>Stop Code</th>
+                <th>Stop Name</th>
+                <th>Marathi Name</th>
+                <th>Coordinates</th>
+                <th>Landmark</th>
+              </tr>
+            </thead>
+            <tbody id="crudStopsTbody">
+              <tr><td colspan="5" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading stops...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: DRIVERS -->
+    <div class="tab-pane fade" id="tab-drivers" role="tabpanel">
+      <div class="tf-card p-4 shadow-sm">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <h5 class="fw-bold mb-0">Driver Roster</h5>
+            <div class="text-muted small">All licensed and registered PMPML drivers</div>
+          </div>
+          <button class="btn btn-tf-primary btn-sm rounded-pill" onclick="openAddDriverModal()">
+            <i class="bi bi-plus-lg me-1"></i> Add Driver
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle small mb-0 tf-table">
+            <thead>
+              <tr>
+                <th>Driver Code</th>
+                <th>Full Name</th>
+                <th>Mobile</th>
+                <th>License No.</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="crudDriversTbody">
+              <tr><td colspan="5" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading drivers...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end tab-content -->
+
+</div>
+
+<!-- Modal: Add Bus -->
+<div class="modal fade" id="addBusModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title fw-bold"><i class="bi bi-bus-front text-primary me-2"></i>Register New Bus</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <form id="addBusForm">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Bus Number</label>
+            <input type="text" id="newBusNum" class="form-control" placeholder="e.g. 195" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Registration Number</label>
+            <input type="text" id="newBusReg" class="form-control" placeholder="e.g. MH-12-RN-8899" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Capacity (seats)</label>
+            <input type="number" id="newBusCap" class="form-control" value="40" min="10" max="100" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-tf-primary px-4" onclick="saveNewBus()">
+          <i class="bi bi-check-lg me-1"></i> Save Bus
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Route -->
+<div class="modal fade" id="addRouteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title fw-bold"><i class="bi bi-signpost-2 text-secondary me-2"></i>Create Transit Route</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <form id="addRouteForm">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Route Number</label>
+            <input type="text" id="newRNum" class="form-control" placeholder="e.g. 111" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Route Name</label>
+            <input type="text" id="newRName" class="form-control" placeholder="e.g. Pune Station to Baner" required>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Source</label>
+              <input type="text" id="newRSrc" class="form-control" placeholder="Pune Station" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Destination</label>
+              <input type="text" id="newRDest" class="form-control" placeholder="Baner" required>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Distance (km)</label>
+              <input type="number" id="newRDist" class="form-control" value="14.5" step="0.1" min="0">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Est. Duration (min)</label>
+              <input type="number" id="newRDur" class="form-control" value="45" min="1">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-tf-primary px-4" onclick="saveNewRoute()">
+          <i class="bi bi-check-lg me-1"></i> Save Route
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Stop (placeholder) -->
+<div class="modal fade" id="addStopModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title fw-bold"><i class="bi bi-geo-alt text-success me-2"></i>Add Transit Stop</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <div class="alert alert-info py-2 small mb-0">
+          <i class="bi bi-info-circle me-1"></i>
+          Use the CSV Portal to bulk-add stops, or contact your system administrator.
+        </div>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4 pt-2">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <a href="{{ url_for('views.admin_csv_portal') }}" class="btn btn-tf-primary px-4">
+          <i class="bi bi-file-earmark-csv me-1"></i> Go to CSV Portal
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Driver (placeholder) -->
+<div class="modal fade" id="addDriverModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title fw-bold"><i class="bi bi-person-badge text-warning me-2"></i>Add Driver</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <div class="alert alert-info py-2 small mb-0">
+          <i class="bi bi-info-circle me-1"></i>
+          Use the CSV Portal to bulk-add drivers with license verification.
+        </div>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4 pt-2">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <a href="{{ url_for('views.admin_csv_portal') }}" class="btn btn-tf-primary px-4">
+          <i class="bi bi-file-earmark-csv me-1"></i> Go to CSV Portal
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let addBusModalInst = null;
+  let addRouteModalInst = null;
+  let addStopModalInst = null;
+  let addDriverModalInst = null;
+
+  async function loadAllCrudData() {
+    await Promise.all([
+      loadBusesCrud(),
+      loadRoutesCrud(),
+      loadStopsCrud(),
+      loadDriversCrud()
+    ]);
+  }
+
+  async function loadBusesCrud() {
+    try {
+      const buses = await API.get('/api/admin/buses');
+      const tbody = document.getElementById('crudBusesTbody');
+      document.getElementById('busCount').textContent = buses.length;
+      if (!buses.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No buses registered.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = buses.map(b => `
+        <tr>
+          <td><strong>Bus ${b.bus_number}</strong></td>
+          <td><code class="small">${b.registration_number}</code></td>
+          <td>${b.capacity} seats</td>
+          <td>${b.route_number ? '<span class="tf-badge badge-info">Route ' + b.route_number + '</span>' : '<span class="text-muted small">Unassigned</span>'}</td>
+          <td>${TransitUI.getStatusBadge(b.current_status)}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill" onclick="deleteBus(${b.id})" title="Remove from fleet">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      TransitUI.showToast('Failed to load buses: ' + e.message, 'danger');
+    }
+  }
+
+  async function loadRoutesCrud() {
+    try {
+      const routes = await API.get('/api/admin/routes');
+      const tbody = document.getElementById('crudRoutesTbody');
+      document.getElementById('routeCount').textContent = routes.length;
+      if (!routes.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No routes found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = routes.map(r => `
+        <tr>
+          <td><span class="tf-badge badge-info">Route ${r.route_number}</span></td>
+          <td><strong>${r.name}</strong></td>
+          <td>${r.source}</td>
+          <td>${r.destination}</td>
+          <td>${r.total_distance_km} km</td>
+          <td>${r.estimated_duration_min} min</td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      TransitUI.showToast('Failed to load routes: ' + e.message, 'danger');
+    }
+  }
+
+  async function loadStopsCrud() {
+    try {
+      const stops = await API.get('/api/admin/stops');
+      const tbody = document.getElementById('crudStopsTbody');
+      document.getElementById('stopCount').textContent = stops.length;
+      if (!stops.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No stops found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = stops.map(s => `
+        <tr>
+          <td><code class="small">${s.stop_code}</code></td>
+          <td><strong>${s.name}</strong></td>
+          <td class="text-muted">${s.name_mr || s.name}</td>
+          <td class="text-muted small">${s.latitude.toFixed(4)}, ${s.longitude.toFixed(4)}</td>
+          <td class="text-muted small">${s.landmark || '—'}</td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      TransitUI.showToast('Failed to load stops: ' + e.message, 'danger');
+    }
+  }
+
+  async function loadDriversCrud() {
+    try {
+      const drivers = await API.get('/api/admin/drivers');
+      const tbody = document.getElementById('crudDriversTbody');
+      document.getElementById('driverCount').textContent = drivers.length;
+      if (!drivers.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No drivers registered.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = drivers.map(d => `
+        <tr>
+          <td><strong>${d.driver_code}</strong></td>
+          <td>${d.full_name}</td>
+          <td>${d.mobile_number || '—'}</td>
+          <td><code class="small">${d.license_number || '—'}</code></td>
+          <td>${TransitUI.getStatusBadge(d.status)}</td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      TransitUI.showToast('Failed to load drivers: ' + e.message, 'danger');
+    }
+  }
+
+  function filterTable(tbodyId, query) {
+    const q = query.toLowerCase();
+    const rows = document.querySelectorAll(`#${tbodyId} tr`);
+    rows.forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  function openAddBusModal() {
+    if (!addBusModalInst) addBusModalInst = new bootstrap.Modal(document.getElementById('addBusModal'));
+    addBusModalInst.show();
+  }
+  function openAddRouteModal() {
+    if (!addRouteModalInst) addRouteModalInst = new bootstrap.Modal(document.getElementById('addRouteModal'));
+    addRouteModalInst.show();
+  }
+  function openAddStopModal() {
+    if (!addStopModalInst) addStopModalInst = new bootstrap.Modal(document.getElementById('addStopModal'));
+    addStopModalInst.show();
+  }
+  function openAddDriverModal() {
+    if (!addDriverModalInst) addDriverModalInst = new bootstrap.Modal(document.getElementById('addDriverModal'));
+    addDriverModalInst.show();
+  }
+
+  async function saveNewBus() {
+    const num = document.getElementById('newBusNum').value.trim();
+    const reg = document.getElementById('newBusReg').value.trim();
+    const cap = parseInt(document.getElementById('newBusCap').value);
+    if (!num || !reg) { TransitUI.showToast('All fields required', 'warning'); return; }
+    try {
+      await API.post('/api/admin/buses', { bus_number: num, registration_number: reg, capacity: cap });
+      addBusModalInst.hide();
+      TransitUI.showToast('Bus ' + num + ' registered successfully', 'success');
+      loadBusesCrud();
+    } catch (e) { TransitUI.showToast(e.message, 'danger'); }
+  }
+
+  async function saveNewRoute() {
+    const payload = {
+      route_number: document.getElementById('newRNum').value.trim(),
+      name: document.getElementById('newRName').value.trim(),
+      source: document.getElementById('newRSrc').value.trim(),
+      destination: document.getElementById('newRDest').value.trim(),
+      total_distance_km: parseFloat(document.getElementById('newRDist').value),
+      estimated_duration_min: parseInt(document.getElementById('newRDur').value)
+    };
+    if (!payload.route_number || !payload.name) { TransitUI.showToast('Route number and name are required', 'warning'); return; }
+    try {
+      await API.post('/api/admin/routes', payload);
+      addRouteModalInst.hide();
+      TransitUI.showToast('Route ' + payload.route_number + ' created successfully', 'success');
+      loadRoutesCrud();
+    } catch (e) { TransitUI.showToast(e.message, 'danger'); }
+  }
+
+  async function deleteBus(id) {
+    if (!confirm('Remove this bus from the fleet registry? This cannot be undone.')) return;
+    try {
+      await API.delete(`/api/admin/buses/${id}`);
+      TransitUI.showToast('Bus removed from fleet', 'success');
+      loadBusesCrud();
+    } catch (e) { TransitUI.showToast(e.message, 'danger'); }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAllCrudData();
+  });
+</script>
+{% endblock %}

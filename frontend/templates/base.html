@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#E85D04">
+  <title>{% block title %}BusNotify – Know your bus. Know your time.{% endblock %}</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 & Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Transit Flow Design System CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/transit-flow.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Offline Warning Banner -->
+  <div id="offlineBanner" class="d-none" style="background: var(--status-delayed-bg); border-bottom: 1px solid var(--status-delayed-border); padding: 0.4rem 1rem; text-align: center; font-size: 0.8rem; color: var(--status-delayed); font-weight: 500; z-index: 1050; position: relative;">
+    <i class="bi bi-wifi-off"></i> <span data-i18n="offline_notice">You're offline. Live bus updates may be unavailable until your connection is restored.</span>
+  </div>
+
+  <!-- Global Header -->
+  <header class="tf-header">
+    <div class="d-flex align-items-center gap-2">
+      <!-- Mobile hamburger -->
+      <button class="btn btn-sm d-lg-none p-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-label="Toggle navigation" style="color: var(--tf-text-secondary);">
+        <i class="bi bi-list fs-4"></i>
+      </button>
+
+      <a href="{{ url_for('views.index') }}" class="tf-brand-logo">
+        <div class="logo-icon"><i class="bi bi-bus-front-fill"></i></div>
+        <div class="d-none d-sm-block">
+          <div>BusNotify</div>
+          <span class="tf-brand-tagline" data-i18n="brand_tagline">Know your bus. Know your time.</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Global Search -->
+    <div class="mx-auto d-none d-lg-block tf-header-search">
+      <form action="{{ url_for('views.passenger_search') }}" method="GET">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" name="q" placeholder="Search buses, routes, stops..." data-i18n="search_placeholder">
+      </form>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="d-flex align-items-center gap-2 ms-auto">
+      <!-- Language Switcher -->
+      <div class="dropdown">
+        <button class="btn btn-sm rounded-pill d-flex align-items-center gap-1 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--tf-text-muted); border: 1px solid var(--tf-border); font-size: 0.8rem; font-weight: 500;">
+          <i class="bi bi-translate"></i>
+          <span id="currentLangLabel" class="d-none d-md-inline">EN</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="javascript:void(0)" onclick="setLanguage('en')"><span class="me-2">🇬🇧</span> English</a></li>
+          <li><a class="dropdown-item" href="javascript:void(0)" onclick="setLanguage('mr')"><span class="me-2">🇮🇳</span> मराठी (Marathi)</a></li>
+        </ul>
+      </div>
+
+      <!-- Notifications -->
+      <div class="dropdown">
+        <button class="btn btn-sm rounded-circle position-relative p-0 d-flex align-items-center justify-content-center" type="button" id="notifBtn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications" style="width: 36px; height: 36px; color: var(--tf-text-muted); border: 1px solid var(--tf-border); background: white;">
+          <i class="bi bi-bell" style="font-size: 1.05rem;"></i>
+          <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size: 0.6rem; padding: 3px 5px;">0</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end p-2" style="width: 340px; max-height: 420px; overflow-y: auto;" id="notifList">
+          <li class="px-2 py-1 d-flex justify-content-between align-items-center">
+            <span class="fw-bold" style="font-size: 0.9rem;">Notifications</span>
+            <small class="text-tf-muted" id="unreadLabel">0 new</small>
+          </li>
+          <li><hr class="dropdown-divider my-1"></li>
+          <li class="text-center py-4" id="notifEmpty">
+            <i class="bi bi-bell-slash d-block mb-2" style="font-size: 1.5rem; color: var(--tf-border);"></i>
+            <span class="text-tf-muted" style="font-size: 0.8rem;">No new notifications</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- User Profile -->
+      {% if current_user_id %}
+      <div class="dropdown">
+        <button class="btn btn-sm rounded-pill d-flex align-items-center gap-2 p-1 pe-2" type="button" data-bs-toggle="dropdown" style="border: 1px solid var(--tf-border); background: white;">
+          <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 30px; height: 30px; background: linear-gradient(135deg, var(--tf-primary), var(--tf-secondary)); color: white; font-size: 0.75rem;">
+            {{ current_username[0]|upper }}
+          </div>
+          <div class="text-start d-none d-md-block lh-1">
+            <div class="fw-semibold" style="font-size: 0.8rem;">{{ current_username }}</div>
+            <span style="font-size: 0.6rem; color: var(--tf-text-light); text-transform: capitalize;">{{ current_role | replace('_', ' ') }}</span>
+          </div>
+          <i class="bi bi-chevron-down d-none d-md-inline" style="font-size: 0.65rem; color: var(--tf-text-light);"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li class="px-3 py-2 mb-1">
+            <div class="fw-bold" style="font-size: 0.85rem;">{{ current_username }}</div>
+            <div style="font-size: 0.72rem; color: var(--tf-text-light); text-transform: capitalize;">{{ current_role | replace('_', ' ') }}</div>
+          </li>
+          <li><hr class="dropdown-divider my-1"></li>
+          <li><a class="dropdown-item" href="{{ url_for('views.passenger_profile') }}"><i class="bi bi-person me-2"></i> Profile</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('views.passenger_profile') }}"><i class="bi bi-gear me-2"></i> Settings</a></li>
+          <li><hr class="dropdown-divider my-1"></li>
+          <li><a class="dropdown-item text-danger" href="{{ url_for('auth_api.logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+        </ul>
+      </div>
+      {% else %}
+      <a href="{{ url_for('views.login_page') }}" class="btn btn-tf-primary btn-sm rounded-pill px-3" style="font-size: 0.8rem;">
+        <i class="bi bi-box-arrow-in-right"></i> Login
+      </a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Layout (Sidebar + Main) -->
+  <div class="tf-layout">
+    <!-- Desktop Sidebar -->
+    <aside class="tf-sidebar">
+      {% if current_role == 'driver' %}
+        <!-- Driver Sidebar -->
+        <div class="tf-sidebar-label">Driver Operations</div>
+        <a href="{{ url_for('views.driver_dashboard') }}" class="tf-nav-item {% if request.path == '/driver' %}active{% endif %}">
+          <i class="bi bi-speedometer2"></i> <span data-i18n="dashboard">Dashboard</span>
+        </a>
+        <a href="{{ url_for('views.driver_start_trip') }}" class="tf-nav-item {% if '/driver/start-trip' in request.path %}active{% endif %}">
+          <i class="bi bi-play-circle"></i> <span data-i18n="start_trip">Start Trip</span>
+        </a>
+        <a href="{{ url_for('views.driver_live_trip') }}" class="tf-nav-item {% if '/driver/live-trip' in request.path %}active{% endif %}">
+          <i class="bi bi-geo-alt"></i> <span data-i18n="live_trip">My Trip</span>
+        </a>
+
+        <div class="tf-sidebar-section"></div>
+        <div class="tf-sidebar-label">Safety</div>
+        <a href="{{ url_for('views.driver_emergency') }}" class="tf-nav-item {% if '/driver/emergency' in request.path %}active{% endif %}" style="{% if '/driver/emergency' not in request.path %}color: var(--status-critical){% endif %}">
+          <i class="bi bi-exclamation-octagon"></i> <span data-i18n="report_emergency">Report Emergency</span>
+        </a>
+
+      {% elif current_role == 'depot_operator' %}
+        <!-- Depot Operator Sidebar -->
+        <div class="tf-sidebar-label">Depot Operations</div>
+        <a href="{{ url_for('views.depot_dashboard') }}" class="tf-nav-item {% if request.path == '/depot' %}active{% endif %}">
+          <i class="bi bi-grid-1x2"></i> <span data-i18n="dashboard">Dashboard</span>
+        </a>
+        <a href="{{ url_for('views.depot_dashboard') }}#requests" class="tf-nav-item">
+          <i class="bi bi-exclamation-triangle"></i> <span data-i18n="depot_requests">Emergency Requests</span>
+        </a>
+
+        <div class="tf-sidebar-section"></div>
+        <div class="tf-sidebar-label">Records</div>
+        <a href="{{ url_for('views.depot_history') }}" class="tf-nav-item {% if '/depot/history' in request.path %}active{% endif %}">
+          <i class="bi bi-clock-history"></i> <span data-i18n="history">History</span>
+        </a>
+
+      {% elif current_role == 'admin' %}
+        <!-- Admin Sidebar -->
+        <div class="tf-sidebar-label">Overview</div>
+        <a href="{{ url_for('views.admin_dashboard') }}" class="tf-nav-item {% if request.path == '/admin' %}active{% endif %}">
+          <i class="bi bi-speedometer2"></i> <span data-i18n="dashboard">Dashboard</span>
+        </a>
+        <a href="{{ url_for('views.admin_live_buses') }}" class="tf-nav-item {% if '/admin/live-buses' in request.path %}active{% endif %}">
+          <i class="bi bi-broadcast"></i> <span data-i18n="live_bus_monitor">Live Buses</span>
+        </a>
+
+        <div class="tf-sidebar-section"></div>
+        <div class="tf-sidebar-label">Management</div>
+        <a href="{{ url_for('views.admin_management') }}" class="tf-nav-item {% if '/admin/management' in request.path %}active{% endif %}">
+          <i class="bi bi-sliders"></i> <span>Transit CRUD</span>
+        </a>
+        <a href="{{ url_for('views.admin_analytics') }}" class="tf-nav-item {% if '/admin/analytics' in request.path %}active{% endif %}">
+          <i class="bi bi-graph-up-arrow"></i> <span data-i18n="analytics">Analytics</span>
+        </a>
+        <a href="{{ url_for('views.admin_csv_portal') }}" class="tf-nav-item {% if '/admin/csv-portal' in request.path %}active{% endif %}">
+          <i class="bi bi-file-earmark-spreadsheet"></i> <span>CSV Portal</span>
+        </a>
+
+      {% else %}
+        <!-- Passenger Sidebar (Default) -->
+        <div class="tf-sidebar-label">Navigate</div>
+        <a href="{{ url_for('views.passenger_home') }}" class="tf-nav-item {% if request.path == '/passenger' or request.path == '/' %}active{% endif %}">
+          <i class="bi bi-house-door"></i> <span data-i18n="home">Home</span>
+        </a>
+        <a href="{{ url_for('views.passenger_search') }}" class="tf-nav-item {% if '/passenger/search' in request.path %}active{% endif %}">
+          <i class="bi bi-search"></i> <span data-i18n="search_bus">Search Bus</span>
+        </a>
+        <a href="{{ url_for('views.passenger_favourites') }}" class="tf-nav-item {% if '/passenger/favourites' in request.path %}active{% endif %}">
+          <i class="bi bi-star"></i> <span data-i18n="favourites">Favourites</span>
+        </a>
+
+        <div class="tf-sidebar-section"></div>
+        <div class="tf-sidebar-label">Alerts</div>
+        <a href="{{ url_for('views.passenger_emergency') }}" class="tf-nav-item {% if '/passenger/emergency' in request.path %}active{% endif %}">
+          <i class="bi bi-shield-exclamation"></i> <span data-i18n="emergency_updates">Emergency Updates</span>
+        </a>
+      {% endif %}
+
+      <!-- Demo Portal Switcher -->
+      <div class="mt-auto pt-3 border-top" style="border-color: var(--tf-border) !important;">
+        <div class="tf-sidebar-label">Switch Demo Portal</div>
+        <a href="{{ url_for('views.passenger_home') }}" class="tf-nav-item" style="font-size: 0.8rem; padding: 0.4rem 0.85rem; color: var(--tf-text-light);">
+          <i class="bi bi-person"></i> <span>Passenger</span>
+        </a>
+        <a href="{{ url_for('views.driver_dashboard') }}" class="tf-nav-item" style="font-size: 0.8rem; padding: 0.4rem 0.85rem; color: var(--tf-text-light);">
+          <i class="bi bi-steering-wheel"></i> <span>Driver</span>
+        </a>
+        <a href="{{ url_for('views.depot_dashboard') }}" class="tf-nav-item" style="font-size: 0.8rem; padding: 0.4rem 0.85rem; color: var(--tf-text-light);">
+          <i class="bi bi-building"></i> <span>Depot Operator</span>
+        </a>
+        <a href="{{ url_for('views.admin_dashboard') }}" class="tf-nav-item" style="font-size: 0.8rem; padding: 0.4rem 0.85rem; color: var(--tf-text-light);">
+          <i class="bi bi-shield-lock"></i> <span>Admin</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="tf-main">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- Mobile Sidebar Offcanvas -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" style="width: 280px;">
+    <div class="offcanvas-header" style="border-bottom: 1px solid var(--tf-border);">
+      <div class="d-flex align-items-center gap-2">
+        <div class="logo-icon" style="background: linear-gradient(135deg, var(--tf-primary), var(--tf-secondary)); color: white; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+          <i class="bi bi-bus-front-fill"></i>
+        </div>
+        <div>
+          <div class="fw-bold" style="font-size: 1.1rem;">BusNotify</div>
+          <div style="font-size: 0.65rem; color: var(--tf-text-light);">Know your bus. Know your time.</div>
+        </div>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-2" style="display: flex; flex-direction: column;">
+      {% if current_role == 'driver' %}
+        <div class="tf-sidebar-label mt-2">Driver Operations</div>
+        <a href="{{ url_for('views.driver_dashboard') }}" class="tf-nav-item {% if request.path == '/driver' %}active{% endif %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="{{ url_for('views.driver_start_trip') }}" class="tf-nav-item {% if '/driver/start-trip' in request.path %}active{% endif %}"><i class="bi bi-play-circle"></i> Start Trip</a>
+        <a href="{{ url_for('views.driver_live_trip') }}" class="tf-nav-item {% if '/driver/live-trip' in request.path %}active{% endif %}"><i class="bi bi-geo-alt"></i> My Trip</a>
+        <a href="{{ url_for('views.driver_emergency') }}" class="tf-nav-item {% if '/driver/emergency' in request.path %}active{% endif %}"><i class="bi bi-exclamation-octagon"></i> Report Emergency</a>
+      {% elif current_role == 'depot_operator' %}
+        <div class="tf-sidebar-label mt-2">Depot Operations</div>
+        <a href="{{ url_for('views.depot_dashboard') }}" class="tf-nav-item {% if request.path == '/depot' %}active{% endif %}"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+        <a href="{{ url_for('views.depot_history') }}" class="tf-nav-item {% if '/depot/history' in request.path %}active{% endif %}"><i class="bi bi-clock-history"></i> History</a>
+      {% elif current_role == 'admin' %}
+        <div class="tf-sidebar-label mt-2">Admin</div>
+        <a href="{{ url_for('views.admin_dashboard') }}" class="tf-nav-item {% if request.path == '/admin' %}active{% endif %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="{{ url_for('views.admin_live_buses') }}" class="tf-nav-item {% if '/admin/live-buses' in request.path %}active{% endif %}"><i class="bi bi-broadcast"></i> Live Buses</a>
+        <a href="{{ url_for('views.admin_management') }}" class="tf-nav-item {% if '/admin/management' in request.path %}active{% endif %}"><i class="bi bi-sliders"></i> Transit CRUD</a>
+        <a href="{{ url_for('views.admin_analytics') }}" class="tf-nav-item {% if '/admin/analytics' in request.path %}active{% endif %}"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+        <a href="{{ url_for('views.admin_csv_portal') }}" class="tf-nav-item {% if '/admin/csv-portal' in request.path %}active{% endif %}"><i class="bi bi-file-earmark-spreadsheet"></i> CSV Portal</a>
+      {% else %}
+        <div class="tf-sidebar-label mt-2">Passenger</div>
+        <a href="{{ url_for('views.passenger_home') }}" class="tf-nav-item {% if request.path == '/passenger' or request.path == '/' %}active{% endif %}"><i class="bi bi-house-door"></i> Home</a>
+        <a href="{{ url_for('views.passenger_search') }}" class="tf-nav-item {% if '/passenger/search' in request.path %}active{% endif %}"><i class="bi bi-search"></i> Search Bus</a>
+        <a href="{{ url_for('views.passenger_favourites') }}" class="tf-nav-item {% if '/passenger/favourites' in request.path %}active{% endif %}"><i class="bi bi-star"></i> Favourites</a>
+        <a href="{{ url_for('views.passenger_emergency') }}" class="tf-nav-item {% if '/passenger/emergency' in request.path %}active{% endif %}"><i class="bi bi-shield-exclamation"></i> Emergency Updates</a>
+      {% endif %}
+
+      <div class="mt-auto pt-3 border-top" style="border-color: var(--tf-border) !important;">
+        <div class="tf-sidebar-label">Switch Demo Portal</div>
+        <a href="{{ url_for('views.passenger_home') }}" class="tf-nav-item" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;"><i class="bi bi-person"></i> Passenger</a>
+        <a href="{{ url_for('views.driver_dashboard') }}" class="tf-nav-item" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;"><i class="bi bi-steering-wheel"></i> Driver</a>
+        <a href="{{ url_for('views.depot_dashboard') }}" class="tf-nav-item" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;"><i class="bi bi-building"></i> Depot</a>
+        <a href="{{ url_for('views.admin_dashboard') }}" class="tf-nav-item" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;"><i class="bi bi-shield-lock"></i> Admin</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="tf-bottom-nav">
+    {% if current_role == 'driver' %}
+      <a href="{{ url_for('views.driver_dashboard') }}" class="tf-bottom-nav-item {% if request.path == '/driver' %}active{% endif %}"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+      <a href="{{ url_for('views.driver_live_trip') }}" class="tf-bottom-nav-item {% if '/driver/live-trip' in request.path %}active{% endif %}"><i class="bi bi-geo-alt"></i><span>Trip</span></a>
+      <a href="{{ url_for('views.driver_emergency') }}" class="tf-bottom-nav-item {% if '/driver/emergency' in request.path %}active{% endif %}"><i class="bi bi-exclamation-octagon"></i><span>Emergency</span></a>
+      <a href="{{ url_for('views.passenger_profile') }}" class="tf-bottom-nav-item {% if '/passenger/profile' in request.path %}active{% endif %}"><i class="bi bi-person"></i><span>Profile</span></a>
+    {% else %}
+      <a href="{{ url_for('views.passenger_home') }}" class="tf-bottom-nav-item {% if request.path == '/passenger' or request.path == '/' %}active{% endif %}"><i class="bi bi-house-door"></i><span data-i18n="home">Home</span></a>
+      <a href="{{ url_for('views.passenger_search') }}" class="tf-bottom-nav-item {% if '/passenger/search' in request.path %}active{% endif %}"><i class="bi bi-search"></i><span data-i18n="search_bus">Search</span></a>
+      <a href="{{ url_for('views.passenger_emergency') }}" class="tf-bottom-nav-item {% if '/passenger/emergency' in request.path %}active{% endif %}"><i class="bi bi-shield-exclamation"></i><span>Alerts</span></a>
+      <a href="{{ url_for('views.passenger_profile') }}" class="tf-bottom-nav-item {% if '/passenger/profile' in request.path %}active{% endif %}"><i class="bi bi-person"></i><span data-i18n="profile">Profile</span></a>
+    {% endif %}
+  </nav>
+
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer" style="z-index: 2000;"></div>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- BusNotify Core Scripts -->
+  <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/transit-ui.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+
+  <script>
+    // Offline detection
+    window.addEventListener('offline', () => {
+      document.getElementById('offlineBanner')?.classList.remove('d-none');
+    });
+    window.addEventListener('online', () => {
+      document.getElementById('offlineBanner')?.classList.add('d-none');
+    });
+
+    // Notifications polling
+    function updateNotifications() {
+      API.get('/api/notifications/')
+        .then(res => {
+          const badge = document.getElementById('notifBadge');
+          const unreadLabel = document.getElementById('unreadLabel');
+          const list = document.getElementById('notifList');
+          if (res.unread_count > 0) {
+            badge.textContent = res.unread_count;
+            badge.classList.remove('d-none');
+            unreadLabel.textContent = `${res.unread_count} new`;
+          } else {
+            badge.classList.add('d-none');
+            unreadLabel.textContent = '0 new';
+          }
+
+          if (res.notifications && res.notifications.length > 0) {
+            const typeIcons = {
+              'BUS_DELAY': 'bi-clock-history text-warning',
+              'EMERGENCY': 'bi-exclamation-triangle-fill text-danger',
+              'REPLACEMENT': 'bi-arrow-repeat text-primary',
+              'STATUS': 'bi-geo-alt-fill text-info',
+              'SYSTEM': 'bi-check-circle text-success',
+            };
+            const items = res.notifications.map(n => {
+              const iconSet = typeIcons[n.type] || 'bi-bell text-secondary';
+              return `
+              <li>
+                <a class="dropdown-item py-2 px-2 text-wrap d-flex gap-2 ${n.is_read ? 'opacity-75' : ''}" href="javascript:void(0)" onclick="markRead(${n.id})" style="border-radius: var(--tf-radius-xs);">
+                  <i class="bi ${iconSet} mt-1 flex-shrink-0"></i>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <strong style="font-size: 0.82rem;">${n.title}</strong>
+                      ${!n.is_read ? '<span class="bg-primary rounded-circle flex-shrink-0" style="width:6px;height:6px;margin-top:6px;"></span>' : ''}
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--tf-text-muted);" class="mt-1">${n.message}</div>
+                  </div>
+                </a>
+              </li>`;
+            }).join('');
+            list.innerHTML = `
+              <li class="px-2 py-1 d-flex justify-content-between align-items-center">
+                <span class="fw-bold" style="font-size: 0.9rem;">Notifications</span>
+                <small class="text-tf-muted">${res.unread_count} new</small>
+              </li>
+              <li><hr class="dropdown-divider my-1"></li>
+              ${items}
+            `;
+          }
+        })
+        .catch(err => console.debug('Notif poll:', err));
+    }
+
+    function markRead(id) {
+      API.post(`/api/notifications/${id}/read`, {})
+        .then(() => updateNotifications())
+        .catch(e => console.error(e));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      TransitUI.startPolling(updateNotifications, 15000);
+    });
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Live Bus Monitor – Admin Portal – BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Header & Breadcrumb -->
+  <div class="tf-page-header">
+    <div class="tf-breadcrumb">
+      <a href="{{ url_for('views.admin_dashboard') }}">Admin Control</a>
+      <span class="separator">/</span>
+      <span>Live Fleet Monitor</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h1 class="page-title" data-i18n="live_bus_monitor">Live Fleet Monitor</h1>
+        <p class="page-subtitle">Real-time GPS telemetry, status validation, passenger occupancy, and incident tracking across all 30 active units.</p>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-sm btn-tf-primary active" id="btnViewTable" onclick="toggleView('table')">
+            <i class="bi bi-table me-1"></i> Table View
+          </button>
+          <button type="button" class="btn btn-sm btn-tf-secondary" id="btnViewMap" onclick="toggleView('map')">
+            <i class="bi bi-map me-1"></i> Map View
+          </button>
+        </div>
+        <button class="btn btn-tf-secondary btn-sm rounded-pill" onclick="loadLiveBuses()">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Bar (Section 25) -->
+  <div class="tf-card p-3 mb-4 shadow-sm">
+    <div class="row g-2 align-items-center">
+      <div class="col-md-5">
+        <div class="tf-input-icon">
+          <i class="bi bi-search input-icon"></i>
+          <input type="text" id="busFilterInput" class="tf-input" placeholder="Search by bus number, route, or driver..." onkeyup="applyFilters()">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <select id="statusFilterSelect" class="tf-select" onchange="applyFilters()">
+          <option value="ALL" selected>All Statuses</option>
+          <option value="RUNNING">🟢 Running / On Time</option>
+          <option value="DELAYED">🟡 Delayed</option>
+          <option value="PUNCTURED">🟠 Tyre Puncture</option>
+          <option value="BREAKDOWN">🔴 Breakdown</option>
+          <option value="DISPATCHED">🔵 Replacement Dispatched</option>
+          <option value="AVAILABLE">⚪ Standby / Available</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-tf-secondary btn-sm w-100 justify-content-center" onclick="resetFilters()">
+          <i class="bi bi-arrow-counterclockwise"></i> Reset Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map View Container -->
+  <div id="mapViewContainer" class="tf-card p-3 mb-4 d-none shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+      <span class="small fw-semibold text-secondary"><i class="bi bi-geo-alt-fill text-primary me-1"></i> Full Network Live Bus Telemetry</span>
+      <span class="tf-freshness fresh"><span class="tf-freshness-dot"></span> Live Sync</span>
+    </div>
+    <div id="adminLiveMap" class="tf-map-container" style="height: 520px;"></div>
+  </div>
+
+  <!-- Table View Container (Section 25) -->
+  <div id="tableViewContainer" class="tf-card shadow-sm p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="small text-muted fw-semibold" id="fleetCountLabel">Loading fleet list...</div>
+      <span class="tf-freshness fresh"><span class="tf-freshness-dot"></span> Polling every 15s</span>
+    </div>
+    <div class="tf-table-wrapper border-0">
+      <table class="tf-table">
+        <thead>
+          <tr>
+            <th>Bus Number</th>
+            <th>Assigned Route</th>
+            <th>Current Stop</th>
+            <th>Operational Status</th>
+            <th>Historical Avg Delay</th>
+            <th>Passenger Occupancy</th>
+            <th>Assigned Driver</th>
+            <th>GPS Signal Freshness</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="liveBusesTbody">
+          <tr><td colspan="9" class="text-center py-4 text-muted">Loading live buses...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let allBusesData = [];
+  let adminMap = null;
+  let mapMarkers = [];
+
+  async function loadLiveBuses() {
+    try {
+      const data = await API.get('/api/admin/live-buses');
+      allBusesData = data || [];
+      applyFilters();
+    } catch (err) {
+      console.error(err);
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  function renderLiveBuses(buses) {
+    const tbody = document.getElementById('liveBusesTbody');
+    const countLabel = document.getElementById('fleetCountLabel');
+    if (countLabel) countLabel.textContent = `Displaying ${buses.length} of ${allBusesData.length} fleet vehicles`;
+
+    if (!buses || buses.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted">No active buses match current filters.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = buses.map(b => {
+      const isEmergency = b.status === 'PUNCTURED' || b.status === 'BREAKDOWN';
+      const isDelayed = b.status === 'DELAYED';
+      const rowClass = isEmergency ? 'bg-danger-subtle' : (isDelayed ? 'bg-warning-subtle' : '');
+
+      return `
+        <tr class="${rowClass}">
+          <td>
+            <strong class="text-dark fs-6">${b.bus_number}</strong>
+            <div class="text-muted" style="font-size: 0.72rem;">${b.registration || 'MH-12'}</div>
+          </td>
+          <td>
+            <span class="badge bg-light text-dark border">${b.route_number || 'Express'}</span>
+            <div class="text-secondary small" style="font-size: 0.78rem;">${b.route_name || 'Intercity'}</div>
+          </td>
+          <td>
+            <strong>${b.current_stop || 'In Transit'}</strong>
+          </td>
+          <td>
+            ${TransitUI.getStatusBadge(b.status)}
+          </td>
+          <td>
+            <strong class="${b.delay_min > 10 ? 'text-warning' : 'text-dark'}">${b.delay_min || 0} min</strong>
+          </td>
+          <td>
+            <span class="badge ${b.available_seats > 10 ? 'bg-success' : (b.available_seats > 0 ? 'bg-warning text-dark' : 'bg-danger')}">
+              ${b.available_seats} avail / ${b.capacity}
+            </span>
+          </td>
+          <td>
+            <div class="fw-semibold small">${b.driver_name || 'Unassigned'}</div>
+            <small class="text-muted">${b.driver_code || ''}</small>
+          </td>
+          <td>
+            <div class="small">${b.last_update || 'Just now'}</div>
+            <span class="tf-freshness fresh" style="font-size: 0.65rem;">
+              <span class="tf-freshness-dot"></span> ${b.freshness || 'Fresh'}
+            </span>
+          </td>
+          <td class="text-end">
+            <a href="/passenger/bus/${b.bus_number}" class="btn btn-sm btn-tf-secondary rounded-pill">
+              <i class="bi bi-eye"></i> Details
+            </a>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderMapMarkers(buses) {
+    if (!adminMap) {
+      adminMap = TransitMap.createMap('adminLiveMap', 18.5204, 73.8567, 12);
+    }
+
+    mapMarkers.forEach(function(m) { adminMap.removeLayer(m); });
+    mapMarkers = [];
+
+    buses.forEach(function(b) {
+      if (b.latitude && b.longitude) {
+        const speedStr = b.speed_kmh != null ? b.speed_kmh.toFixed(1) + ' km/h' : 'N/A';
+        const freshStr = b.freshness || 'Unknown';
+        const timeStr  = b.last_update || 'Unknown';
+        const freshClass = freshStr === 'Fresh' ? 'text-success' :
+                           freshStr === 'Delayed Update' ? 'text-warning' :
+                           freshStr === 'Stale' ? 'text-warning' : 'text-danger';
+
+        const marker = L.marker([b.latitude, b.longitude], {
+          icon: TransitMap.createBusIcon(b.status)
+        }).bindPopup(
+          '<div style="font-size: 0.85rem;">' +
+          '<strong>Bus ' + b.bus_number + '</strong> (' + (b.route_number || 'Route') + ')<br>' +
+          'Stop: <strong>' + (b.current_stop || 'In Transit') + '</strong><br>' +
+          'Status: ' + b.status + '<br>' +
+          'Speed: <strong>' + speedStr + '</strong><br>' +
+          'GPS: <span class="' + freshClass + '">' + freshStr + ' &bull; ' + timeStr + '</span><br>' +
+          'Seats: ' + b.available_seats + ' / ' + b.capacity + '<br>' +
+          '<a href="/passenger/bus/' + b.bus_number + '" class="btn btn-tf-primary btn-sm mt-1 text-white py-0 px-2" style="font-size: 11px;">View Bus</a>' +
+          '</div>'
+        ).addTo(adminMap);
+        mapMarkers.push(marker);
+      }
+    });
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('busFilterInput').value.trim().toLowerCase();
+    const st = document.getElementById('statusFilterSelect').value;
+
+    let filtered = allBusesData;
+    if (q) {
+      filtered = filtered.filter(b => 
+        (b.bus_number || '').toLowerCase().includes(q) || 
+        (b.driver_name || '').toLowerCase().includes(q) ||
+        (b.route_number || '').toLowerCase().includes(q) ||
+        (b.current_stop || '').toLowerCase().includes(q)
+      );
+    }
+    if (st !== 'ALL') {
+      filtered = filtered.filter(b => (b.status || '').toUpperCase() === st.toUpperCase());
+    }
+
+    renderLiveBuses(filtered);
+    renderMapMarkers(filtered);
+  }
+
+  function resetFilters() {
+    document.getElementById('busFilterInput').value = '';
+    document.getElementById('statusFilterSelect').value = 'ALL';
+    applyFilters();
+  }
+
+  function toggleView(view) {
+    const tblContainer = document.getElementById('tableViewContainer');
+    const mapContainer = document.getElementById('mapViewContainer');
+    const btnTbl = document.getElementById('btnViewTable');
+    const btnMap = document.getElementById('btnViewMap');
+
+    if (view === 'map') {
+      tblContainer.classList.add('d-none');
+      mapContainer.classList.remove('d-none');
+      btnMap.className = 'btn btn-sm btn-tf-primary active';
+      btnTbl.className = 'btn btn-sm btn-tf-secondary';
+      setTimeout(() => { adminMap && adminMap.invalidateSize(); }, 200);
+    } else {
+      mapContainer.classList.add('d-none');
+      tblContainer.classList.remove('d-none');
+      btnTbl.className = 'btn btn-sm btn-tf-primary active';
+      btnMap.className = 'btn btn-sm btn-tf-secondary';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadLiveBuses();
+    TransitUI.startPolling(loadLiveBuses, 15000);
+  });
+</script>
+{% endblock %}

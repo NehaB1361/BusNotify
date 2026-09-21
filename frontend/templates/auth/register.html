@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Register - BusNotify{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center py-4">
+  <div class="col-12 col-md-7 col-lg-5">
+    <div class="tf-card shadow-lg p-4 p-md-5">
+      <div class="text-center mb-4">
+        <h3 class="fw-bold mb-1">Create an Account</h3>
+        <p class="text-muted small">Join BusNotify to track live buses and receive alerts</p>
+      </div>
+
+      <div id="regAlert" class="alert alert-danger d-none" role="alert"></div>
+
+      <form id="registerForm">
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Full Name / Username</label>
+          <input type="text" id="username" class="form-control" placeholder="e.g. John Doe" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Email Address</label>
+          <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Mobile Number</label>
+          <input type="tel" id="mobile" class="form-control" placeholder="+91 98765 43210">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Account Role</label>
+          <select id="role" class="form-select">
+            <option value="passenger" selected>Passenger</option>
+            <option value="driver">Driver</option>
+            <option value="depot_operator">Depot Operator</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold small">Password</label>
+          <input type="password" id="password" class="form-control" placeholder="Min. 8 characters" required>
+        </div>
+
+        <button type="submit" class="btn btn-tf-primary w-100 py-2 justify-content-center fw-bold" id="submitBtn">
+          <span>Create Account</span>
+        </button>
+      </form>
+
+      <div class="mt-4 pt-3 border-top text-center">
+        <span class="small text-muted">Already have an account?</span>
+        <a href="{{ url_for('views.login_page') }}" class="small fw-semibold text-decoration-none" style="color: var(--tf-primary);">Sign in</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alertBox = document.getElementById('regAlert');
+    const submitBtn = document.getElementById('submitBtn');
+    alertBox.classList.add('d-none');
+
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const mobile = document.getElementById('mobile').value;
+    const role = document.getElementById('role').value;
+    const password = document.getElementById('password').value;
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Creating...`;
+
+    try {
+      await API.post('/api/auth/register', { username, email, mobile, role, password });
+      TransitUI.showToast('Account created successfully! Logging in...', 'success');
+      // Automatic login
+      await API.post('/api/auth/login', { identifier: email, password });
+      window.location.href = (role === 'driver' ? '/driver' : (role === 'depot_operator' ? '/depot' : (role === 'admin' ? '/admin' : '/passenger')));
+    } catch (err) {
+      alertBox.textContent = err.message || 'Registration failed.';
+      alertBox.classList.remove('d-none');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Create Account</span>`;
+    }
+  });
+</script>
+{% endblock %}

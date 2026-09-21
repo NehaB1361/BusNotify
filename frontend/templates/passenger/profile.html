@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile – BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Header & Breadcrumb -->
+  <div class="tf-page-header">
+    <div class="tf-breadcrumb">
+      <a href="{{ url_for('views.passenger_home') }}">Home</a>
+      <span class="separator">/</span>
+      <span>Profile & Settings</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h1 class="page-title" data-i18n="profile">Account Settings</h1>
+        <p class="page-subtitle">Manage your personal profile, notification preferences, language, and role-based permissions.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: User Card -->
+    <div class="col-12 col-md-4">
+      <div class="tf-card text-center p-4">
+        <div class="rounded-circle mx-auto mb-3 text-white d-flex align-items-center justify-content-center fw-bold fs-1 shadow-sm" style="width: 88px; height: 88px; background: linear-gradient(135deg, var(--tf-primary), var(--tf-secondary));">
+          {{ current_username[0]|upper }}
+        </div>
+        <h4 class="fw-bold mb-1 text-dark">{{ current_username }}</h4>
+        <span class="tf-badge badge-dispatched text-capitalize mb-2">
+          <i class="bi bi-shield-check"></i> {{ current_role | replace('_', ' ') }}
+        </span>
+        <div class="text-muted small mb-4">BusNotify Smart Passenger Information System</div>
+
+        <div class="border-top pt-3 text-start small mb-3">
+          <div class="d-flex justify-content-between py-1">
+            <span class="text-muted">Account Status:</span>
+            <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Active</span>
+          </div>
+          <div class="d-flex justify-content-between py-1">
+            <span class="text-muted">Region:</span>
+            <strong>Maharashtra (Pune / Mumbai)</strong>
+          </div>
+          <div class="d-flex justify-content-between py-1">
+            <span class="text-muted">Current Language:</span>
+            <strong id="profileLang">English</strong>
+          </div>
+        </div>
+
+        <a href="{{ url_for('auth_api.logout') }}" class="btn btn-tf-danger btn-sm rounded-pill w-100 justify-content-center">
+          <i class="bi bi-box-arrow-right"></i> Log Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Right Column: Settings & Tabs -->
+    <div class="col-12 col-md-8">
+      <div class="tf-card p-4">
+        
+        <!-- Navigation Tabs -->
+        <div class="tf-tabs">
+          <div class="tf-tab active" onclick="switchTab('tab-general', this)">General & Preferences</div>
+          <div class="tf-tab" onclick="switchTab('tab-notifications', this)">Notifications</div>
+          <div class="tf-tab" onclick="switchTab('tab-roles', this)">Demo Switcher</div>
+        </div>
+
+        <!-- Tab 1: General -->
+        <div id="tab-general" class="tab-pane-content">
+          <h5 class="fw-bold mb-3">Localization & Language</h5>
+          <p class="text-muted small">Choose your preferred display language across all transit portals:</p>
+          <div class="d-flex gap-2 mb-4">
+            <button class="btn btn-tf-secondary btn-sm" onclick="setLanguage('en'); updateProfileLang('English');">
+              🇬🇧 English (Default)
+            </button>
+            <button class="btn btn-tf-secondary btn-sm" onclick="setLanguage('mr'); updateProfileLang('मराठी (Marathi)');">
+              🇮🇳 मराठी (Marathi)
+            </button>
+          </div>
+
+          <hr class="my-4">
+
+          <h5 class="fw-bold mb-3">Account Information</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="tf-form-label">Username</label>
+              <input type="text" class="tf-input" value="{{ current_username }}" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="tf-form-label">Role</label>
+              <input type="text" class="tf-input text-capitalize" value="{{ current_role | replace('_', ' ') }}" readonly>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Notifications -->
+        <div id="tab-notifications" class="tab-pane-content d-none">
+          <h5 class="fw-bold mb-3">Transit Alerts & Preferences</h5>
+          <div class="d-flex flex-column gap-3">
+            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+              <div>
+                <strong class="d-block text-dark">Delay Advisories</strong>
+                <small class="text-muted">Receive toast alerts when your regular routes exceed 10 min delay</small>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" checked id="switchDelays">
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+              <div>
+                <strong class="d-block text-dark">Emergency & Breakdown Notifications</strong>
+                <small class="text-muted">Instant warnings with alternative bus recommendations</small>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" checked id="switchEmergency">
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+              <div>
+                <strong class="d-block text-dark">Replacement Bus Dispatch Updates</strong>
+                <small class="text-muted">Real-time arrival ETA and passenger transfer milestones</small>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" checked id="switchReplacement">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Demo Role Switcher -->
+        <div id="tab-roles" class="tab-pane-content d-none">
+          <h5 class="fw-bold mb-2">College Project Demonstration Portals</h5>
+          <p class="text-muted small mb-4">Switch instantly between role-specific portals to test the complete end-to-end incident response workflow:</p>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <a href="{{ url_for('views.passenger_home') }}" class="tf-card tf-card-clickable text-decoration-none d-block p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background: var(--tf-primary-light); color: var(--tf-primary);">
+                    <i class="bi bi-person fs-4"></i>
+                  </div>
+                  <div>
+                    <strong class="text-dark d-block">Passenger Portal</strong>
+                    <small class="text-muted">Search, live status & alternatives</small>
+                  </div>
+                </div>
+              </a>
+            </div>
+
+            <div class="col-md-6">
+              <a href="{{ url_for('views.driver_dashboard') }}" class="tf-card tf-card-clickable text-decoration-none d-block p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background: var(--status-delayed-bg); color: var(--status-delayed);">
+                    <i class="bi bi-steering-wheel fs-4"></i>
+                  </div>
+                  <div>
+                    <strong class="text-dark d-block">Driver Portal</strong>
+                    <small class="text-muted">Trip ops, stop updates & emergencies</small>
+                  </div>
+                </div>
+              </a>
+            </div>
+
+            <div class="col-md-6">
+              <a href="{{ url_for('views.depot_dashboard') }}" class="tf-card tf-card-clickable text-decoration-none d-block p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background: var(--status-dispatched-bg); color: var(--status-dispatched);">
+                    <i class="bi bi-building fs-4"></i>
+                  </div>
+                  <div>
+                    <strong class="text-dark d-block">Depot Operator Portal</strong>
+                    <small class="text-muted">Replacement dispatch & passenger transfer</small>
+                  </div>
+                </div>
+              </a>
+            </div>
+
+            <div class="col-md-6">
+              <a href="{{ url_for('views.admin_dashboard') }}" class="tf-card tf-card-clickable text-decoration-none d-block p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background: var(--status-critical-bg); color: var(--status-critical);">
+                    <i class="bi bi-shield-lock fs-4"></i>
+                  </div>
+                  <div>
+                    <strong class="text-dark d-block">Operations Admin</strong>
+                    <small class="text-muted">Fleet monitor, analytics & CSV portal</small>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function switchTab(tabId, el) {
+    document.querySelectorAll('.tf-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-pane-content').forEach(p => p.classList.add('d-none'));
+    if (el) el.classList.add('active');
+    const target = document.getElementById(tabId);
+    if (target) target.classList.remove('d-none');
+  }
+
+  function updateProfileLang(langText) {
+    const el = document.getElementById('profileLang');
+    if (el) el.textContent = langText;
+    TransitUI.showToast(`Display language updated to ${langText}`, 'success');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentL = localStorage.getItem('busnotify_lang');
+    if (currentL === 'mr') {
+      const el = document.getElementById('profileLang');
+      if (el) el.textContent = 'मराठी (Marathi)';
+    }
+  });
+</script>
+{% endblock %}

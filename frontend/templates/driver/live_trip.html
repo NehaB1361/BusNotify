@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block title %}Live Trip Management – Driver Console – BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Header & Breadcrumb -->
+  <div class="tf-page-header">
+    <div class="tf-breadcrumb">
+      <a href="{{ url_for('views.driver_dashboard') }}">Driver Operations</a>
+      <span class="separator">/</span>
+      <span>Live Trip</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h1 class="page-title" data-i18n="live_trip">Live Trip Management</h1>
+        <p class="page-subtitle">Track stop milestones, adjust passenger occupancy, and broadcast GPS coordinates.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('views.driver_emergency') }}" class="btn btn-tf-danger btn-sm rounded-pill">
+          <i class="bi bi-shield-exclamation"></i> Report Emergency
+        </a>
+        <button class="btn btn-tf-secondary btn-sm rounded-pill" onclick="endTrip()">
+          <i class="bi bi-stop-circle"></i> End Trip
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="liveTripLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="text-muted small mt-2">Loading active trip state...</div>
+  </div>
+
+  <div id="liveTripContent" class="d-none">
+    
+    <div class="row g-4 mb-4">
+      
+      <!-- Stop Progression & Passenger Occupancy (Section 22) -->
+      <div class="col-lg-6">
+        <div class="tf-card p-4 h-100 shadow-sm">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Stop Progression &amp; Occupancy</h5>
+            <span id="tripStatusBadge"></span>
+          </div>
+
+          <!-- Occupancy Widget -->
+          <div class="p-3 bg-light rounded-3 mb-4 border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Passenger Occupancy:</span>
+              <strong class="fs-5 text-dark"><span id="paxDisplay">40</span> / 40</strong>
+            </div>
+            <div class="tf-progress mb-3" style="height: 14px;">
+              <div class="progress-bar bg-primary" id="paxProgBar" role="progressbar" style="width: 100%;"></div>
+            </div>
+            
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-tf-secondary w-50 justify-content-center" onclick="adjustPax(-5)">
+                <i class="bi bi-dash-circle text-danger"></i> Alight (-5)
+              </button>
+              <button class="btn btn-sm btn-tf-secondary w-50 justify-content-center" onclick="adjustPax(+5)">
+                <i class="bi bi-plus-circle text-success"></i> Board (+5)
+              </button>
+            </div>
+          </div>
+
+          <!-- Advance Stop Form -->
+          <div class="mb-3">
+            <label class="tf-form-label">Current / Next Stop</label>
+            <select id="stopSelect" class="tf-select mb-3">
+              <!-- Populated via JS -->
+            </select>
+            <button class="btn btn-tf-primary w-100 justify-content-center" onclick="updateStopProgression()">
+              <i class="bi bi-check2-circle"></i> Confirm Stop Progression
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPS Telemetry & Interactive Map -->
+      <div class="col-lg-6">
+        <div class="tf-card p-4 h-100 shadow-sm">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Operational GPS Tracking</h5>
+            <span class="tf-badge badge-info" id="gpsLiveIndicator">
+              <i class="bi bi-broadcast-pin"></i> GPS Stopped
+            </span>
+          </div>
+
+          <div id="driverMap" class="tf-map-container mb-3" style="height: 270px;"></div>
+
+          <div class="d-flex justify-content-between align-items-center text-muted small p-2 bg-light rounded-3 border" style="font-size: 0.8rem;">
+            <span><i class="bi bi-clock me-1"></i> Last Signal: <strong id="gpsTimestamp">—</strong></span>
+            <div class="d-flex gap-2">
+              <button id="gpsStartBtn" class="btn btn-success btn-sm py-1 rounded-pill px-3" onclick="startGpsTracking()">
+                <i class="bi bi-broadcast"></i> Start GPS
+              </button>
+              <button id="gpsStopBtn" class="btn btn-secondary btn-sm py-1 rounded-pill px-3 d-none" onclick="stopGpsTracking()">
+                <i class="bi bi-broadcast-pin"></i> Stop GPS
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let activeTrip = null;
+  let driverMap = null;
+  let driverBusMarker = null;
+
+  // ---- GPS Tracking State ----
+  let gpsWatchId = null;
+  let lastGpsSentAt = 0;
+  const GPS_THROTTLE_MS = 15000;
+
+  // ---- GPS Badge Helper ----
+  const GPS_BADGE = {
+    active:      '<i class="bi bi-broadcast text-success"></i> GPS Active',
+    stopped:     '<i class="bi bi-broadcast-pin text-secondary"></i> GPS Stopped',
+    permission:  '<i class="bi bi-geo-alt-fill text-warning"></i> GPS Permission Required',
+    unavailable: '<i class="bi bi-wifi-off text-danger"></i> GPS Unavailable',
+    error:       '<i class="bi bi-exclamation-triangle-fill text-danger"></i> GPS Error',
+  };
+
+  function setGpsStatusBadge(state) {
+    const el = document.getElementById('gpsLiveIndicator');
+    if (!el) return;
+    el.innerHTML = GPS_BADGE[state] || GPS_BADGE.stopped;
+    el.className = 'tf-badge ' + (
+      state === 'active'      ? 'badge-ontime'  :
+      state === 'stopped'     ? 'badge-info'    :
+      state === 'permission'  ? 'badge-warning' :
+      'badge-critical'
+    );
+  }
+
+  function renderGpsButtons(tracking) {
+    const startBtn = document.getElementById('gpsStartBtn');
+    const stopBtn  = document.getElementById('gpsStopBtn');
+    if (!startBtn || !stopBtn) return;
+    if (tracking) {
+      startBtn.classList.add('d-none');
+      stopBtn.classList.remove('d-none');
+    } else {
+      startBtn.classList.remove('d-none');
+      stopBtn.classList.add('d-none');
+    }
+  }
+
+  function onGpsPosition(pos) {
+    const now = Date.now();
+    if (now - lastGpsSentAt < GPS_THROTTLE_MS) return;
+
+    const lat   = pos.coords.latitude;
+    const lon   = pos.coords.longitude;
+    const speed = pos.coords.speed != null ? pos.coords.speed * 3.6 : 0.0;
+    const ts    = new Date(pos.timestamp).toISOString();
+
+    setGpsStatusBadge('active');
+
+    // Update map marker to real GPS position
+    if (driverMap) {
+      if (driverBusMarker) {
+        driverBusMarker.setLatLng([lat, lon]);
+      } else {
+        driverBusMarker = L.marker([lat, lon], {
+          icon: TransitMap.createBusIcon(activeTrip ? activeTrip.status : 'RUNNING')
+        }).addTo(driverMap);
+      }
+      driverMap.panTo([lat, lon]);
+    }
+
+    // POST to backend – NO trip_id / bus_id / driver_id from frontend
+    API.post('/api/driver/gps', { latitude: lat, longitude: lon, speed: speed, timestamp: ts })
+      .then(function() {
+        lastGpsSentAt = now;
+        const el = document.getElementById('gpsTimestamp');
+        if (el) el.textContent = new Date().toLocaleTimeString();
+      })
+      .catch(function(err) {
+        const msg = (err && err.message) ? err.message : 'Network error';
+        if (msg.includes('NO_ACTIVE_TRIP')) {
+          TransitUI.showToast('No active trip. Please start a trip first.', 'warning');
+          stopGpsTracking();
+        } else {
+          TransitUI.showToast('GPS transmission failed: ' + msg, 'danger');
+        }
+      });
+  }
+
+  function onGpsError(err) {
+    if (err.code === err.PERMISSION_DENIED) {
+      setGpsStatusBadge('permission');
+      TransitUI.showToast('Location permission is required to share your live bus location.', 'warning');
+    } else if (err.code === err.POSITION_UNAVAILABLE) {
+      setGpsStatusBadge('unavailable');
+      TransitUI.showToast('GPS signal unavailable. Please check your device location settings.', 'warning');
+    } else if (err.code === err.TIMEOUT) {
+      setGpsStatusBadge('unavailable');
+      TransitUI.showToast('GPS signal timed out. Retrying automatically.', 'warning');
+    } else {
+      setGpsStatusBadge('error');
+      TransitUI.showToast('GPS error: ' + (err.message || 'Unknown'), 'danger');
+    }
+  }
+
+  function startGpsTracking() {
+    if (!navigator.geolocation) {
+      setGpsStatusBadge('unavailable');
+      TransitUI.showToast('This browser does not support Geolocation.', 'danger');
+      return;
+    }
+    if (gpsWatchId !== null) return;
+
+    gpsWatchId = navigator.geolocation.watchPosition(
+      onGpsPosition,
+      onGpsError,
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+    setGpsStatusBadge('active');
+    renderGpsButtons(true);
+    TransitUI.showToast('GPS tracking started. Broadcasting every ~15 seconds.', 'success');
+  }
+
+  function stopGpsTracking() {
+    if (gpsWatchId !== null) {
+      navigator.geolocation.clearWatch(gpsWatchId);
+      gpsWatchId = null;
+    }
+    setGpsStatusBadge('stopped');
+    renderGpsButtons(false);
+    TransitUI.showToast('GPS tracking stopped.', 'info');
+  }
+
+  async function loadLiveTrip() {
+    try {
+      const data = await API.get('/api/driver/dashboard');
+      document.getElementById('liveTripLoading').classList.add('d-none');
+      document.getElementById('liveTripContent').classList.remove('d-none');
+
+      activeTrip = data.trip;
+      if (!activeTrip) {
+        TransitUI.showToast('No active trip running. Please start a trip.', 'warning');
+        return;
+      }
+
+      document.getElementById('tripStatusBadge').innerHTML = TransitUI.getStatusBadge(activeTrip.status);
+      const pax = activeTrip.passenger_count;
+      document.getElementById('paxDisplay').textContent = pax;
+      const busCapacity = data.assigned_bus ? data.assigned_bus.capacity : 40;
+      const pct = Math.round((pax / busCapacity) * 100);
+      document.getElementById('paxProgBar').style.width = pct + '%';
+
+      // Stops select
+      const select = document.getElementById('stopSelect');
+      if (data.route_stops && select.options.length === 0) {
+        select.innerHTML = data.route_stops.map(function(s) {
+          return '<option value="' + s.id + '"' + (s.id === activeTrip.current_stop_id ? ' selected' : '') + '>' + s.name + '</option>';
+        }).join('');
+      }
+
+      // Map: use real GPS if available, otherwise current stop
+      renderDriverMap(activeTrip, data.route_stops || []);
+
+    } catch (err) {
+      console.error(err);
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  function renderDriverMap(trip, stops) {
+    if (stops.length === 0) return;
+
+    // Prefer latest GPS coords; fall back to current stop
+    let lat, lon;
+    if (trip.latest_gps && trip.latest_gps.latitude != null) {
+      lat = trip.latest_gps.latitude;
+      lon = trip.latest_gps.longitude;
+    } else {
+      const curStop = stops.find(function(s) { return s.id === trip.current_stop_id; }) || stops[0];
+      lat = curStop.latitude;
+      lon = curStop.longitude;
+    }
+
+    if (!driverMap) {
+      driverMap = TransitMap.createMap('driverMap', lat, lon, 14);
+    }
+
+    // Draw route polyline
+    const coords = stops.map(function(s) { return [s.latitude, s.longitude]; });
+    L.polyline(coords, { color: '#E85D04', weight: 3, opacity: 0.7 }).addTo(driverMap);
+
+    if (driverBusMarker) driverMap.removeLayer(driverBusMarker);
+    driverBusMarker = L.marker([lat, lon], {
+      icon: TransitMap.createBusIcon(trip.status)
+    }).bindPopup('<strong>Bus ' + trip.bus_number + '</strong><br>Status: ' + trip.status).addTo(driverMap);
+
+    driverMap.panTo([lat, lon]);
+  }
+
+  async function adjustPax(delta) {
+    if (!activeTrip) return;
+    const busCapacity = 40;
+    let newPax = Math.min(busCapacity, Math.max(0, activeTrip.passenger_count + delta));
+    try {
+      await API.post('/api/driver/trip/stop-update', {
+        trip_id: activeTrip.id,
+        stop_id: activeTrip.current_stop_id,
+        passenger_count: newPax
+      });
+      activeTrip.passenger_count = newPax;
+      document.getElementById('paxDisplay').textContent = newPax;
+      document.getElementById('paxProgBar').style.width = Math.round((newPax / busCapacity) * 100) + '%';
+      TransitUI.showToast('Passengers updated: ' + newPax + '/' + busCapacity, 'info');
+    } catch (err) {
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  async function updateStopProgression() {
+    if (!activeTrip) return;
+    const stopId = document.getElementById('stopSelect').value;
+    try {
+      await API.post('/api/driver/trip/stop-update', {
+        trip_id: activeTrip.id,
+        stop_id: parseInt(stopId),
+        passenger_count: activeTrip.passenger_count
+      });
+      TransitUI.showToast('Stop updated successfully!', 'success');
+      loadLiveTrip();
+    } catch (err) {
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  async function endTrip() {
+    if (!activeTrip || !confirm('End current trip now?')) return;
+    if (gpsWatchId !== null) stopGpsTracking();
+    try {
+      await API.post('/api/driver/trip/end', { trip_id: activeTrip.id });
+      TransitUI.showToast('Trip ended successfully', 'success');
+      window.location.href = '/driver';
+    } catch (err) {
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadLiveTrip();
+    TransitUI.startPolling(loadLiveTrip, 20000);
+  });
+</script>
+{% endblock %}

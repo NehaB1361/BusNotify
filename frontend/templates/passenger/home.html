@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}BusNotify – Smart Bus Delay Prediction & Passenger Information System{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Active Emergency Alert Card (Clean Warning Design) -->
+  {% if active_incident %}
+  <div class="tf-alert tf-alert-emergency mb-4 shadow-sm">
+    <div class="tf-alert-icon" style="background: var(--status-critical-bg); color: var(--status-critical);">
+      <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+    </div>
+    <div class="flex-grow-1">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+        <span class="tf-badge badge-critical">
+          <i class="bi bi-exclamation-triangle-fill"></i> ACTIVE INCIDENT
+        </span>
+        <strong class="text-dark fs-6">Bus {{ active_incident.bus.bus_number }} — {{ active_incident.incident_type }}</strong>
+      </div>
+      <p class="mb-1 text-secondary" style="font-size: 0.85rem;">
+        <i class="bi bi-geo-alt-fill text-danger me-1"></i> Location: <strong>{{ active_incident.stop.name if active_incident.stop else 'En route' }}</strong> &bull; 
+        <i class="bi bi-people-fill text-muted me-1"></i> Affected Passengers: <strong>{{ active_incident.affected_passengers }}</strong> &bull; 
+        <i class="bi bi-clock-history text-warning me-1"></i> Expected Impact: <strong>10–18 min delay</strong>
+      </p>
+      <div class="tf-stat-disclaimer py-1 px-2 mt-2" style="max-width: 500px;">
+        <i class="bi bi-info-circle me-1"></i>
+        <span>Historical statistical estimate based on previous trip records. This is not a guarantee.</span>
+      </div>
+    </div>
+    <div class="d-flex flex-column flex-sm-row gap-2 flex-shrink-0 align-self-start mt-2 mt-md-0">
+      <a href="{{ url_for('views.passenger_emergency', incident_id=active_incident.id) }}" class="btn btn-tf-danger btn-sm rounded-pill">
+        <i class="bi bi-arrow-repeat"></i> Find Alternative Bus
+      </a>
+      <a href="{{ url_for('views.passenger_bus_detail', bus_identifier=active_incident.bus.bus_number) }}" class="btn btn-tf-secondary btn-sm rounded-pill">
+        View Details
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Dashboard Hero Section -->
+  <div class="tf-hero mb-4">
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <div class="hero-greeting d-flex align-items-center gap-1">
+          <i class="bi bi-shield-check"></i> Live Transit Intelligence
+        </div>
+        <h1 class="hero-title">
+          {% if current_username and current_username != 'Guest' %}
+            Welcome back, {{ current_username }}
+          {% else %}
+            Know your bus. Know your time.
+          {% endif %}
+        </h1>
+        <p class="hero-desc">
+          Real-time GPS bus tracking, statistical delay estimates, and instant alternative bus recommendations across Maharashtra.
+        </p>
+
+        <!-- Search Module -->
+        <form action="{{ url_for('views.passenger_search') }}" method="GET" class="row g-2">
+          <div class="col-sm-5">
+            <div class="tf-input-icon">
+              <i class="bi bi-geo-alt input-icon text-primary"></i>
+              <input type="text" name="source" class="tf-input" placeholder="Source (e.g. Pune Station)" data-i18n="source_placeholder">
+            </div>
+          </div>
+          <div class="col-sm-5">
+            <div class="tf-input-icon">
+              <i class="bi bi-flag input-icon text-danger"></i>
+              <input type="text" name="destination" class="tf-input" placeholder="Destination (e.g. Hadapsar)" data-i18n="dest_placeholder">
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <button type="submit" class="btn btn-tf-primary w-100 justify-content-center">
+              <i class="bi bi-search"></i> <span data-i18n="find_bus">Find</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Quick Portals / Status Cards -->
+      <div class="col-lg-5 mt-4 mt-lg-0">
+        <div class="row g-2">
+          <div class="col-6">
+            <a href="{{ url_for('views.passenger_search') }}" class="tf-card text-decoration-none d-block p-3 h-100 tf-card-clickable text-center">
+              <div class="rounded-3 mx-auto mb-2 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: var(--tf-primary-light); color: var(--tf-primary);">
+                <i class="bi bi-search fs-5"></i>
+              </div>
+              <div class="fw-bold text-dark" style="font-size: 0.85rem;" data-i18n="search_bus">Search Bus</div>
+              <div class="small text-muted" style="font-size: 0.72rem;">All routes & schedules</div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a href="{{ url_for('views.passenger_search') }}?status=RUNNING" class="tf-card text-decoration-none d-block p-3 h-100 tf-card-clickable text-center">
+              <div class="rounded-3 mx-auto mb-2 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: var(--status-ontime-bg); color: var(--status-ontime);">
+                <i class="bi bi-broadcast fs-5"></i>
+              </div>
+              <div class="fw-bold text-dark" style="font-size: 0.85rem;" data-i18n="live_status">Live Status</div>
+              <div class="small text-muted" style="font-size: 0.72rem;">GPS tracking</div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a href="{{ url_for('views.passenger_emergency') }}" class="tf-card text-decoration-none d-block p-3 h-100 tf-card-clickable text-center">
+              <div class="rounded-3 mx-auto mb-2 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: var(--status-critical-bg); color: var(--status-critical);">
+                <i class="bi bi-shield-exclamation fs-5"></i>
+              </div>
+              <div class="fw-bold text-dark" style="font-size: 0.85rem;" data-i18n="emergency_updates">Emergency Updates</div>
+              <div class="small text-muted" style="font-size: 0.72rem;">Delays & alternatives</div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a href="{{ url_for('views.passenger_favourites') }}" class="tf-card text-decoration-none d-block p-3 h-100 tf-card-clickable text-center">
+              <div class="rounded-3 mx-auto mb-2 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: var(--status-delayed-bg); color: var(--status-delayed);">
+                <i class="bi bi-star-fill fs-5"></i>
+              </div>
+              <div class="fw-bold text-dark" style="font-size: 0.85rem;" data-i18n="favourites">Favourites</div>
+              <div class="small text-muted" style="font-size: 0.72rem;">Saved quick access</div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Network Summary Cards -->
+  <div class="row g-3 mb-4" id="networkKpiRow">
+    <div class="col-6 col-md-3">
+      <div class="tf-kpi">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="tf-kpi-value" id="kpiActiveBuses">30</div>
+            <div class="tf-kpi-label">Active Operating Buses</div>
+          </div>
+          <div class="tf-kpi-icon" style="background: var(--tf-primary-light); color: var(--tf-primary);">
+            <i class="bi bi-bus-front-fill"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="tf-kpi-trend up"><i class="bi bi-arrow-up-short"></i> 8.4%</span>
+          <span class="text-muted small ms-1" style="font-size: 0.7rem;">Fleet running</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="tf-kpi">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="tf-kpi-value text-success" id="kpiOnTimeRate">87.4%</div>
+            <div class="tf-kpi-label">On-Time Performance</div>
+          </div>
+          <div class="tf-kpi-icon" style="background: var(--status-ontime-bg); color: var(--status-ontime);">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="tf-kpi-trend up"><i class="bi bi-arrow-up-short"></i> +4.2%</span>
+          <span class="text-muted small ms-1" style="font-size: 0.7rem;">vs. last week</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="tf-kpi">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="tf-kpi-value text-warning" id="kpiDelayedBuses">05</div>
+            <div class="tf-kpi-label">Delayed Buses</div>
+          </div>
+          <div class="tf-kpi-icon" style="background: var(--status-delayed-bg); color: var(--status-delayed);">
+            <i class="bi bi-clock-history"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="tf-kpi-trend down"><i class="bi bi-arrow-down-short"></i> -3.2%</span>
+          <span class="text-muted small ms-1" style="font-size: 0.7rem;">Compared to peak</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="tf-kpi">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="tf-kpi-value text-danger" id="kpiIncidents">02</div>
+            <div class="tf-kpi-label">Active Incidents</div>
+          </div>
+          <div class="tf-kpi-icon" style="background: var(--status-critical-bg); color: var(--status-critical);">
+            <i class="bi bi-wrench-adjustable-circle-fill"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="tf-badge badge-critical" style="font-size: 0.65rem;">1 Critical &bull; 1 High</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured Buses Section -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <h3 class="fw-bold mb-0 fs-5">Active Fleet Tracking</h3>
+      <span class="tf-freshness fresh" id="freshnessIndicator">
+        <span class="tf-freshness-dot"></span> Fresh &bull; Updated just now
+      </span>
+    </div>
+    <div class="d-flex gap-2 align-items-center mt-2 mt-sm-0">
+      <!-- Quick Filter Pills -->
+      <div class="tf-filter-bar mb-0">
+        <button class="tf-filter-pill active" onclick="filterBuses('all', this)">All</button>
+        <button class="tf-filter-pill" onclick="filterBuses('RUNNING', this)">🟢 On Time</button>
+        <button class="tf-filter-pill" onclick="filterBuses('DELAYED', this)">🟡 Delayed</button>
+        <button class="tf-filter-pill" onclick="filterBuses('PUNCTURED', this)">🟠 Punctured</button>
+        <button class="tf-filter-pill" onclick="filterBuses('BREAKDOWN', this)">🔴 Breakdown</button>
+      </div>
+      <a href="{{ url_for('views.passenger_search') }}" class="btn btn-tf-secondary btn-sm rounded-pill">
+        View All <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Live Buses Grid -->
+  <div class="row g-3" id="liveBusesGrid">
+    <!-- Skeleton Loaders initial state -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="tf-card tf-skeleton-card tf-skeleton"></div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="tf-card tf-skeleton-card tf-skeleton"></div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="tf-card tf-skeleton-card tf-skeleton"></div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let allBusesData = [];
+  let currentFilter = 'all';
+
+  async function loadFeaturedBuses() {
+    try {
+      const buses = await API.get('/api/passenger/search?status=all');
+      allBusesData = buses || [];
+      renderBusesGrid();
+      updateFreshness();
+    } catch (err) {
+      console.error(err);
+      document.getElementById('liveBusesGrid').innerHTML = `
+        <div class="col-12">
+          <div class="tf-error-state">
+            <i class="bi bi-wifi-off error-icon"></i>
+            <div class="error-title">Unable to load live bus information</div>
+            <div class="error-desc">Please check your network connection and try again.</div>
+            <button class="btn btn-tf-primary btn-sm" onclick="loadFeaturedBuses()">
+              <i class="bi bi-arrow-clockwise"></i> Retry
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function filterBuses(filterKey, btnEl) {
+    currentFilter = filterKey;
+    document.querySelectorAll('.tf-filter-pill').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    renderBusesGrid();
+  }
+
+  function renderBusesGrid() {
+    const grid = document.getElementById('liveBusesGrid');
+    let list = allBusesData;
+
+    if (currentFilter !== 'all') {
+      list = list.filter(b => (b.status || '').toUpperCase() === currentFilter.toUpperCase());
+    }
+
+    if (!list || list.length === 0) {
+      grid.innerHTML = `
+        <div class="col-12">
+          <div class="tf-empty-state">
+            <i class="bi bi-bus-front empty-icon"></i>
+            <div class="empty-title">No buses match the filter "${currentFilter}"</div>
+            <div class="empty-desc">Try selecting another filter or search by route name.</div>
+            <button class="btn btn-tf-secondary btn-sm" onclick="filterBuses('all', document.querySelector('.tf-filter-pill'))">
+              Clear Filter
+            </button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // Prioritize key demo buses like SHIVNERI_101, 123, 156, 178
+    const sorted = [...list].sort((a, b) => {
+      const isSpecialA = ['123', 'SHIVNERI_101', '156', 'PUNE_NASHIK_101'].includes(a.bus_number);
+      const isSpecialB = ['123', 'SHIVNERI_101', '156', 'PUNE_NASHIK_101'].includes(b.bus_number);
+      if (isSpecialA && !isSpecialB) return -1;
+      if (!isSpecialA && isSpecialB) return 1;
+      return 0;
+    });
+
+    // Display top 6 buses
+    const displayList = sorted.slice(0, 6);
+
+    grid.innerHTML = displayList.map(b => {
+      const isEmergency = b.status === 'PUNCTURED' || b.status === 'BREAKDOWN';
+      const isDelayed = b.status === 'DELAYED';
+      const cardClass = isEmergency ? 'tf-card-emergency' : (isDelayed ? 'tf-card-warning' : '');
+
+      return `
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="tf-card h-100 d-flex flex-column ${cardClass}">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="tf-bus-number">${b.bus_number}</span>
+                <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.72rem;">${b.route_number || 'Express'}</span>
+              </div>
+              ${TransitUI.getStatusBadge(b.status)}
+            </div>
+
+            <div class="mb-2">
+              <div class="fw-semibold text-secondary" style="font-size: 0.85rem;">${b.route_name || (b.source + ' → ' + b.destination)}</div>
+              <div class="small text-muted" style="font-size: 0.78rem;">
+                <i class="bi bi-geo-alt text-primary"></i> ${b.source} &rarr; ${b.destination}
+              </div>
+            </div>
+
+            <!-- Route Visual Indicator -->
+            <div class="tf-route-indicator">
+              <div class="tf-route-dot completed" title="Origin"></div>
+              <div class="tf-route-line completed"></div>
+              <div class="tf-route-dot current" title="${b.current_stop || 'En route'}"></div>
+              <div class="tf-route-line"></div>
+              <div class="tf-route-dot" title="Destination"></div>
+            </div>
+
+            <div class="bg-light p-2 rounded-3 mb-2" style="font-size: 0.8rem;">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">Current Stop:</span>
+                <strong class="text-dark">${b.current_stop || 'In Transit'}</strong>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">Next Stop:</span>
+                <strong>${b.next_stop || 'Terminal'}</strong>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">Available Seats:</span>
+                <span class="badge ${b.available_seats > 10 ? 'bg-success' : (b.available_seats > 0 ? 'bg-warning text-dark' : 'bg-danger')}" style="font-size: 0.75rem;">
+                  ${b.available_seats} / ${b.capacity}
+                </span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span class="text-muted">Expected Delay:</span>
+                <strong class="${b.historical_average_delay > 10 ? 'text-warning' : 'text-dark'}">${b.historical_average_delay || 0} min</strong>
+              </div>
+            </div>
+
+            <div class="tf-stat-disclaimer mb-3">
+              <i class="bi bi-info-circle"></i>
+              <div>
+                <strong>${b.delay_label || 'Historical Statistical Estimate'}:</strong>
+                ${b.delay_disclaimer || 'Based on previous trip records.'}
+              </div>
+            </div>
+
+            <div class="mt-auto d-flex gap-2">
+              <a href="/passenger/bus/${b.bus_number}" class="btn btn-tf-primary btn-sm w-100 justify-content-center">
+                <i class="bi bi-eye"></i> View Details
+              </a>
+              ${isEmergency ? `
+                <a href="/passenger/emergency" class="btn btn-tf-danger btn-sm w-100 justify-content-center">
+                  <i class="bi bi-arrow-repeat"></i> Alternatives
+                </a>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function updateFreshness() {
+    const el = document.getElementById('freshnessIndicator');
+    if (el) {
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      el.innerHTML = `<span class="tf-freshness-dot"></span> Fresh &bull; Updated at ${now}`;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadFeaturedBuses();
+    TransitUI.startPolling(loadFeaturedBuses, 15000);
+  });
+</script>
+{% endblock %}

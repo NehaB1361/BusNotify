@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Replacement Bus Tracker – BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Breadcrumb & Header -->
+  <div class="tf-page-header">
+    <div class="tf-breadcrumb">
+      <a href="{{ url_for('views.passenger_home') }}">Home</a>
+      <span class="separator">/</span>
+      <a href="{{ url_for('views.passenger_emergency') }}">Emergency Updates</a>
+      <span class="separator">/</span>
+      <span>Replacement Status</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h1 class="page-title"><i class="bi bi-truck text-primary me-2"></i>Replacement Bus Status</h1>
+        <p class="page-subtitle">Live operational dispatch tracker and passenger transfer monitoring.</p>
+      </div>
+      <span class="tf-freshness fresh" id="repFreshness">
+        <span class="tf-freshness-dot"></span> Live Depot Sync &bull; Auto-refreshes
+      </span>
+    </div>
+  </div>
+
+  <div id="replacementLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="text-muted small mt-2">Loading replacement request status...</div>
+  </div>
+
+  <div id="replacementContent" class="d-none">
+    
+    <!-- Top Status Card -->
+    <div class="tf-card mb-4 shadow-sm p-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+            <span class="badge bg-primary fs-6 fw-bold px-3 py-1" id="reqCodeBadge">DR001</span>
+            <span id="reqStatusBadge"></span>
+          </div>
+          <h2 class="fw-bold text-dark mb-1">Replacement Bus <span id="repBusNumber">189</span></h2>
+          <div class="text-secondary small mt-1">
+            <i class="bi bi-person-badge text-primary me-1"></i> Assigned Driver: <strong id="repDriverName">Rajesh Patil</strong> (<span id="repDriverCode">D104</span>) &bull; 
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i> Pickup Stop: <strong id="repPickupStop">Magarpatta</strong>
+          </div>
+        </div>
+
+        <div class="text-md-end p-3 bg-light rounded-3 border">
+          <small class="text-muted d-block" style="font-size: 0.75rem;">Estimated Arrival</small>
+          <div class="fs-2 fw-bold text-primary" id="repETA">12 min</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6-Stage Workflow Stepper Timeline (Section 21) -->
+    <div class="tf-card mb-4 shadow-sm p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h5 class="fw-bold mb-0">Operational Coordination Workflow</h5>
+          <div class="small text-muted" style="font-size: 0.75rem;">Real-time progress across all 6 dispatch milestones</div>
+        </div>
+      </div>
+
+      <div class="row text-center position-relative g-2 py-3" id="workflowStepper">
+        
+        <div class="col step-col" id="step-PENDING">
+          <div class="step-circle mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center border" style="width: 46px; height: 46px;">
+            <i class="bi bi-hourglass-split fs-5"></i>
+          </div>
+          <div class="small fw-bold">1. Pending</div>
+          <div class="text-muted" style="font-size: 0.72rem;">Incident Logged</div>
+        </div>
+
+        <div class="col step-col" id="step-ASSIGNED">
+          <div class="step-circle mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center border" style="width: 46px; height: 46px;">
+            <i class="bi bi-person-check fs-5"></i>
+          </div>
+          <div class="small fw-bold">2. Assigned</div>
+          <div class="text-muted" style="font-size: 0.72rem;">Bus & Driver</div>
+        </div>
+
+        <div class="col step-col" id="step-DISPATCHED">
+          <div class="step-circle mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center border" style="width: 46px; height: 46px;">
+            <i class="bi bi-truck fs-5"></i>
+          </div>
+          <div class="small fw-bold">3. Dispatched</div>
+          <div class="text-muted" style="font-size: 0.72rem;">En Route to Site</div>
+        </div>
+
+        <div class="col step-col" id="step-ARRIVED">
+          <div class="step-circle mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center border" style="width: 46px; height: 46px;">
+            <i class="bi bi-geo-alt fs-5"></i>
+          </div>
+          <div class="small fw-bold">4. Arrived</div>
+          <div class="text-muted" style="font-size: 0.72rem;">At Incident Site</div>
+        </div>
+
+        <div class="col step-col" id="step-PASSENGER_TRANSFER">
+          <div class="step-circle mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center border" style="width: 46px; height: 46px;">
+            <i class="bi bi-people fs-5"></i>
+          </div>
+          <div class="small fw-bold">5. Transfer</div>
+          <div class="text-muted" style="font-size: 0.72rem;">Boarding In Progress</div>
+        </div>
+
+        <div class="col step-col" id="step-RESOLVED">
+          <div class="step-circle mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center border" style="width: 46px; height: 46px;">
+            <i class="bi bi-check2-all fs-5"></i>
+          </div>
+          <div class="small fw-bold">6. Resolved</div>
+          <div class="text-muted" style="font-size: 0.72rem;">Service Restored</div>
+        </div>
+
+      </div>
+
+      <!-- Service Restored Banner if Resolved -->
+      <div id="serviceRestoredBanner" class="tf-alert tf-alert-success mt-4 d-none">
+        <div class="tf-alert-icon" style="background: var(--status-ontime-bg); color: var(--status-ontime);">
+          <i class="bi bi-check-circle-fill fs-4"></i>
+        </div>
+        <div>
+          <strong class="d-block text-dark fs-6">Service Restored / Replacement Completed</strong>
+          <span class="small text-muted" id="resNotes">All passengers transferred safely. Normal route operation has resumed.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Transfer Details Card -->
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="tf-card h-100 p-4">
+          <h5 class="fw-bold mb-3">Passenger Boarding & Transfer Status</h5>
+          <div class="p-3 bg-light rounded-3 mb-3" style="font-size: 0.85rem;">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Total Affected Passengers:</span>
+              <strong id="cardAffected">40 Passengers</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Transferred to Replacement:</span>
+              <strong class="text-success" id="cardTransferred">0</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Remaining to Transfer:</span>
+              <strong class="text-primary" id="cardRemaining">40</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Replacement Bus Capacity:</span>
+              <strong id="cardCapacity">40 Seats</strong>
+            </div>
+          </div>
+          <div class="tf-progress mb-2" style="height: 18px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" id="transferProgBar">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="tf-card h-100 p-4">
+          <h5 class="fw-bold mb-3">Replacement Vehicle Information</h5>
+          <table class="table table-sm table-borderless small mb-0" style="font-size: 0.85rem;">
+            <tbody>
+              <tr><td class="text-muted py-2">Bus Model / Type:</td><td class="fw-bold py-2">Standard Transit (40-Seater)</td></tr>
+              <tr><td class="text-muted py-2">Registration Number:</td><td class="fw-bold py-2" id="cardReg">MH-12-RN-3456</td></tr>
+              <tr><td class="text-muted py-2">Operating Depot:</td><td class="fw-bold py-2">Pune Central Depot</td></tr>
+              <tr><td class="text-muted py-2">Driver Contact:</td><td class="fw-bold py-2">+91 98765 43210</td></tr>
+              <tr><td class="text-muted py-2">Incident Reference:</td><td class="fw-bold py-2" id="cardIncRef">INC-001</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const STEPS = ['PENDING', 'ASSIGNED', 'DISPATCHED', 'ARRIVED', 'PASSENGER_TRANSFER', 'RESOLVED'];
+
+  async function loadReplacementStatus() {
+    try {
+      const pathParts = window.location.pathname.split('/');
+      const reqId = pathParts[pathParts.length - 1];
+
+      const req = await API.get(`/api/depot/requests/${reqId}`);
+      document.getElementById('replacementLoading').classList.add('d-none');
+      document.getElementById('replacementContent').classList.remove('d-none');
+
+      document.getElementById('reqCodeBadge').textContent = req.request_code;
+      document.getElementById('reqStatusBadge').innerHTML = TransitUI.getStatusBadge(req.status);
+      document.getElementById('repBusNumber').textContent = req.replacement_bus_number || 'Awaiting Assignment';
+      document.getElementById('repDriverName').textContent = req.replacement_driver_name || 'Awaiting Driver';
+      document.getElementById('repDriverCode').textContent = req.replacement_driver_code || '--';
+      document.getElementById('repPickupStop').textContent = req.stop_name || 'En route';
+      document.getElementById('repETA').textContent = req.status === 'ARRIVED' || req.status === 'RESOLVED' ? 'Arrived' : `${req.eta_minutes || 12} min`;
+
+      // Cards
+      document.getElementById('cardAffected').textContent = `${req.affected_passengers} Passengers`;
+      document.getElementById('cardTransferred').textContent = `${req.transferred_passengers} Transferred`;
+      document.getElementById('cardRemaining').textContent = `${req.remaining_passengers} Remaining`;
+      document.getElementById('cardIncRef').textContent = req.incident_number || 'INC-001';
+
+      if (req.replacement_bus_number) {
+        document.getElementById('cardReg').textContent = `MH-12-${req.replacement_bus_number}`;
+      }
+
+      // Progress bar
+      const pct = req.affected_passengers > 0 ? Math.round((req.transferred_passengers / req.affected_passengers) * 100) : 0;
+      const progBar = document.getElementById('transferProgBar');
+      progBar.style.width = `${pct}%`;
+      progBar.textContent = `${pct}%`;
+
+      // Update 6-stage stepper
+      updateStepper(req.status);
+
+      if (req.status === 'RESOLVED') {
+        document.getElementById('serviceRestoredBanner').classList.remove('d-none');
+        if (req.resolution_notes) {
+          document.getElementById('resNotes').textContent = req.resolution_notes;
+        }
+      }
+
+    } catch (err) {
+      console.error(err);
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  function updateStepper(currentStatus) {
+    const activeIndex = STEPS.indexOf(currentStatus);
+
+    STEPS.forEach((step, idx) => {
+      const col = document.getElementById(`step-${step}`);
+      if (!col) return;
+      const circle = col.querySelector('.step-circle');
+
+      if (idx < activeIndex) {
+        // Completed
+        col.className = 'col step-col text-success';
+        circle.className = 'step-circle mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center bg-success text-white border-success';
+      } else if (idx === activeIndex) {
+        // Active
+        col.className = 'col step-col text-primary fw-bold';
+        circle.className = 'step-circle mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center bg-primary text-white border-primary shadow-sm';
+      } else {
+        // Upcoming
+        col.className = 'col step-col text-muted';
+        circle.className = 'step-circle mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center bg-light text-muted border';
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadReplacementStatus();
+    TransitUI.startPolling(loadReplacementStatus, 10000);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}CSV Import & Export Portal - Admin - BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Page Header -->
+  <div class="tf-page-header mb-4">
+    <div>
+      <nav class="tf-breadcrumb" aria-label="breadcrumb">
+        <a href="{{ url_for('views.admin_dashboard') }}">Dashboard</a>
+        <span>/</span>
+        <span>CSV Portal</span>
+      </nav>
+      <h2 class="tf-page-title">CSV Bulk Import &amp; Export Portal</h2>
+      <p class="tf-page-subtitle">Schema-validated bulk data pipeline with row-level error reporting — Section 48</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <a href="{{ url_for('views.admin_management') }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+        <i class="bi bi-grid me-1"></i> Management
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- LEFT: Upload & Validate -->
+    <div class="col-12 col-lg-6">
+      <div class="tf-card shadow-sm p-4 h-100">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="d-flex align-items-center justify-content-center rounded-3" style="width:44px; height:44px; background: var(--tf-primary-subtle);">
+            <i class="bi bi-cloud-arrow-up fs-5" style="color: var(--tf-primary);"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold mb-0">Upload &amp; Validate CSV</h5>
+            <div class="text-muted small">Import data with schema validation and row-level error reporting</div>
+          </div>
+        </div>
+
+        <form id="csvUploadForm">
+          <!-- Dataset selector -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Target Dataset</label>
+            <select id="csvTableSelect" class="form-select tf-select" required onchange="updateSchemaHint()">
+              <option value="routes">Routes (routes.csv)</option>
+              <option value="stops">Stops (stops.csv)</option>
+              <option value="buses">Buses (buses.csv)</option>
+              <option value="drivers">Drivers (drivers.csv)</option>
+              <option value="historical_delays">Historical Delays (historical_delays.csv)</option>
+              <option value="bus_capacity">Bus Capacity (bus_capacity.csv)</option>
+              <option value="depot_requests">Depot Requests (depot_requests.csv)</option>
+            </select>
+          </div>
+
+          <!-- Schema hint -->
+          <div class="p-3 rounded-3 mb-3" style="background: var(--tf-bg-page); border: 1px solid var(--tf-border); font-size: 0.8rem;">
+            <div class="fw-semibold mb-1 text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Required Columns:</div>
+            <code id="schemaHint" class="d-block" style="color: var(--tf-text-primary); word-break: break-all;"></code>
+          </div>
+
+          <!-- File picker -->
+          <div class="mb-4">
+            <label class="form-label small fw-semibold">Select CSV File <span class="text-muted">(max 16 MB)</span></label>
+            <input type="file" id="csvFileInput" class="form-control" accept=".csv" required>
+            <div class="form-text">Header row must strictly match the schema columns above.</div>
+          </div>
+
+          <button type="submit" class="btn btn-tf-primary w-100 py-2 justify-content-center" id="uploadBtn">
+            <i class="bi bi-file-earmark-arrow-up me-2"></i> Validate &amp; Import
+          </button>
+        </form>
+
+        <!-- Import Result Box -->
+        <div id="importResultBox" class="mt-4 d-none">
+          <div class="p-3 rounded-3 border" id="resultBoxInner">
+            <h6 class="fw-bold mb-3">Import Summary</h6>
+            <div class="row g-3 mb-3">
+              <div class="col-4 text-center">
+                <div class="fw-bold fs-5" id="resTotal">0</div>
+                <div class="text-muted small">Total Rows</div>
+              </div>
+              <div class="col-4 text-center">
+                <div class="fw-bold fs-5 text-success" id="resSuccess">0</div>
+                <div class="text-muted small">Imported</div>
+              </div>
+              <div class="col-4 text-center">
+                <div class="fw-bold fs-5 text-danger" id="resFailed">0</div>
+                <div class="text-muted small">Failed</div>
+              </div>
+            </div>
+            <div id="errorDetailsList" class="alert alert-danger py-2 small mb-0 d-none" style="max-height: 180px; overflow-y: auto;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Export & Schema Reference -->
+    <div class="col-12 col-lg-6">
+
+      <!-- Export Card -->
+      <div class="tf-card shadow-sm p-4 mb-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="d-flex align-items-center justify-content-center rounded-3" style="width:44px; height:44px; background: #ECFDF5;">
+            <i class="bi bi-cloud-arrow-down fs-5 text-success"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold mb-0">Export Database Snapshots</h5>
+            <div class="text-muted small">Download live data as CSV for backup or analysis</div>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2">
+          <a href="/api/admin/csv-export/routes" class="btn btn-outline-secondary text-start d-flex justify-content-between align-items-center py-2">
+            <span><i class="bi bi-signpost me-2 text-primary"></i> Export Routes</span>
+            <i class="bi bi-download text-muted"></i>
+          </a>
+          <a href="/api/admin/csv-export/stops" class="btn btn-outline-secondary text-start d-flex justify-content-between align-items-center py-2">
+            <span><i class="bi bi-geo-alt me-2 text-success"></i> Export Stops</span>
+            <i class="bi bi-download text-muted"></i>
+          </a>
+          <a href="/api/admin/csv-export/buses" class="btn btn-outline-secondary text-start d-flex justify-content-between align-items-center py-2">
+            <span><i class="bi bi-bus-front me-2 text-warning"></i> Export Bus Fleet</span>
+            <i class="bi bi-download text-muted"></i>
+          </a>
+          <a href="/api/admin/csv-export/historical_delays" class="btn btn-outline-secondary text-start d-flex justify-content-between align-items-center py-2">
+            <span><i class="bi bi-clock-history me-2" style="color:var(--tf-primary);"></i> Export Historical Delays</span>
+            <i class="bi bi-download text-muted"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Schema Reference Card -->
+      <div class="tf-card shadow-sm p-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-file-code text-muted me-2"></i>CSV Schema Reference</h6>
+        <div class="d-flex flex-column gap-3" style="font-size: 0.82rem;">
+          <div>
+            <div class="fw-semibold mb-1">routes.csv</div>
+            <code class="d-block text-muted" style="word-break: break-all;">route_number, name, source, destination, total_distance_km, estimated_duration_min</code>
+          </div>
+          <div>
+            <div class="fw-semibold mb-1">stops.csv</div>
+            <code class="d-block text-muted" style="word-break: break-all;">stop_code, name, latitude, longitude, landmark</code>
+          </div>
+          <div>
+            <div class="fw-semibold mb-1">buses.csv</div>
+            <code class="d-block text-muted" style="word-break: break-all;">bus_number, registration_number, capacity, assigned_route_id, current_status</code>
+          </div>
+          <div>
+            <div class="fw-semibold mb-1">historical_delays.csv</div>
+            <code class="d-block text-muted" style="word-break: break-all;">route_number, stop_code, weekday, hour_of_day, delay_minutes, delay_reason, sample_date</code>
+          </div>
+          <div>
+            <div class="fw-semibold mb-1">bus_capacity.csv</div>
+            <code class="d-block text-muted" style="word-break: break-all;">bus_number, capacity, available_seats</code>
+          </div>
+          <div>
+            <div class="fw-semibold mb-1">depot_requests.csv</div>
+            <code class="d-block text-muted" style="word-break: break-all;">request_id, incident_id, failed_bus_number, problem, affected_passengers, priority, status</code>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const SCHEMA_HINTS = {
+    routes: 'route_number, name, source, destination, total_distance_km, estimated_duration_min',
+    stops: 'stop_code, name, latitude, longitude, landmark',
+    buses: 'bus_number, registration_number, capacity, assigned_route_id, current_status',
+    drivers: 'driver_code, full_name, mobile_number, license_number',
+    historical_delays: 'route_number, stop_code, weekday, hour_of_day, delay_minutes, delay_reason, sample_date',
+    bus_capacity: 'bus_number, capacity, available_seats',
+    depot_requests: 'request_id, incident_id, failed_bus_number, problem, affected_passengers, priority, status'
+  };
+
+  function updateSchemaHint() {
+    const table = document.getElementById('csvTableSelect').value;
+    document.getElementById('schemaHint').textContent = SCHEMA_HINTS[table] || '';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateSchemaHint();
+  });
+
+  document.getElementById('csvUploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const table = document.getElementById('csvTableSelect').value;
+    const fileInput = document.getElementById('csvFileInput');
+    const btn = document.getElementById('uploadBtn');
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+      TransitUI.showToast('Please select a CSV file first.', 'warning');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('table_name', table);
+    formData.append('file', fileInput.files[0]);
+
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Validating &amp; Importing...`;
+
+    try {
+      const summary = await API.upload('/api/admin/csv-import', formData);
+      const resBox = document.getElementById('importResultBox');
+      const resBoxInner = document.getElementById('resultBoxInner');
+      resBox.classList.remove('d-none');
+
+      document.getElementById('resTotal').textContent = summary.total_processed;
+      document.getElementById('resSuccess').textContent = summary.successful_rows;
+      document.getElementById('resFailed').textContent = summary.failed_rows;
+
+      // Color the box
+      resBoxInner.style.borderColor = summary.failed_rows === 0 ? '#BBF7D0' : '#FECACA';
+      resBoxInner.style.background = summary.failed_rows === 0 ? '#F0FDF4' : '#FEF2F2';
+
+      const errBox = document.getElementById('errorDetailsList');
+      if (summary.errors && summary.errors.length > 0) {
+        errBox.classList.remove('d-none');
+        errBox.innerHTML = `<strong>Validation Errors:</strong><ul class="mb-0 ps-3 mt-1">${summary.errors.map(err => `<li>Row ${err.row}: ${err.error}</li>`).join('')}</ul>`;
+      } else {
+        errBox.classList.add('d-none');
+      }
+
+      TransitUI.showToast(`Import complete: ${summary.successful_rows}/${summary.total_processed} rows inserted.`, summary.failed_rows === 0 ? 'success' : 'warning');
+
+    } catch (err) {
+      TransitUI.showToast(err.message || 'Import failed', 'danger');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-file-earmark-arrow-up me-2"></i> Validate &amp; Import`;
+    }
+  });
+</script>
+{% endblock %}

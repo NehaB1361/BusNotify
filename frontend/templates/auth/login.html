@@ -1,0 +1,481 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Login - BusNotify{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center align-items-center w-100 m-0">
+    <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
+
+        <div class="tf-card shadow-lg p-4 p-md-5">
+
+            <!-- BusNotify Logo -->
+            <div class="text-center mb-4">
+
+                <div
+                    class="d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
+                    style="
+                        width: 64px;
+                        height: 64px;
+                        background: linear-gradient(
+                            135deg,
+                            var(--tf-primary),
+                            var(--tf-secondary)
+                        );
+                        color: white;
+                        font-size: 2rem;
+                    "
+                >
+                    <i class="bi bi-bus-front"></i>
+                </div>
+
+                <h3 class="fw-bold mb-1">
+                    Welcome to BusNotify
+                </h3>
+
+                <p class="text-muted small mb-0">
+                    Sign in to your transit account
+                </p>
+
+            </div>
+
+
+            <!-- Login Error -->
+            <div
+                id="loginAlert"
+                class="alert alert-danger d-none"
+                role="alert"
+                aria-live="polite"
+            ></div>
+
+
+            <!-- Login Form -->
+            <form id="loginForm" novalidate>
+
+                <!-- Email / Mobile -->
+                <div class="mb-3">
+
+                    <label
+                        for="identifier"
+                        class="form-label fw-semibold small"
+                    >
+                        Email or Mobile Number
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-person text-muted"></i>
+                        </span>
+
+                        <input
+                            type="text"
+                            id="identifier"
+                            name="identifier"
+                            class="form-control"
+                            placeholder="name@example.com or 9876543210"
+                            autocomplete="username"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Password -->
+                <div class="mb-3">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <label
+                            for="password"
+                            class="form-label fw-semibold small mb-2"
+                        >
+                            Password
+                        </label>
+
+                        <a
+                            href="javascript:void(0)"
+                            id="forgotPasswordLink"
+                            class="small text-decoration-none text-muted"
+                        >
+                            Forgot password?
+                        </a>
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-lock text-muted"></i>
+                        </span>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="form-control"
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                        <button
+                            class="btn btn-outline-secondary"
+                            type="button"
+                            id="togglePasswordBtn"
+                            aria-label="Show password"
+                        >
+                            <i
+                                class="bi bi-eye"
+                                id="togglePasswordIcon"
+                            ></i>
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Remember Me / Guest -->
+                <div
+                    class="d-flex justify-content-between align-items-center mb-4"
+                >
+
+                    <div class="form-check">
+
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="rememberMe"
+                            checked
+                        >
+
+                        <label
+                            class="form-check-label small text-muted"
+                            for="rememberMe"
+                        >
+                            Remember me
+                        </label>
+
+                    </div>
+
+
+                    <a
+                        href="{{ url_for('views.passenger_home') }}"
+                        class="small text-muted text-decoration-none"
+                    >
+                        Continue as Guest
+                    </a>
+
+                </div>
+
+
+                <!-- Sign In -->
+                <button
+                    type="submit"
+                    id="submitBtn"
+                    class="btn btn-tf-primary w-100 py-2 fw-bold"
+                >
+                    <span>Sign In</span>
+                </button>
+
+            </form>
+
+
+            <!-- Register -->
+            <div class="mt-4 pt-3 border-top text-center">
+
+                <span class="small text-muted">
+                    Don't have an account?
+                </span>
+
+                <a
+                    href="{{ url_for('views.register_page') }}"
+                    class="small fw-semibold text-decoration-none"
+                    style="color: var(--tf-primary);"
+                >
+                    Create account
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const loginForm = document.getElementById("loginForm");
+    const identifierInput = document.getElementById("identifier");
+    const passwordInput = document.getElementById("password");
+
+    const togglePasswordBtn =
+        document.getElementById("togglePasswordBtn");
+
+    const togglePasswordIcon =
+        document.getElementById("togglePasswordIcon");
+
+    const submitBtn =
+        document.getElementById("submitBtn");
+
+    const alertBox =
+        document.getElementById("loginAlert");
+
+    const forgotPasswordLink =
+        document.getElementById("forgotPasswordLink");
+
+
+    /* ================================
+       Password Visibility
+    ================================= */
+
+    togglePasswordBtn.addEventListener("click", function () {
+
+        if (passwordInput.type === "password") {
+
+            passwordInput.type = "text";
+
+            togglePasswordIcon.classList.remove("bi-eye");
+            togglePasswordIcon.classList.add("bi-eye-slash");
+
+            togglePasswordBtn.setAttribute(
+                "aria-label",
+                "Hide password"
+            );
+
+        } else {
+
+            passwordInput.type = "password";
+
+            togglePasswordIcon.classList.remove("bi-eye-slash");
+            togglePasswordIcon.classList.add("bi-eye");
+
+            togglePasswordBtn.setAttribute(
+                "aria-label",
+                "Show password"
+            );
+        }
+    });
+
+
+    /* ================================
+       Show Error
+    ================================= */
+
+    function showError(message) {
+
+        alertBox.textContent = message;
+        alertBox.classList.remove("d-none");
+    }
+
+
+    /* ================================
+       Hide Error
+    ================================= */
+
+    function hideError() {
+
+        alertBox.textContent = "";
+        alertBox.classList.add("d-none");
+    }
+
+
+    /* ================================
+       Clear Error While Typing
+    ================================= */
+
+    identifierInput.addEventListener(
+        "input",
+        hideError
+    );
+
+    passwordInput.addEventListener(
+        "input",
+        hideError
+    );
+
+
+    /* ================================
+       Login
+    ================================= */
+
+    loginForm.addEventListener("submit", async function (e) {
+
+        e.preventDefault();
+
+        hideError();
+
+
+        const identifier =
+            identifierInput.value.trim();
+
+        const password =
+            passwordInput.value;
+
+
+        /* Basic Validation */
+
+        if (!identifier) {
+
+            showError(
+                "Please enter your email or mobile number."
+            );
+
+            identifierInput.focus();
+            return;
+        }
+
+
+        if (!password) {
+
+            showError(
+                "Please enter your password."
+            );
+
+            passwordInput.focus();
+            return;
+        }
+
+
+        /* Get next URL */
+
+        const nextUrl =
+            new URLSearchParams(
+                window.location.search
+            ).get("next");
+
+
+        /* Disable button */
+
+        submitBtn.disabled = true;
+
+        submitBtn.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm me-2"
+                aria-hidden="true"
+            ></span>
+            Signing in...
+        `;
+
+
+        try {
+
+            /* API Request */
+
+            const res = await API.post(
+                "/api/auth/login",
+                {
+                    identifier: identifier,
+                    password: password
+                }
+            );
+
+
+            /* Success Toast */
+
+            if (
+                typeof TransitUI !== "undefined" &&
+                typeof TransitUI.showToast === "function"
+            ) {
+
+                TransitUI.showToast(
+                    `Welcome back, ${res.username || "User"}!`,
+                    "success"
+                );
+            }
+
+
+            /* Safe next URL */
+
+            const safeNext =
+                nextUrl &&
+                nextUrl.startsWith("/") &&
+                !nextUrl.startsWith("//")
+                    ? nextUrl
+                    : null;
+
+
+            /* Role-Based Redirect */
+
+            let redirectTarget;
+
+
+            if (safeNext) {
+
+                redirectTarget = safeNext;
+
+            } else if (res.role === "driver") {
+
+                redirectTarget = "/driver";
+
+            } else if (res.role === "depot_operator") {
+
+                redirectTarget = "/depot";
+
+            } else if (res.role === "admin") {
+
+                redirectTarget = "/admin";
+
+            } else {
+
+                redirectTarget = "/passenger";
+            }
+
+
+            /* Redirect */
+
+            window.location.href = redirectTarget;
+
+
+        } catch (err) {
+
+            console.error("Login error:", err);
+
+
+            showError(
+                err?.message ||
+                "Login failed. Please check your credentials and try again."
+            );
+
+
+            /* Enable button again */
+
+            submitBtn.disabled = false;
+
+            submitBtn.innerHTML = `
+                <span>Sign In</span>
+            `;
+        }
+
+    });
+
+
+    /* ================================
+       Forgot Password
+    ================================= */
+
+    forgotPasswordLink.addEventListener(
+        "click",
+        function () {
+
+            showError(
+                "Password reset is not available yet. Please contact the administrator."
+            );
+
+        }
+    );
+
+});
+</script>
+
+{% endblock %}

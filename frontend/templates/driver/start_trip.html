@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Start Trip - Driver Portal - BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Page Header -->
+  <div class="tf-page-header mb-4">
+    <div>
+      <nav class="tf-breadcrumb" aria-label="breadcrumb">
+        <a href="{{ url_for('views.driver_dashboard') }}">Driver Dashboard</a>
+        <span>/</span>
+        <span>Start Trip</span>
+      </nav>
+      <h2 class="tf-page-title">Start Bus Trip</h2>
+      <p class="tf-page-subtitle">Initialize vehicle monitoring, route assignment, and passenger tracking</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="tf-badge badge-success">
+        <i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i> System Ready
+      </span>
+    </div>
+  </div>
+
+  <div class="row g-4 justify-content-center">
+
+    <!-- Main Form Card -->
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="tf-card shadow-sm p-4 p-md-5">
+
+        <!-- Step indicator -->
+        <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+          <div class="d-flex align-items-center justify-content-center rounded-circle fw-bold text-white" style="width:32px; height:32px; background: var(--tf-primary); font-size:0.875rem; flex-shrink:0;">1</div>
+          <div>
+            <div class="fw-semibold" style="font-size:0.9rem;">Configure Trip Details</div>
+            <div class="text-muted" style="font-size:0.78rem;">Select bus, route, and initial passenger count</div>
+          </div>
+        </div>
+
+        <form id="startTripForm">
+
+          <!-- Bus Select -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:0.05em; color: var(--tf-text-secondary);">
+              <i class="bi bi-bus-front me-1" style="color: var(--tf-primary);"></i> Assigned Bus
+            </label>
+            <select id="busSelect" class="form-select tf-select" required>
+              {% for b in buses %}
+                <option value="{{ b.id }}" {% if b.bus_number == '123' %}selected{% endif %}>
+                  Bus {{ b.bus_number }} ({{ b.registration_number }}) — Capacity: {{ b.capacity }} seats
+                </option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Select the vehicle you have been assigned for this trip.</div>
+          </div>
+
+          <!-- Route Select -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:0.05em; color: var(--tf-text-secondary);">
+              <i class="bi bi-signpost-2 me-1" style="color: var(--tf-secondary);"></i> Route Assignment
+            </label>
+            <select id="routeSelect" class="form-select tf-select" required>
+              {% for r in routes %}
+                <option value="{{ r.id }}" {% if r.route_number == '101' %}selected{% endif %}>
+                  Route {{ r.route_number }} — {{ r.name }} ({{ r.source }} → {{ r.destination }})
+                </option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Choose the route you are operating today.</div>
+          </div>
+
+          <!-- Initial Passenger Count -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:0.05em; color: var(--tf-text-secondary);">
+              <i class="bi bi-people me-1" style="color: #3B82F6;"></i> Initial Passenger Count
+            </label>
+            <input type="number" id="initPax" class="form-control tf-input" value="40" min="0" max="100" required>
+            <div class="form-text">Estimated boarding count at the first stop. Must not exceed bus capacity.</div>
+          </div>
+
+          <!-- GPS Info Badge -->
+          <div class="d-flex align-items-start gap-3 p-3 rounded-3 mb-4" style="background: #F0FDF4; border: 1px solid #BBF7D0;">
+            <i class="bi bi-geo-alt-fill fs-5 mt-1" style="color: #10B981;"></i>
+            <div>
+              <div class="fw-semibold small" style="color: #065F46;">GPS Tracking Activates Automatically</div>
+              <div class="text-muted" style="font-size:0.8rem;">Live location updates, passenger telemetry, and delay monitoring will begin the moment you start the trip. No manual GPS entry required.</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex gap-3">
+            <a href="{{ url_for('views.driver_dashboard') }}" class="btn btn-outline-secondary flex-fill">
+              <i class="bi bi-arrow-left me-1"></i> Cancel
+            </a>
+            <button type="button" class="btn btn-tf-primary flex-fill justify-content-center" onclick="confirmStartTrip()">
+              <i class="bi bi-play-circle me-1"></i> Start Trip
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="col-12 col-md-4 col-lg-3 d-none d-md-block">
+      <div class="tf-card shadow-sm p-4 mb-3">
+        <h6 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Pre-Trip Checklist</h6>
+        <div class="d-flex flex-column gap-2">
+          <div class="d-flex align-items-center gap-2 small">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span>Vehicle inspected &amp; fuelled</span>
+          </div>
+          <div class="d-flex align-items-center gap-2 small">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span>Route sheet collected from depot</span>
+          </div>
+          <div class="d-flex align-items-center gap-2 small">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span>Mobile device charged &amp; connected</span>
+          </div>
+          <div class="d-flex align-items-center gap-2 small">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span>Emergency contact numbers saved</span>
+          </div>
+          <div class="d-flex align-items-center gap-2 small">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span>GPS signal confirmed</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tf-card shadow-sm p-4">
+        <h6 class="fw-bold mb-2"><i class="bi bi-telephone-fill text-danger me-2"></i>Emergency Contacts</h6>
+        <div class="small text-muted mb-2">Pune Depot Control Room</div>
+        <div class="fw-bold mb-3" style="font-size: 1.1rem;">020-2601-0000</div>
+        <div class="small text-muted mb-1">Traffic Control</div>
+        <div class="fw-bold">020-2700-1234</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Start Trip Confirmation Modal -->
+<div class="modal fade" id="startConfirmModal" tabindex="-1" aria-labelledby="startModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <div class="d-flex align-items-center gap-3">
+          <div class="d-flex align-items-center justify-content-center rounded-circle" style="width:44px; height:44px; background: var(--tf-primary-subtle);">
+            <i class="bi bi-play-circle-fill fs-4" style="color: var(--tf-primary);"></i>
+          </div>
+          <div>
+            <h5 class="modal-title fw-bold mb-0" id="startModalLabel">Confirm Trip Start</h5>
+            <div class="text-muted small">This action will activate live monitoring</div>
+          </div>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <div class="p-3 rounded-3 mb-3" style="background: var(--tf-bg-page); border: 1px solid var(--tf-border);">
+          <p class="mb-1 fw-semibold" id="modalConfirmPrompt">Start Bus 123 on Route 101?</p>
+          <p class="text-muted small mb-0">GPS positioning, live occupancy tracking, and delay monitoring will begin automatically.</p>
+        </div>
+        <div class="small text-muted">
+          <i class="bi bi-shield-check text-success me-1"></i>
+          Your session will be secured and tied to this trip ID for the duration of the journey.
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 px-4 pb-4">
+        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Cancel
+        </button>
+        <button type="button" class="btn btn-tf-primary px-5" id="modalStartBtn" onclick="executeStartTrip()">
+          <i class="bi bi-play-circle me-1"></i> Start Trip
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let confirmModal = null;
+
+  function confirmStartTrip() {
+    const busSelect = document.getElementById('busSelect');
+    const routeSelect = document.getElementById('routeSelect');
+    const busText = busSelect.options[busSelect.selectedIndex].text;
+    const routeText = routeSelect.options[routeSelect.selectedIndex].text;
+    const busNum = busText.split('(')[0].trim();
+    const routePart = routeText.split('—')[0]?.trim() || 'route';
+    document.getElementById('modalConfirmPrompt').textContent = `Start ${busNum} on ${routePart}?`;
+    if (!confirmModal) confirmModal = new bootstrap.Modal(document.getElementById('startConfirmModal'));
+    confirmModal.show();
+  }
+
+  async function executeStartTrip() {
+    const busId = document.getElementById('busSelect').value;
+    const routeId = document.getElementById('routeSelect').value;
+    const pax = parseInt(document.getElementById('initPax').value) || 0;
+    const btn = document.getElementById('modalStartBtn');
+
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Starting...`;
+
+    try {
+      await API.post('/api/driver/trip/start', {
+        bus_id: parseInt(busId),
+        route_id: parseInt(routeId),
+        passenger_count: pax
+      });
+      confirmModal.hide();
+      TransitUI.showToast('Trip started successfully! Redirecting to live view...', 'success');
+      setTimeout(() => { window.location.href = '/driver/live-trip'; }, 900);
+    } catch (err) {
+      TransitUI.showToast(err.message || 'Could not start trip. Please try again.', 'danger');
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-play-circle me-1"></i> Start Trip`;
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}Driver Dashboard – BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Header & Breadcrumb -->
+  <div class="tf-page-header">
+    <div class="tf-breadcrumb">
+      <a href="{{ url_for('views.driver_dashboard') }}">Driver Operations</a>
+      <span class="separator">/</span>
+      <span>Dashboard</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h1 class="page-title" id="driverGreeting">Good evening, Rajesh</h1>
+        <p class="page-subtitle">Real-time trip progression, occupancy monitoring, and emergency escalation.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('views.driver_emergency') }}" class="btn btn-tf-danger btn-sm rounded-pill">
+          <i class="bi bi-exclamation-octagon-fill"></i> <span data-i18n="report_emergency">Report Emergency</span>
+        </a>
+        <a href="{{ url_for('views.driver_start_trip') }}" class="btn btn-tf-primary btn-sm rounded-pill">
+          <i class="bi bi-play-circle-fill"></i> <span data-i18n="start_trip">Start Trip</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div id="driverLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="text-muted small mt-2">Loading driver profile and active trip...</div>
+  </div>
+
+  <div id="driverContent" class="d-none">
+    
+    <!-- Top Driver Profile Banner (Section 22) -->
+    <div class="tf-card mb-4 p-4 shadow-sm">
+      <div class="row align-items-center">
+        <div class="col-md-7">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center fs-3 shadow-sm" style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--tf-text), #334155);">
+              <i class="bi bi-steering-wheel"></i>
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h3 class="fw-bold mb-0 text-dark" id="drvName">Rajesh Patil</h3>
+                <span class="badge bg-light text-secondary border fw-bold" id="drvCode">D104</span>
+                <span id="drvStatusBadge"></span>
+              </div>
+              <div class="text-secondary small mt-1">
+                <i class="bi bi-bus-front text-primary me-1"></i> Assigned Vehicle: <strong class="text-dark">Bus <span id="drvBusNum">123</span></strong> &bull; 
+                <i class="bi bi-signpost-split text-muted me-1"></i> Route: <strong id="drvRouteName">Pune Station &rarr; Hadapsar</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-5 mt-3 mt-md-0 text-md-end">
+          <div class="d-inline-flex gap-3 text-start p-3 bg-light rounded-3 border">
+            <div>
+              <small class="text-muted d-block" style="font-size: 0.72rem;">Current Passengers</small>
+              <strong class="fs-4 text-dark" id="drvPaxCount">40 / 40</strong>
+            </div>
+            <div class="border-start ps-3">
+              <small class="text-muted d-block" style="font-size: 0.72rem;">Available Seats</small>
+              <strong class="fs-4 text-success" id="drvSeats">0</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Trip Status Block (Section 22) -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-8">
+        <div class="tf-card p-4 h-100 shadow-sm">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="fw-bold mb-0">Current Trip Execution</h5>
+              <div class="small text-muted" style="font-size: 0.75rem;">GPS telemetry and milestone progression</div>
+            </div>
+            <span class="tf-badge badge-info" id="drvGpsStatus">
+              <i class="bi bi-broadcast-pin text-secondary"></i> GPS Stopped
+            </span>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <div class="p-3 border rounded-3 bg-light">
+                <span class="text-muted small d-block" style="font-size: 0.75rem;">Current Stop Location</span>
+                <div class="fs-4 fw-bold text-primary" id="drvCurStop">Magarpatta</div>
+                <small class="text-muted">Detected at last stop update</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 border rounded-3 bg-light">
+                <span class="text-muted small d-block" style="font-size: 0.75rem;">Next Stop Along Route</span>
+                <div class="fs-4 fw-bold text-dark" id="drvNextStop">Hadapsar (Terminus)</div>
+                <small class="text-muted">Estimated arrival in ~8 minutes</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons (Section 22) -->
+          <div class="d-flex gap-2 flex-wrap mb-3">
+            <a href="{{ url_for('views.driver_live_trip') }}" class="btn btn-tf-primary btn-sm rounded-pill px-3">
+              <i class="bi bi-geo-alt"></i> Update Stop &amp; Live Trip
+            </a>
+            <a href="{{ url_for('views.driver_emergency') }}" class="btn btn-tf-danger btn-sm rounded-pill px-3">
+              <i class="bi bi-exclamation-octagon-fill"></i> Report Emergency
+            </a>
+            <button class="btn btn-tf-secondary btn-sm rounded-pill px-3" onclick="endTripConfirm()">
+              <i class="bi bi-stop-circle"></i> End Trip
+            </button>
+          </div>
+
+          <!-- GPS Tracking Controls -->
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button id="gpsStartBtn" class="btn btn-success btn-sm rounded-pill px-3" onclick="startGpsTracking()">
+              <i class="bi bi-broadcast"></i> Start GPS Tracking
+            </button>
+            <button id="gpsStopBtn" class="btn btn-secondary btn-sm rounded-pill px-3 d-none" onclick="stopGpsTracking()">
+              <i class="bi bi-broadcast-pin"></i> Stop GPS Tracking
+            </button>
+            <small class="text-muted" id="gpsLastSentAt"></small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stop Advance Widget -->
+      <div class="col-lg-4">
+        <div class="tf-card p-4 h-100 shadow-sm">
+          <h5 class="fw-bold mb-1">Quick Stop Advance</h5>
+          <p class="text-muted small mb-3">Advance stop manually if GPS signal is degraded:</p>
+
+          <div class="mb-3">
+            <label class="tf-form-label">Next Stop Selection</label>
+            <select id="quickStopSelect" class="tf-select mb-3">
+              <!-- Populated via JS -->
+            </select>
+            <label class="tf-form-label">Passenger Onboard Count</label>
+            <input type="number" id="quickPaxInput" class="tf-input mb-3" min="0" max="50" value="40">
+            <button class="btn btn-tf-primary btn-sm w-100 justify-content-center" onclick="submitQuickStop()">
+              <i class="bi bi-check-circle"></i> Confirm Stop Update
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentTripId = null;
+
+  // ---- GPS Tracking State ----
+  let gpsWatchId = null;
+  let lastGpsSentAt = 0;       // epoch ms of last successful POST
+  const GPS_THROTTLE_MS = 15000; // minimum 15 s between transmissions
+
+  // ---- GPS Status Badge Helper ----
+  const GPS_BADGE = {
+    active:      '<i class="bi bi-broadcast text-success"></i> GPS Active',
+    stopped:     '<i class="bi bi-broadcast-pin text-secondary"></i> GPS Stopped',
+    permission:  '<i class="bi bi-geo-alt-fill text-warning"></i> GPS Permission Required',
+    unavailable: '<i class="bi bi-wifi-off text-danger"></i> GPS Unavailable',
+    error:       '<i class="bi bi-exclamation-triangle-fill text-danger"></i> GPS Error',
+  };
+
+  function setGpsStatusBadge(state) {
+    const el = document.getElementById('drvGpsStatus');
+    if (!el) return;
+    el.innerHTML = GPS_BADGE[state] || GPS_BADGE.stopped;
+    el.className = 'tf-badge ' + (
+      state === 'active'      ? 'badge-ontime'  :
+      state === 'stopped'     ? 'badge-info'    :
+      state === 'permission'  ? 'badge-warning' :
+      'badge-critical'
+    );
+  }
+
+  function renderGpsButtons(tracking) {
+    const startBtn = document.getElementById('gpsStartBtn');
+    const stopBtn  = document.getElementById('gpsStopBtn');
+    if (!startBtn || !stopBtn) return;
+    if (tracking) {
+      startBtn.classList.add('d-none');
+      stopBtn.classList.remove('d-none');
+    } else {
+      startBtn.classList.remove('d-none');
+      stopBtn.classList.add('d-none');
+    }
+  }
+
+  // ---- GPS watchPosition callbacks ----
+  function onGpsPosition(pos) {
+    const now = Date.now();
+    if (now - lastGpsSentAt < GPS_THROTTLE_MS) return; // throttle
+
+    const lat   = pos.coords.latitude;
+    const lon   = pos.coords.longitude;
+    const speed = pos.coords.speed != null ? pos.coords.speed * 3.6 : 0.0; // m/s to km/h
+    const ts    = new Date(pos.timestamp).toISOString();
+
+    setGpsStatusBadge('active');
+
+    // POST to backend – NO trip_id / bus_id / driver_id from frontend
+    API.post('/api/driver/gps', { latitude: lat, longitude: lon, speed: speed, timestamp: ts })
+      .then(() => {
+        lastGpsSentAt = now;
+        const el = document.getElementById('gpsLastSentAt');
+        if (el) el.textContent = 'Last sent: ' + new Date().toLocaleTimeString();
+      })
+      .catch(err => {
+        const msg = (err && err.message) ? err.message : 'Network error';
+        if (msg.includes('NO_ACTIVE_TRIP')) {
+          TransitUI.showToast('No active trip. Start a trip before sharing GPS.', 'warning');
+          stopGpsTracking();
+        } else {
+          TransitUI.showToast('GPS transmission failed: ' + msg, 'danger');
+        }
+      });
+  }
+
+  function onGpsError(err) {
+    if (err.code === err.PERMISSION_DENIED) {
+      setGpsStatusBadge('permission');
+      TransitUI.showToast('Location permission is required to share your live bus location.', 'warning');
+    } else if (err.code === err.POSITION_UNAVAILABLE) {
+      setGpsStatusBadge('unavailable');
+      TransitUI.showToast('GPS signal unavailable. Please check your device location settings.', 'warning');
+    } else if (err.code === err.TIMEOUT) {
+      setGpsStatusBadge('unavailable');
+      TransitUI.showToast('GPS signal timed out. Retrying automatically.', 'warning');
+    } else {
+      setGpsStatusBadge('error');
+      TransitUI.showToast('GPS error: ' + (err.message || 'Unknown error'), 'danger');
+    }
+  }
+
+  function startGpsTracking() {
+    if (!navigator.geolocation) {
+      setGpsStatusBadge('unavailable');
+      TransitUI.showToast('This browser does not support Geolocation.', 'danger');
+      return;
+    }
+    if (gpsWatchId !== null) return; // already tracking
+
+    gpsWatchId = navigator.geolocation.watchPosition(
+      onGpsPosition,
+      onGpsError,
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+    setGpsStatusBadge('active');
+    renderGpsButtons(true);
+    TransitUI.showToast('GPS tracking started. Sharing location every ~15 seconds.', 'success');
+  }
+
+  function stopGpsTracking() {
+    if (gpsWatchId !== null) {
+      navigator.geolocation.clearWatch(gpsWatchId);
+      gpsWatchId = null;
+    }
+    setGpsStatusBadge('stopped');
+    renderGpsButtons(false);
+    const el = document.getElementById('gpsLastSentAt');
+    if (el) el.textContent = '';
+    TransitUI.showToast('GPS tracking stopped. No further location updates will be sent.', 'info');
+  }
+
+  // ---- Dashboard load ----
+  function updateGreeting() {
+    const hours = new Date().getHours();
+    const g = hours < 12 ? 'Good morning' : (hours < 17 ? 'Good afternoon' : 'Good evening');
+    const name = document.getElementById('drvName') ? document.getElementById('drvName').textContent : 'Rajesh';
+    const el = document.getElementById('driverGreeting');
+    if (el) el.textContent = g + ', ' + name.split(' ')[0];
+  }
+
+  async function loadDriverDashboard() {
+    try {
+      const data = await API.get('/api/driver/dashboard');
+      document.getElementById('driverLoading').classList.add('d-none');
+      document.getElementById('driverContent').classList.remove('d-none');
+
+      const driver = data.driver;
+      const bus = data.assigned_bus || {};
+      const route = data.assigned_route || {};
+      const trip = data.trip || {};
+
+      document.getElementById('drvName').textContent = driver.full_name;
+      document.getElementById('drvCode').textContent = driver.driver_code;
+      document.getElementById('drvStatusBadge').innerHTML = TransitUI.getStatusBadge(trip.status || driver.status);
+
+      document.getElementById('drvBusNum').textContent = bus.bus_number || '123';
+      document.getElementById('drvRouteName').textContent = route.name || 'Pune Station to Hadapsar';
+
+      const pax = trip.passenger_count !== undefined ? trip.passenger_count : 40;
+      const cap = bus.capacity || 40;
+      document.getElementById('drvPaxCount').textContent = pax + ' / ' + cap;
+      document.getElementById('drvSeats').textContent = Math.max(0, cap - pax);
+
+      document.getElementById('drvCurStop').textContent = trip.current_stop_name || 'Magarpatta';
+      document.getElementById('drvNextStop').textContent = trip.next_stop_name || 'Hadapsar';
+      currentTripId = trip.id;
+
+      updateGreeting();
+
+      // Populate stops in quick-stop select
+      const select = document.getElementById('quickStopSelect');
+      if (data.route_stops && select.options.length === 0) {
+        select.innerHTML = data.route_stops.map(function(s) {
+          return '<option value="' + s.id + '"' + (s.id === trip.current_stop_id ? ' selected' : '') + '>' + s.name + '</option>';
+        }).join('');
+      }
+
+    } catch (err) {
+      console.error(err);
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  async function submitQuickStop() {
+    const stopId = document.getElementById('quickStopSelect').value;
+    const pax = document.getElementById('quickPaxInput').value;
+    if (!currentTripId) {
+      TransitUI.showToast('No active trip found.', 'warning');
+      return;
+    }
+    try {
+      await API.post('/api/driver/trip/stop-update', {
+        trip_id: currentTripId,
+        stop_id: stopId,
+        passenger_count: parseInt(pax)
+      });
+      TransitUI.showToast('Stop updated successfully!', 'success');
+      loadDriverDashboard();
+    } catch (err) {
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  async function endTripConfirm() {
+    if (!confirm('Are you sure you want to end this trip?')) return;
+    if (gpsWatchId !== null) stopGpsTracking(); // Stop GPS when trip ends
+    try {
+      await API.post('/api/driver/trip/end', { trip_id: currentTripId });
+      TransitUI.showToast('Trip ended successfully.', 'success');
+      loadDriverDashboard();
+    } catch (err) {
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadDriverDashboard();
+    TransitUI.startPolling(loadDriverDashboard, 20000);
+  });
+</script>
+{% endblock %}

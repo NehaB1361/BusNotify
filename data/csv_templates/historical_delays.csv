@@ -1,0 +1,4 @@
+route_number,stop_code,weekday,hour_of_day,delay_minutes,delay_reason,sample_date
+101,STP-MAG,0,17,14.0,TRAFFIC,2026-09-01
+101,STP-MAG,1,17,13.5,TYRE_PUNCTURE,2026-09-02
+101,STP-MAG,2,17,15.0,TRAFFIC,2026-09-03

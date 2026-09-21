@@ -1,0 +1,14 @@
+route_number,name,source,destination,total_distance_km,estimated_duration_min
+PUNE_MUM,Pune to Mumbai Shivneri AC Express,Pune Station,Dadar Mumbai,150.0,210
+PUNE_NASHIK,Pune to Nashik Semi-Luxury,Shivajinagar,Nashik CBS,210.0,270
+MUM_NAGPUR,Mumbai to Nagpur Superfast Express,Mumbai Central,Nagpur Mor Bhavan,820.0,780
+PUNE_SOLAPUR,Pune to Solapur Express,Swargate,Solapur Bus Stand,250.0,300
+MUM_AHMEDABAD,Mumbai to Ahmedabad Intercity,Borivali Mumbai,Geeta Mandir Ahmedabad,530.0,540
+PUNE_BANGALORE,Pune to Bangalore Deluxe Sleeper,Katraj Pune,Majestic Bangalore,840.0,810
+101,Pune Station to Hadapsar,Pune Station,Hadapsar,12.5,45
+102,Swargate to Katraj,Swargate,Katraj,8.0,30
+103,Kothrud to Viman Nagar,Kothrud,Viman Nagar,16.0,55
+104,Hinjewadi to Pune Station,Hinjewadi Phase 1,Pune Station,21.0,65
+105,Deccan to Pimpri,Deccan Gymkhana,Pimpri,18.0,50
+106,Swargate to Hadapsar,Swargate,Hadapsar,10.5,40
+107,Hadapsar to Kharadi,Hadapsar,Kharadi,9.0,35

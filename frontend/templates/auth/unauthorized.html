@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied - BusNotify{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center text-center py-5">
+  <div class="col-12 col-md-6">
+    <div class="tf-card p-5">
+      <div class="text-danger mb-3" style="font-size: 3.5rem;">
+        <i class="bi bi-shield-x"></i>
+      </div>
+      <h3 class="fw-bold mb-2">Access Denied</h3>
+      <p class="text-muted mb-4">You do not have the required permissions to access this screen. Please switch roles or return to your dashboard.</p>
+      <div class="d-flex justify-content-center gap-3">
+        <a href="{{ url_for('views.index') }}" class="btn btn-tf-primary">
+          <i class="bi bi-house"></i> Go to Dashboard
+        </a>
+        <a href="{{ url_for('views.login_page') }}" class="btn btn-tf-secondary">
+          <i class="bi bi-box-arrow-in-right"></i> Login as Different Role
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

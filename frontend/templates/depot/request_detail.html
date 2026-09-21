@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block title %}Dispatch Workflow – Depot Request {{ request_id }} – BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Breadcrumb & Header -->
+  <div class="tf-page-header">
+    <div class="tf-breadcrumb">
+      <a href="{{ url_for('views.depot_dashboard') }}">Depot Control</a>
+      <span class="separator">/</span>
+      <span>Dispatch Workflow (<span id="reqCodeBread">DR001</span>)</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h1 class="page-title">Dispatch Workflow Console</h1>
+        <p class="page-subtitle">Multi-stage state machine for replacement bus assignment, telemetry tracking, and passenger transfer.</p>
+      </div>
+      <a href="{{ url_for('views.depot_dashboard') }}" class="btn btn-tf-secondary btn-sm rounded-pill">
+        <i class="bi bi-arrow-left"></i> Back to Queue
+      </a>
+    </div>
+  </div>
+
+  <div id="detailLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="text-muted small mt-2">Loading depot request details...</div>
+  </div>
+
+  <div id="detailContent" class="d-none">
+    
+    <!-- Top Header -->
+    <div class="tf-card mb-4 p-4 shadow-sm">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+            <span class="badge bg-primary fs-6 fw-bold px-3 py-1" id="reqCodeDisplay">DR001</span>
+            <span id="statusBadgeDisplay"></span>
+            <span class="badge bg-danger" id="priorityBadgeDisplay">HIGH PRIORITY</span>
+          </div>
+          <h2 class="fw-bold text-dark mb-1">Emergency Incident on Bus <span id="failedBusNum">123</span></h2>
+          <div class="text-secondary small mt-1">
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i> Location: <strong id="incidentLocation">Magarpatta</strong> &bull; 
+            <i class="bi bi-wrench-adjustable text-warning me-1"></i> Incident Type: <strong class="text-danger" id="incidentTypeDisplay">Tyre Puncture</strong> &bull; 
+            <i class="bi bi-people-fill text-primary me-1"></i> Affected Passengers: <strong id="affectedPaxDisplay">40</strong>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <span class="tf-freshness fresh"><span class="tf-freshness-dot"></span> State Machine Synced</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6-Stage Interactive State Machine Console (Section 21) -->
+    <div class="tf-card mb-4 p-4 shadow-sm">
+      <h5 class="fw-bold mb-1">6-Stage Dispatch State Machine</h5>
+      <p class="text-muted small mb-4">Advance the workflow systematically with full database audit tracking:</p>
+
+      <!-- Stepper Visualizer -->
+      <div class="row text-center mb-4 g-2" id="detailStepper">
+        <div class="col" id="stepper-PENDING">
+          <div class="p-2 border rounded-3 bg-light step-box">
+            <div class="fw-bold small">1. PENDING</div>
+            <small class="text-muted" style="font-size: 0.72rem;">Incident Logged</small>
+          </div>
+        </div>
+        <div class="col" id="stepper-ASSIGNED">
+          <div class="p-2 border rounded-3 bg-light step-box">
+            <div class="fw-bold small">2. ASSIGNED</div>
+            <small class="text-muted" style="font-size: 0.72rem;">Bus & Driver</small>
+          </div>
+        </div>
+        <div class="col" id="stepper-DISPATCHED">
+          <div class="p-2 border rounded-3 bg-light step-box">
+            <div class="fw-bold small">3. DISPATCHED</div>
+            <small class="text-muted" style="font-size: 0.72rem;">En Route</small>
+          </div>
+        </div>
+        <div class="col" id="stepper-ARRIVED">
+          <div class="p-2 border rounded-3 bg-light step-box">
+            <div class="fw-bold small">4. ARRIVED</div>
+            <small class="text-muted" style="font-size: 0.72rem;">On Site</small>
+          </div>
+        </div>
+        <div class="col" id="stepper-PASSENGER_TRANSFER">
+          <div class="p-2 border rounded-3 bg-light step-box">
+            <div class="fw-bold small">5. TRANSFER</div>
+            <small class="text-muted" style="font-size: 0.72rem;">Boarding Pax</small>
+          </div>
+        </div>
+        <div class="col" id="stepper-RESOLVED">
+          <div class="p-2 border rounded-3 bg-light step-box">
+            <div class="fw-bold small">6. RESOLVED</div>
+            <small class="text-muted" style="font-size: 0.72rem;">Restored</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Panel Based on Current Status -->
+      <div class="p-4 bg-light rounded-4 border" id="actionPanel">
+        
+        <!-- Stage 1: PENDING -> ASSIGNED -->
+        <div id="panel-PENDING" class="workflow-panel d-none">
+          <h6 class="fw-bold text-dark mb-2"><i class="bi bi-person-plus me-1 text-primary"></i> Stage 2 Action: Assign Replacement Fleet</h6>
+          <p class="text-muted small mb-3">Select available bus from depot and assign ready driver:</p>
+          <div class="row g-3">
+            <div class="col-md-5">
+              <label class="tf-form-label">Replacement Bus</label>
+              <select id="stageBusSelect" class="tf-select"></select>
+            </div>
+            <div class="col-md-5">
+              <label class="tf-form-label">Standby Driver</label>
+              <select id="stageDriverSelect" class="tf-select"></select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button class="btn btn-tf-primary btn-sm w-100 py-2 justify-content-center" onclick="stepAssign()">
+                <i class="bi bi-check2"></i> Assign
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 2: ASSIGNED -> DISPATCHED -->
+        <div id="panel-ASSIGNED" class="workflow-panel d-none">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+              <h6 class="fw-bold text-dark mb-1"><i class="bi bi-truck me-1 text-primary"></i> Stage 3 Action: Dispatch Replacement Bus</h6>
+              <p class="text-muted small mb-0">Bus <strong id="assignedBusLabel">189</strong> and Driver <strong id="assignedDriverLabel">Rajesh Patil</strong> are prepped. Dispatch unit to pickup location.</p>
+            </div>
+            <button class="btn btn-tf-primary px-4 py-2 fw-bold rounded-pill justify-content-center" onclick="stepDispatch()">
+              <i class="bi bi-send-fill me-1"></i> Dispatch Bus Now
+            </button>
+          </div>
+        </div>
+
+        <!-- Stage 3: DISPATCHED -> ARRIVED -->
+        <div id="panel-DISPATCHED" class="workflow-panel d-none">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+              <h6 class="fw-bold text-dark mb-1"><i class="bi bi-geo-alt me-1 text-success"></i> Stage 4 Action: Confirm On-Site Arrival</h6>
+              <p class="text-muted small mb-0">Driver has reached Magarpatta incident site. Confirm arrival to allow passenger boarding.</p>
+            </div>
+            <button class="btn btn-success px-4 py-2 fw-bold rounded-pill text-white justify-content-center" onclick="stepArrive()">
+              <i class="bi bi-geo-fill me-1"></i> Confirm Bus Arrival
+            </button>
+          </div>
+        </div>
+
+        <!-- Stage 4: ARRIVED -> PASSENGER_TRANSFER -->
+        <div id="panel-ARRIVED" class="workflow-panel d-none">
+          <h6 class="fw-bold text-dark mb-2"><i class="bi bi-people me-1 text-primary"></i> Stage 5 Action: Record Passenger Transfer</h6>
+          <p class="text-muted small mb-3">Record headcount transferred from failed bus into Replacement Bus:</p>
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label class="tf-form-label">Transferred Count (0 to 40)</label>
+              <input type="number" id="transferInput" class="tf-input" value="40" min="0" max="50">
+            </div>
+            <div class="col-md-4">
+              <small class="text-muted d-block mb-1">Replacement Vehicle Capacity</small>
+              <strong class="fs-6 text-dark">40 Seats</strong>
+            </div>
+            <div class="col-md-4">
+              <button class="btn btn-tf-primary btn-sm w-100 py-2 justify-content-center" onclick="stepTransfer()">
+                <i class="bi bi-people-fill"></i> Record Transfer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 5: PASSENGER_TRANSFER -> RESOLVED -->
+        <div id="panel-PASSENGER_TRANSFER" class="workflow-panel d-none">
+          <h6 class="fw-bold text-dark mb-2"><i class="bi bi-check2-all me-1 text-success"></i> Stage 6 Action: Resolve Request & Restore Service</h6>
+          <p class="text-muted small mb-3">All passengers have boarded. Enter final resolution notes and confirm service restoration:</p>
+          <div class="mb-3">
+            <textarea id="resNotesInput" class="tf-input" rows="2">All 40 passengers transferred to Bus 189 successfully. Normal route operations restored.</textarea>
+          </div>
+          <button class="btn btn-success px-4 py-2 fw-bold rounded-pill text-white" onclick="stepResolve()">
+            <i class="bi bi-check-circle-fill me-1"></i> Finalize & Mark RESOLVED
+          </button>
+        </div>
+
+        <!-- Stage 6: RESOLVED -->
+        <div id="panel-RESOLVED" class="workflow-panel d-none">
+          <div class="text-center py-2">
+            <i class="bi bi-check-circle-fill text-success fs-2 mb-1"></i>
+            <h5 class="fw-bold text-dark mb-1">Depot Request Resolved & Closed</h5>
+            <p class="text-muted small mb-0">All passengers safely transferred and journey resumed. Incident officially resolved.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Request Details & Transferred Numbers -->
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="tf-card h-100 p-4">
+          <h5 class="fw-bold mb-3">Fleet Allocation Summary</h5>
+          <table class="table table-sm table-borderless small mb-0" style="font-size: 0.85rem;">
+            <tbody>
+              <tr><td class="text-muted py-2">Failed Bus:</td><td class="fw-bold py-2" id="tblFailedBus">Bus 123</td></tr>
+              <tr><td class="text-muted py-2">Replacement Bus:</td><td class="fw-bold py-2" id="tblRepBus">Bus 189</td></tr>
+              <tr><td class="text-muted py-2">Assigned Driver:</td><td class="fw-bold py-2" id="tblRepDriver">Rajesh Patil (D104)</td></tr>
+              <tr><td class="text-muted py-2">Pickup Location:</td><td class="fw-bold py-2" id="tblLocation">Magarpatta</td></tr>
+              <tr><td class="text-muted py-2">Created Timestamp:</td><td class="fw-bold py-2" id="tblCreated">---</td></tr>
+              <tr><td class="text-muted py-2">Resolution Timestamp:</td><td class="fw-bold py-2" id="tblResolved">---</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="tf-card h-100 p-4">
+          <h5 class="fw-bold mb-3">Passenger Transfer Audit</h5>
+          <div class="p-3 bg-light rounded-3 mb-3 border" style="font-size: 0.85rem;">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Affected Passengers:</span>
+              <strong id="auditAffected">40</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Transferred:</span>
+              <strong class="text-success" id="auditTransferred">0</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Remaining:</span>
+              <strong class="text-primary" id="auditRemaining">40</strong>
+            </div>
+          </div>
+
+          <div class="alert alert-success py-2 small mb-0 d-none" id="allTransferredNotice">
+            <i class="bi bi-check-circle-fill me-1"></i> <strong>40 / 40</strong> &bull; All passengers transferred successfully.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const reqId = "{{ request_id }}";
+  let requestObj = null;
+
+  async function loadRequestDetail() {
+    try {
+      const data = await API.get(`/api/depot/requests/${reqId}`);
+      document.getElementById('detailLoading').classList.add('d-none');
+      document.getElementById('detailContent').classList.remove('d-none');
+
+      requestObj = data;
+      document.getElementById('reqCodeBread').textContent = data.request_code;
+      document.getElementById('reqCodeDisplay').textContent = data.request_code;
+      document.getElementById('statusBadgeDisplay').innerHTML = TransitUI.getStatusBadge(data.status);
+      document.getElementById('priorityBadgeDisplay').textContent = `${data.priority} PRIORITY`;
+      document.getElementById('failedBusNum').textContent = data.failed_bus_number || '123';
+      document.getElementById('incidentLocation').textContent = data.stop_name || 'Magarpatta';
+      document.getElementById('incidentTypeDisplay').textContent = data.incident_type || 'Tyre Puncture';
+      document.getElementById('affectedPaxDisplay').textContent = data.affected_passengers;
+
+      document.getElementById('tblFailedBus').textContent = `Bus ${data.failed_bus_number || '123'}`;
+      document.getElementById('tblRepBus').textContent = data.replacement_bus_number ? `Bus ${data.replacement_bus_number}` : 'Pending';
+      document.getElementById('tblRepDriver').textContent = data.replacement_driver_name ? `${data.replacement_driver_name} (${data.replacement_driver_code})` : 'Pending';
+      document.getElementById('tblLocation').textContent = data.stop_name || 'Magarpatta';
+      document.getElementById('tblCreated').textContent = data.created_at || 'Just now';
+      document.getElementById('tblResolved').textContent = data.resolved_at || 'In Progress';
+
+      document.getElementById('auditAffected').textContent = data.affected_passengers;
+      document.getElementById('auditTransferred').textContent = data.transferred_passengers;
+      document.getElementById('auditRemaining').textContent = data.remaining_passengers;
+
+      if (data.transferred_passengers >= data.affected_passengers && data.affected_passengers > 0) {
+        document.getElementById('allTransferredNotice').classList.remove('d-none');
+      }
+
+      // Update Stepper & Panels
+      updateWorkflowUI(data.status);
+
+      // Populate stage 1 options if pending
+      if (data.status === 'PENDING') {
+        loadFleetResources();
+      }
+
+    } catch (err) {
+      console.error(err);
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  function updateWorkflowUI(status) {
+    const steps = ['PENDING', 'ASSIGNED', 'DISPATCHED', 'ARRIVED', 'PASSENGER_TRANSFER', 'RESOLVED'];
+    const currentIdx = steps.indexOf(status);
+
+    steps.forEach((s, idx) => {
+      const box = document.getElementById(`stepper-${s}`)?.querySelector('.step-box');
+      if (!box) return;
+
+      if (idx < currentIdx) {
+        box.className = 'p-2 border rounded-3 bg-success text-white step-box';
+      } else if (idx === currentIdx) {
+        box.className = 'p-2 border rounded-3 bg-primary text-white shadow-sm step-box';
+      } else {
+        box.className = 'p-2 border rounded-3 bg-light text-muted step-box';
+      }
+    });
+
+    // Hide all action panels, show active one
+    document.querySelectorAll('.workflow-panel').forEach(p => p.classList.add('d-none'));
+    const activePanel = document.getElementById(`panel-${status}`);
+    if (activePanel) activePanel.classList.remove('d-none');
+
+    if (status === 'ASSIGNED') {
+      document.getElementById('assignedBusLabel').textContent = requestObj.replacement_bus_number || '189';
+      document.getElementById('assignedDriverLabel').textContent = requestObj.replacement_driver_name || 'Rajesh Patil';
+    }
+  }
+
+  async function loadFleetResources() {
+    try {
+      const depotData = await API.get('/api/depot/dashboard');
+      const bSel = document.getElementById('stageBusSelect');
+      const dSel = document.getElementById('stageDriverSelect');
+
+      bSel.innerHTML = (depotData.available_buses || []).map(b => `
+        <option value="${b.id}" ${b.bus_number === '189' ? 'selected' : ''}>Bus ${b.bus_number} (Cap: ${b.capacity})</option>
+      `).join('');
+
+      dSel.innerHTML = (depotData.available_drivers || []).map(d => `
+        <option value="${d.id}" ${d.driver_code === 'D104' ? 'selected' : ''}>${d.full_name} (${d.driver_code})</option>
+      `).join('');
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // 1. Assign
+  async function stepAssign() {
+    const busId = document.getElementById('stageBusSelect').value;
+    const driverId = document.getElementById('stageDriverSelect').value;
+    try {
+      await API.post('/api/depot/assign', {
+        request_id: reqId,
+        bus_id: parseInt(busId),
+        driver_id: parseInt(driverId),
+        eta_minutes: 12
+      });
+      TransitUI.showToast('Bus & Driver Assigned!', 'success');
+      loadRequestDetail();
+    } catch (err) {
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  // 2. Dispatch
+  async function stepDispatch() {
+    try {
+      await API.post('/api/depot/dispatch', { request_id: reqId });
+      TransitUI.showToast('Bus Dispatched!', 'success');
+      loadRequestDetail();
+    } catch (err) {
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  // 3. Arrive
+  async function stepArrive() {
+    try {
+      await API.post('/api/depot/arrive', { request_id: reqId });
+      TransitUI.showToast('Bus Arrival Confirmed!', 'success');
+      loadRequestDetail();
+    } catch (err) {
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  // 4. Transfer
+  async function stepTransfer() {
+    const count = document.getElementById('transferInput').value;
+    try {
+      await API.post('/api/depot/transfer', {
+        request_id: reqId,
+        transferred_count: parseInt(count)
+      });
+      TransitUI.showToast('Passenger Transfer Recorded!', 'success');
+      loadRequestDetail();
+    } catch (err) {
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  // 5. Resolve
+  async function stepResolve() {
+    const notes = document.getElementById('resNotesInput').value;
+    try {
+      await API.post('/api/depot/resolve', {
+        request_id: reqId,
+        resolution_notes: notes
+      });
+      TransitUI.showToast('Depot Request Marked RESOLVED. Service Restored!', 'success');
+      loadRequestDetail();
+    } catch (err) {
+      TransitUI.showToast(err.message, 'danger');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadRequestDetail();
+    TransitUI.startPolling(loadRequestDetail, 10000);
+  });
+</script>
+{% endblock %}
