@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Depot History – BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Header & Breadcrumb -->
+  <div class="tf-page-header">
+    <div class="tf-breadcrumb">
+      <a href="{{ url_for('views.depot_dashboard') }}">Depot Control</a>
+      <span class="separator">/</span>
+      <span>History</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h1 class="page-title" data-i18n="history">Depot Dispatch History</h1>
+        <p class="page-subtitle">Historical archive of emergency fleet requests, relief vehicle assignments, and passenger resolutions.</p>
+      </div>
+      <button class="btn btn-tf-secondary btn-sm rounded-pill" onclick="loadHistory()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh Records
+      </button>
+    </div>
+  </div>
+
+  <div class="tf-card p-4 shadow-sm">
+    <div class="tf-table-wrapper border-0">
+      <table class="tf-table">
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Failed Bus</th>
+            <th>Replacement Bus</th>
+            <th>Assigned Driver</th>
+            <th>Passenger Transfer</th>
+            <th>Status</th>
+            <th>Resolution Notes</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody id="historyTableBody">
+          <tr>
+            <td colspan="8" class="text-center py-4 text-muted">
+              <div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading historical depot requests...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  async function loadHistory() {
+    const tbody = document.getElementById('historyTableBody');
+    tbody.innerHTML = TransitUI.renderLoadingRow(8, 'Loading historical depot requests...');
+    try {
+      const requests = await API.get('/api/depot/requests');
+      if (!requests || requests.length === 0) {
+        tbody.innerHTML = TransitUI.renderEmptyRow(8, 'No historical depot requests found.', 'bi-clock-history');
+        return;
+      }
+      tbody.innerHTML = requests.map(r => `
+        <tr>
+          <td><a href="/depot/request/${r.id}" class="fw-bold text-decoration-none">${r.request_code}</a></td>
+          <td><span class="badge bg-light text-dark border">Bus ${r.failed_bus_number || '---'}</span></td>
+          <td><span class="badge bg-light text-primary border">${r.replacement_bus_number ? 'Bus ' + r.replacement_bus_number : 'None'}</span></td>
+          <td>${r.replacement_driver_name || '<span class="text-muted">Unassigned</span>'}</td>
+          <td><strong class="text-success">${r.transferred_passengers}</strong> / ${r.affected_passengers} pax</td>
+          <td>${TransitUI.getStatusBadge(r.status)}</td>
+          <td class="text-muted small">${r.resolution_notes || '<span class="text-secondary">In progress</span>'}</td>
+          <td class="text-end">
+            <a href="/depot/request/${r.id}" class="btn btn-sm btn-tf-secondary rounded-pill">
+              View
+            </a>
+          </td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = TransitUI.renderErrorRow(8, 'Failed to load depot history. Please retry.');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadHistory();
+  });
+</script>
+{% endblock %}

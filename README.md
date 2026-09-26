@@ -93,64 +93,38 @@ Visit: **http://localhost:5000**
 ```
 BusNotify/
 ├── app/
-│   ├── __init__.py          # create_app() factory
-│   ├── config.py            # Environment-based config
-│   ├── extensions.py        # db, migrate, cors, bcrypt, jwt
-│   ├── models/              # SQLAlchemy models
-│   │   ├── user.py          # User + roles
-│   │   ├── transit.py       # Stop, Route, RouteStop
-│   │   ├── bus.py           # Bus, BusCapacity, GPSRecord
-│   │   ├── trip.py          # Trip, PassengerCount
-│   │   ├── incident.py      # Incident
-│   │   ├── depot.py         # DepotRequest (6-stage state machine)
-│   │   ├── delay.py         # HistoricalDelay
-│   │   ├── notification.py  # Notification
-│   │   └── audit.py         # AuditLog
-│   ├── routes/              # Flask Blueprints (REST API)
-│   │   ├── auth_routes.py   # Login, register, logout
-│   │   ├── passenger_routes.py
-│   │   ├── driver_routes.py
-│   │   ├── depot_routes.py
-│   │   ├── admin_routes.py
-│   │   └── view_routes.py   # HTML page routes
-│   ├── services/            # Business logic layer
-│   │   ├── stats_service.py     # Historical Statistical Estimate engine
-│   │   ├── alternative_service.py # Alternative bus ranking
-│   │   ├── notification_service.py
-│   │   └── csv_service.py       # Bulk import/export
-│   └── dsa/                 # Data Structures & Algorithms
-│       ├── graph.py         # Transit graph + Dijkstra + Haversine
-│       ├── priority_queue.py # Emergency min-heap
-│       ├── greedy.py        # Passenger redistribution
-│       └── hash_map.py      # Stop lookup O(1)
-├── frontend/
-│   ├── templates/           # Jinja2 HTML templates (25 files)
-│   │   ├── base.html        # Master layout
-│   │   ├── auth/            # login, register, 404, 500, unauthorized
-│   │   ├── passenger/       # home, search, bus_detail, emergency, replacement, favourites, profile
-│   │   ├── driver/          # dashboard, start_trip, live_trip, emergency
-│   │   ├── depot/           # dashboard, request_detail, history
-│   │   └── admin/           # dashboard, live_buses, analytics, management, csv_portal
-│   └── static/
-│       ├── css/transit-flow.css  # BusNotify design system
-│       └── js/busnotify.js       # API helper + TransitUI + TransitMap
-├── migrations/              # Flask-Migrate (Alembic) scripts
-├── tests/                   # pytest test suite (23 tests)
+│   ├── __init__.py          # create_app() application factory & error handlers
+│   ├── models.py            # Clean SQLAlchemy MySQL database models
+│   ├── routes.py            # REST API endpoints & page controllers
+│   ├── services.py          # Delay statistics (pure statistics), incident & depot workflow
+│   └── auth.py              # Authentication service, session management & RBAC decorators
+├── templates/               # Jinja2 HTML templates for all portals
+│   ├── auth_base.html       # Centered layout for login/auth
+│   ├── base.html            # Master layout with sidebar
+│   ├── auth/                # login, register, unauthorized, 404, 500
+│   ├── passenger/           # home, search, bus_detail, emergency, replacement, favourites, profile
+│   ├── driver/              # dashboard, start_trip, live_trip, emergency
+│   ├── depot/               # dashboard, request_detail, history
+│   └── admin/               # dashboard, live_buses, analytics, management, csv_portal
+├── static/                  # Static assets
+│   ├── css/                 # transit-flow.css & custom styles
+│   └── js/                  # api.js & transit-ui.js
+├── data/                    # Datasets
+│   └── historical_delays.csv # Historical delay observations for statistics
+├── scripts/                 # Utility scripts
+│   └── seed_data.py         # Database seeder (routes, stops, buses, users)
+├── tests/                   # Pytest test suite (28 passing tests)
 │   ├── test_api_endpoints.py
 │   ├── test_auth.py
 │   ├── test_depot_workflow.py
 │   ├── test_dsa.py
+│   ├── test_master_end_to_end.py
 │   └── test_statistics.py
-├── scripts/
-│   ├── seed_data.py         # Create demo data
-│   └── load_dataset.py      # Load intercity dataset
-├── data/csv_templates/      # Sample CSV files for import
-├── docs/
-│   └── SUBJECT_MAPPING.md   # Academic subject-to-module mapping
-├── .env.example
-├── requirements.txt
-├── pytest.ini
-└── run.py
+├── .env                     # Environment variables & MySQL connection config
+├── requirements.txt         # Python dependencies
+├── config.py                # Configuration classes (Development, Testing, Production)
+├── run.py                   # Application entrypoint
+└── README.md
 ```
 
 ---

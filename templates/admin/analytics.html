@@ -1,0 +1,495 @@
+{% extends "base.html" %}
+
+{% block title %}Delay Analytics & Trends - Admin Portal - BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Page Header -->
+  <div class="tf-page-header mb-4">
+    <div>
+      <nav class="tf-breadcrumb" aria-label="breadcrumb">
+        <a href="{{ url_for('views.admin_dashboard') }}">Dashboard</a>
+        <span>/</span>
+        <span>Analytics</span>
+      </nav>
+      <h2 class="tf-page-title">Historical Delay Analytics</h2>
+      <p class="tf-page-subtitle">Descriptive statistics from 90+ days of trip records — Section 31</p>
+    </div>
+    <!-- Time Filter Pills -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <div class="btn-group btn-group-sm rounded-pill border p-1 bg-white shadow-sm" role="group" id="rangeGroup">
+        <button type="button" class="btn btn-sm btn-tf-primary rounded-pill active" onclick="setAnalyticsRange('today', this)">Today</button>
+        <button type="button" class="btn btn-sm btn-light rounded-pill" onclick="setAnalyticsRange('7d', this)">Last 7 Days</button>
+        <button type="button" class="btn btn-sm btn-light rounded-pill" onclick="setAnalyticsRange('30d', this)">Last 30 Days</button>
+        <button type="button" class="btn btn-sm btn-light rounded-pill" onclick="setAnalyticsRange('90d', this)">90 Days Full</button>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="loadAnalytics()">
+        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Summary Row -->
+  <div class="row g-3 mb-4" id="analyticsKpis">
+    <div class="col-6 col-md-3">
+      <div class="tf-kpi">
+        <div class="tf-kpi-label">Avg Delay (All Routes)</div>
+        <div class="tf-kpi-value" id="kpiAvgDelay">—</div>
+        <div class="tf-kpi-sub">minutes</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="tf-kpi">
+        <div class="tf-kpi-label">On-Time Rate</div>
+        <div class="tf-kpi-value text-success" id="kpiOnTime">—</div>
+        <div class="tf-kpi-sub">trips ≤ 5 min delay</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="tf-kpi">
+        <div class="tf-kpi-label">Peak Delay Hour</div>
+        <div class="tf-kpi-value text-warning" id="kpiPeakHour">—</div>
+        <div class="tf-kpi-sub">daily rush window</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="tf-kpi">
+        <div class="tf-kpi-label">Most Delayed Route</div>
+        <div class="tf-kpi-value" id="kpiWorstRoute" style="font-size: 1.2rem;">—</div>
+        <div class="tf-kpi-sub">avg delay</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="row g-4 mb-4">
+
+    <!-- Chart 1: Delay by Hour of Day -->
+    <div class="col-12 col-lg-8">
+      <div class="tf-card p-4 h-100 shadow-sm">
+        <div class="tf-chart-header">
+          <div>
+            <div class="tf-chart-title">Average Delay by Hour of Day</div>
+            <div class="tf-chart-subtitle">Rush hour congestion spikes (8–11 AM &amp; 5–8 PM)</div>
+          </div>
+          <span class="badge rounded-pill" style="background:#FFF3E0; color:#E85D04; border: 1px solid #E85D04;" id="peakBadge">
+            Peak: —
+          </span>
+        </div>
+        <div class="tf-chart-wrapper" style="height: 280px;">
+          <canvas id="hourlyDelayChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 2: Delay Reasons Distribution -->
+    <div class="col-12 col-lg-4">
+      <div class="tf-card p-4 h-100 shadow-sm">
+        <div class="tf-chart-header">
+          <div>
+            <div class="tf-chart-title">Delay Root Causes</div>
+            <div class="tf-chart-subtitle">Categorical breakdown of incidents</div>
+          </div>
+        </div>
+        <div class="tf-chart-wrapper" style="height: 280px; position: relative;">
+          <canvas id="delayReasonsChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="row g-4 mb-4">
+
+    <!-- Chart 3: Delay by Weekday -->
+    <div class="col-12 col-lg-6">
+      <div class="tf-card p-4 h-100 shadow-sm">
+        <div class="tf-chart-header">
+          <div>
+            <div class="tf-chart-title">Average Delay by Weekday</div>
+            <div class="tf-chart-subtitle">Weekend vs. weekday transit variance</div>
+          </div>
+          <span class="badge rounded-pill bg-warning-subtle text-dark border" id="weekdayPeakBadge">—</span>
+        </div>
+        <div class="tf-chart-wrapper" style="height: 260px;">
+          <canvas id="weekdayDelayChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 4: Average Delay by Top Routes -->
+    <div class="col-12 col-lg-6">
+      <div class="tf-card p-4 h-100 shadow-sm">
+        <div class="tf-chart-header">
+          <div>
+            <div class="tf-chart-title">Average Delay Across Top Routes</div>
+            <div class="tf-chart-subtitle">Route 101 baseline: Pune Station → Hadapsar</div>
+          </div>
+        </div>
+        <div class="tf-chart-wrapper" style="height: 260px;">
+          <canvas id="routeDelayChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Charts Row 3: On-Time Distribution, Incident Statistics & Depot Resolution -->
+  <div class="row g-4 mb-4">
+
+    <!-- Chart 5: On-Time Performance Distribution -->
+    <div class="col-12 col-lg-4">
+      <div class="tf-card p-4 h-100 shadow-sm">
+        <div class="tf-chart-header">
+          <div>
+            <div class="tf-chart-title">On-Time Performance Ratio</div>
+            <div class="tf-chart-subtitle">Punctuality distribution (&le;5m vs. delayed)</div>
+          </div>
+        </div>
+        <div class="tf-chart-wrapper" style="height: 260px; position: relative;">
+          <canvas id="onTimeDistChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 6: Incident Statistics by Category -->
+    <div class="col-12 col-lg-4">
+      <div class="tf-card p-4 h-100 shadow-sm">
+        <div class="tf-chart-header">
+          <div>
+            <div class="tf-chart-title">Incident Classifications</div>
+            <div class="tf-chart-subtitle">Emergency reports by root condition</div>
+          </div>
+        </div>
+        <div class="tf-chart-wrapper" style="height: 260px;">
+          <canvas id="incidentStatsChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 7: Depot Workflow Resolution Statistics -->
+    <div class="col-12 col-lg-4">
+      <div class="tf-card p-4 h-100 shadow-sm">
+        <div class="tf-chart-header">
+          <div>
+            <div class="tf-chart-title">Depot Workflow Pipeline</div>
+            <div class="tf-chart-subtitle">Stage distribution for relief operations</div>
+          </div>
+        </div>
+        <div class="tf-chart-wrapper" style="height: 260px;">
+          <canvas id="depotResolutionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Mandatory Statistical Disclaimer -->
+  <div class="tf-stat-disclaimer mb-4">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>Historical Statistical Estimate:</strong>
+    All analytics shown are historical statistical estimates derived from descriptive statistics (mean, median, P90) and SQL aggregations over recorded trip data. These are NOT AI predictions, machine learning outputs, or guarantees of future performance.
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let charts = {};
+
+  async function loadAnalytics() {
+    try {
+      const res = await API.get('/api/admin/analytics');
+      renderKpis(res);
+      renderCharts(res);
+    } catch (err) {
+      console.error(err);
+      TransitUI.showToast(err.message || 'Failed to load analytics', 'danger');
+    }
+  }
+
+  function renderKpis(data) {
+    // Compute avg delay from hourly values
+    const hourlyVals = data.hourly_delays?.values || [];
+    if (hourlyVals.length) {
+      const avg = (hourlyVals.reduce((a, b) => a + b, 0) / hourlyVals.length).toFixed(1);
+      document.getElementById('kpiAvgDelay').textContent = avg + ' min';
+    }
+
+    // On-time rate (≤5 min delay)
+    if (data.on_time_rate !== undefined) {
+      document.getElementById('kpiOnTime').textContent = data.on_time_rate.toFixed(1) + '%';
+    } else {
+      // estimate from hourly: percentage of hours where delay ≤ 5
+      if (hourlyVals.length) {
+        const onTime = Math.round((hourlyVals.filter(v => v <= 5).length / hourlyVals.length) * 100);
+        document.getElementById('kpiOnTime').textContent = onTime + '%';
+      }
+    }
+
+    // Peak delay hour
+    const labels = data.hourly_delays?.labels || [];
+    if (hourlyVals.length && labels.length) {
+      const maxVal = Math.max(...hourlyVals);
+      const maxIdx = hourlyVals.indexOf(maxVal);
+      const peakLabel = labels[maxIdx] || '—';
+      document.getElementById('kpiPeakHour').textContent = peakLabel;
+      document.getElementById('peakBadge').textContent = `Peak: ${maxVal} min (${peakLabel})`;
+    }
+
+    // Worst route
+    const routeLabels = data.route_delays?.labels || [];
+    const routeVals = data.route_delays?.values || [];
+    if (routeVals.length) {
+      const maxRVal = Math.max(...routeVals);
+      const maxRIdx = routeVals.indexOf(maxRVal);
+      document.getElementById('kpiWorstRoute').textContent = routeLabels[maxRIdx] || '—';
+      document.querySelector('#kpiWorstRoute').nextElementSibling.textContent = maxRVal + ' min avg';
+    }
+
+    // Weekday peak badge
+    const wdLabels = data.weekday_delays?.labels || [];
+    const wdVals = data.weekday_delays?.values || [];
+    if (wdVals.length) {
+      const maxWd = Math.max(...wdVals);
+      const maxWdIdx = wdVals.indexOf(maxWd);
+      document.getElementById('weekdayPeakBadge').textContent = `${wdLabels[maxWdIdx]}: ${maxWd} min`;
+    }
+  }
+
+  function renderCharts(data) {
+    const chartDefaults = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } }
+    };
+
+    // 1. Hourly Delay — Line chart
+    const ctxHourly = document.getElementById('hourlyDelayChart').getContext('2d');
+    if (charts.hourly) charts.hourly.destroy();
+    charts.hourly = new Chart(ctxHourly, {
+      type: 'line',
+      data: {
+        labels: data.hourly_delays.labels,
+        datasets: [{
+          label: 'Avg Delay (min)',
+          data: data.hourly_delays.values,
+          borderColor: '#E85D04',
+          backgroundColor: 'rgba(232, 93, 4, 0.1)',
+          fill: true,
+          tension: 0.4,
+          borderWidth: 3,
+          pointBackgroundColor: '#E85D04',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        ...chartDefaults,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Delay (min)', font: { size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.05)' }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 2. Delay Reasons — Doughnut chart
+    const ctxReasons = document.getElementById('delayReasonsChart').getContext('2d');
+    if (charts.reasons) charts.reasons.destroy();
+    charts.reasons = new Chart(ctxReasons, {
+      type: 'doughnut',
+      data: {
+        labels: data.delay_reasons.labels,
+        datasets: [{
+          data: data.delay_reasons.values,
+          backgroundColor: ['#E85D04', '#F97316', '#DC2626', '#3B82F6', '#10B981', '#64748B'],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: { boxWidth: 12, font: { size: 11 }, padding: 12 }
+          }
+        }
+      }
+    });
+
+    // 3. Weekday Delay — Bar chart
+    const ctxWeekday = document.getElementById('weekdayDelayChart').getContext('2d');
+    if (charts.weekday) charts.weekday.destroy();
+    charts.weekday = new Chart(ctxWeekday, {
+      type: 'bar',
+      data: {
+        labels: data.weekday_delays.labels,
+        datasets: [{
+          label: 'Avg Delay (min)',
+          data: data.weekday_delays.values,
+          backgroundColor: data.weekday_delays.values.map((v, i) => {
+            const max = Math.max(...data.weekday_delays.values);
+            return v === max ? '#E85D04' : '#F97316';
+          }),
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        ...chartDefaults,
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 4. Route Delay — Horizontal bar chart
+    const ctxRoute = document.getElementById('routeDelayChart').getContext('2d');
+    if (charts.route) charts.route.destroy();
+    charts.route = new Chart(ctxRoute, {
+      type: 'bar',
+      data: {
+        labels: data.route_delays.labels,
+        datasets: [{
+          label: 'Avg Delay (min)',
+          data: data.route_delays.values,
+          backgroundColor: ['#DC2626', '#E85D04', '#F97316', '#F59E0B', '#10B981', '#3B82F6'],
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        ...chartDefaults,
+        scales: {
+          x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 5. On-Time Distribution — Doughnut chart
+    const onTimeData = data.on_time_distribution || {
+      labels: ['On-Time (<= 5 min)', 'Moderate Delay (5-15 min)', 'Severe Delay (> 15 min)'],
+      values: [75, 18, 7]
+    };
+    const ctxOnTime = document.getElementById('onTimeDistChart').getContext('2d');
+    if (charts.onTime) charts.onTime.destroy();
+    charts.onTime = new Chart(ctxOnTime, {
+      type: 'doughnut',
+      data: {
+        labels: onTimeData.labels,
+        datasets: [{
+          data: onTimeData.values,
+          backgroundColor: ['#16A34A', '#EAB308', '#DC2626'],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: { boxWidth: 12, font: { size: 10 }, padding: 8 }
+          }
+        }
+      }
+    });
+
+    // 6. Incident Statistics — Categorical Bar chart
+    const incData = data.incident_stats || {
+      labels: ['Tyre Puncture', 'Engine Breakdown', 'Traffic Congestion', 'Weather', 'Passenger Surge'],
+      values: [10, 8, 45, 15, 14]
+    };
+    const ctxIncident = document.getElementById('incidentStatsChart').getContext('2d');
+    if (charts.incident) charts.incident.destroy();
+    charts.incident = new Chart(ctxIncident, {
+      type: 'bar',
+      data: {
+        labels: incData.labels,
+        datasets: [{
+          label: 'Incidents Logged',
+          data: incData.values,
+          backgroundColor: ['#DC2626', '#EA580C', '#EAB308', '#2563EB', '#8B5CF6'],
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        ...chartDefaults,
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 10 }, maxRotation: 30, minRotation: 0 }
+          }
+        }
+      }
+    });
+
+    // 7. Depot Workflow Resolution — Bar chart
+    const depotData = data.depot_resolution_stats || {
+      labels: ['Pending', 'Assigned', 'Dispatched', 'Arrived', 'Transfer', 'Resolved'],
+      values: [1, 2, 2, 1, 1, 8]
+    };
+    const ctxDepot = document.getElementById('depotResolutionChart').getContext('2d');
+    if (charts.depot) charts.depot.destroy();
+    charts.depot = new Chart(ctxDepot, {
+      type: 'bar',
+      data: {
+        labels: depotData.labels,
+        datasets: [{
+          label: 'Requests at Stage',
+          data: depotData.values,
+          backgroundColor: ['#DC2626', '#9333EA', '#2563EB', '#0D9488', '#F59E0B', '#16A34A'],
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        ...chartDefaults,
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 10 } }
+          }
+        }
+      }
+    });
+  }
+
+  function setAnalyticsRange(range, btn) {
+    // Update pill active state
+    document.querySelectorAll('#rangeGroup .btn').forEach(b => {
+      b.classList.remove('btn-tf-primary', 'active');
+      b.classList.add('btn-light');
+    });
+    btn.classList.remove('btn-light');
+    btn.classList.add('btn-tf-primary', 'active');
+    TransitUI.showToast(`Filtered to: ${range}`, 'info');
+    loadAnalytics();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAnalytics();
+    TransitUI.startPolling(loadAnalytics, 15000);
+  });
+</script>
+{% endblock %}

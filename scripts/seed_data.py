@@ -20,16 +20,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import random
 from datetime import datetime, timedelta, date
 from app import create_app
-from app.extensions import db
-from app.models.user import User
-from app.models.transit import Route, Stop, RouteStop, RouteConnectivity
-from app.models.bus import Bus, BusCapacity, Driver
-from app.models.trip import Trip, LiveGPS, PassengerCount
-from app.models.delay import HistoricalDelay
-from app.models.incident import Incident, AlternativeRecommendation
-from app.models.depot import DepotRequest, ReplacementBus, PassengerTransfer
-from app.models.notification import Notification
-from app.models.audit import AuditLog
+from app.models import (
+    db, User, Route, Stop, RouteStop, RouteConnectivity,
+    Bus, BusCapacity, Driver, Trip, LiveGPS, PassengerCount,
+    HistoricalDelay, Incident, AlternativeRecommendation,
+    DepotRequest, ReplacementBus, PassengerTransfer,
+    Notification, AuditLog
+)
 
 app = create_app()
 
@@ -171,15 +168,18 @@ ROUTES_DATA = [
 ]
 
 
-def seed_database():
+def seed_database(reset=False):
     with app.app_context():
         print("Initializing BusNotify database seeding...")
-        db.create_all()
-
-        # Check if already seeded
-        if User.query.filter_by(username="passenger").first():
-            print("Database already contains seed data. Refreshing scenario state...")
-            return
+        if reset or "--reset" in sys.argv:
+            print("Resetting database tables...")
+            db.drop_all()
+            db.create_all()
+        else:
+            db.create_all()
+            if User.query.filter_by(username="passenger").first() and Trip.query.filter_by(trip_code="TRIP-123-DEMO").first():
+                print("Database already contains seed data and active trips.")
+                return
 
         # 1. Create Core Users
         print("1. Creating role-based user accounts...")
@@ -461,12 +461,11 @@ def seed_database():
             delays_to_insert.append(HistoricalDelay(
                 route_id=r101_id,
                 stop_id=mag_stop_id,
-                bus_id=buses_map["123"].id,
                 weekday=sample_d.weekday(),
                 hour_of_day=17,  # 5 PM rush hour
                 delay_minutes=d_val,
                 delay_reason="TYRE_PUNCTURE" if idx < 10 else "TRAFFIC",
-                sample_date=sample_d
+                recorded_date=sample_d
             ))
 
         # Populate other stops and routes across 90 days
@@ -486,7 +485,7 @@ def seed_database():
                         hour_of_day=random.randint(7, 21),
                         delay_minutes=delay_m,
                         delay_reason=reason,
-                        sample_date=cur_date
+                        recorded_date=cur_date
                     ))
 
         # Bulk insert historical delays in batches

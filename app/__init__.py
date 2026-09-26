@@ -1,13 +1,23 @@
 """
 BusNotify Application Factory
-Initializes Flask, database, migrations, blueprints, error handlers, and context processors.
+Initializes Flask, MySQL database, blueprints, error handlers, and context processors.
 """
 import os
 from flask import Flask, render_template, request, session
 from werkzeug.exceptions import HTTPException
-from app.config import config_by_name
-from app.extensions import db, migrate, cors
-from app.utils.response import api_error
+from config import config_by_name
+from app.models import db, migrate, cors
+from app.routes import (
+    api_error,
+    auth_bp,
+    passenger_bp,
+    driver_bp,
+    depot_bp,
+    admin_bp,
+    notification_bp,
+    system_bp,
+    view_bp,
+)
 
 
 def create_app(config_name=None):
@@ -16,8 +26,8 @@ def create_app(config_name=None):
 
     app = Flask(
         __name__,
-        template_folder="../frontend/templates",
-        static_folder="../frontend/static"
+        template_folder="../templates",
+        static_folder="../static"
     )
     app.config.from_object(config_by_name.get(config_name, config_by_name["default"]))
 
@@ -27,17 +37,6 @@ def create_app(config_name=None):
     cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
 
     # Register blueprints
-    from app.routes import (
-        auth_bp,
-        passenger_bp,
-        driver_bp,
-        depot_bp,
-        admin_bp,
-        notification_bp,
-        system_bp,
-        view_bp,
-    )
-
     app.register_blueprint(auth_bp)
     app.register_blueprint(passenger_bp)
     app.register_blueprint(driver_bp)
@@ -116,7 +115,7 @@ def create_app(config_name=None):
             return api_error(code="UNHANDLED_EXCEPTION", message="An unexpected server error occurred.", details=str(error), status_code=500)
         return render_template("auth/500.html"), 500
 
-    # Auto-create tables if not already present
+    # Auto-create tables if not present
     with app.app_context():
         try:
             db.create_all()
