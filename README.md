@@ -57,17 +57,10 @@ copy .env.example .env
 ### 3. Initialize Database
 
 ```powershell
-flask db upgrade
 python scripts/seed_data.py
 ```
 
-### 4. (Optional) Load Intercity Dataset
-
-```powershell
-python scripts/load_dataset.py
-```
-
-### 5. Run Application
+### 4. Run Application
 
 ```powershell
 python run.py
