@@ -127,7 +127,8 @@
           <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div>
               <h6 class="fw-bold text-dark mb-1"><i class="bi bi-truck me-1 text-primary"></i> Stage 3 Action: Dispatch Replacement Bus</h6>
-              <p class="text-muted small mb-0">Bus <strong id="assignedBusLabel">189</strong> and Driver <strong id="assignedDriverLabel">Rajesh Patil</strong> are prepped. Dispatch unit to pickup location.</p>
+              <p class="text-muted small mb-0">Bus <strong id="assignedBusLabel">—</strong> and Driver <strong id="assignedDriverLabel">—</strong> are prepped. Dispatch unit to pickup location.</p>
+
             </div>
             <button class="btn btn-tf-primary px-4 py-2 fw-bold rounded-pill justify-content-center" onclick="stepDispatch()">
               <i class="bi bi-send-fill me-1"></i> Dispatch Bus Now
@@ -201,12 +202,13 @@
           <h5 class="fw-bold mb-3">Fleet Allocation Summary</h5>
           <table class="table table-sm table-borderless small mb-0" style="font-size: 0.85rem;">
             <tbody>
-              <tr><td class="text-muted py-2">Failed Bus:</td><td class="fw-bold py-2" id="tblFailedBus">Bus 123</td></tr>
-              <tr><td class="text-muted py-2">Replacement Bus:</td><td class="fw-bold py-2" id="tblRepBus">Bus 189</td></tr>
-              <tr><td class="text-muted py-2">Assigned Driver:</td><td class="fw-bold py-2" id="tblRepDriver">Rajesh Patil (D104)</td></tr>
-              <tr><td class="text-muted py-2">Pickup Location:</td><td class="fw-bold py-2" id="tblLocation">Magarpatta</td></tr>
-              <tr><td class="text-muted py-2">Created Timestamp:</td><td class="fw-bold py-2" id="tblCreated">---</td></tr>
-              <tr><td class="text-muted py-2">Resolution Timestamp:</td><td class="fw-bold py-2" id="tblResolved">---</td></tr>
+              <tr><td class="text-muted py-2">Failed Bus:</td><td class="fw-bold py-2" id="tblFailedBus">—</td></tr>
+              <tr><td class="text-muted py-2">Replacement Bus:</td><td class="fw-bold py-2" id="tblRepBus">—</td></tr>
+              <tr><td class="text-muted py-2">Assigned Driver:</td><td class="fw-bold py-2" id="tblRepDriver">—</td></tr>
+              <tr><td class="text-muted py-2">Pickup Location:</td><td class="fw-bold py-2" id="tblLocation">—</td></tr>
+              <tr><td class="text-muted py-2">Created Timestamp:</td><td class="fw-bold py-2" id="tblCreated">—</td></tr>
+              <tr><td class="text-muted py-2">Resolution Timestamp:</td><td class="fw-bold py-2" id="tblResolved">—</td></tr>
+
             </tbody>
           </table>
         </div>
@@ -315,8 +317,8 @@
     if (activePanel) activePanel.classList.remove('d-none');
 
     if (status === 'ASSIGNED') {
-      document.getElementById('assignedBusLabel').textContent = requestObj.replacement_bus_number || '189';
-      document.getElementById('assignedDriverLabel').textContent = requestObj.replacement_driver_name || 'Rajesh Patil';
+      document.getElementById('assignedBusLabel').textContent = requestObj.replacement_bus_number || '—';
+      document.getElementById('assignedDriverLabel').textContent = requestObj.replacement_driver_name || 'Awaiting Driver';
     }
   }
 
@@ -326,13 +328,14 @@
       const bSel = document.getElementById('stageBusSelect');
       const dSel = document.getElementById('stageDriverSelect');
 
-      bSel.innerHTML = (depotData.available_buses || []).map(b => `
-        <option value="${b.id}" ${b.bus_number === '189' ? 'selected' : ''}>Bus ${b.bus_number} (Cap: ${b.capacity})</option>
-      `).join('');
+      bSel.innerHTML = (depotData.available_buses || []).map((b, idx) => `
+        <option value="${b.id}" ${idx === 0 ? 'selected' : ''}>Bus ${b.bus_number} (Cap: ${b.capacity})</option>
+      `).join('') || '<option value="" disabled selected>No spare buses available</option>';
 
-      dSel.innerHTML = (depotData.available_drivers || []).map(d => `
-        <option value="${d.id}" ${d.driver_code === 'D104' ? 'selected' : ''}>${d.full_name} (${d.driver_code})</option>
-      `).join('');
+      dSel.innerHTML = (depotData.available_drivers || []).map((d, idx) => `
+        <option value="${d.id}" ${idx === 0 ? 'selected' : ''}>${d.full_name} (${d.driver_code})</option>
+      `).join('') || '<option value="" disabled selected>No relief drivers available</option>';
+
     } catch (e) {
       console.error(e);
     }

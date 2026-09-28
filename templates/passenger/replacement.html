@@ -37,20 +37,21 @@
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
           <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-            <span class="badge bg-primary fs-6 fw-bold px-3 py-1" id="reqCodeBadge">DR001</span>
+            <span class="badge bg-primary fs-6 fw-bold px-3 py-1" id="reqCodeBadge">{{ depot_request.request_code if depot_request else '—' }}</span>
             <span id="reqStatusBadge"></span>
           </div>
-          <h2 class="fw-bold text-dark mb-1">Replacement Bus <span id="repBusNumber">189</span></h2>
+          <h2 class="fw-bold text-dark mb-1">Replacement Bus <span id="repBusNumber">—</span></h2>
           <div class="text-secondary small mt-1">
-            <i class="bi bi-person-badge text-primary me-1"></i> Assigned Driver: <strong id="repDriverName">Rajesh Patil</strong> (<span id="repDriverCode">D104</span>) &bull; 
-            <i class="bi bi-geo-alt-fill text-danger me-1"></i> Pickup Stop: <strong id="repPickupStop">Magarpatta</strong>
+            <i class="bi bi-person-badge text-primary me-1"></i> Assigned Driver: <strong id="repDriverName">—</strong> (<span id="repDriverCode">—</span>) &bull; 
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i> Pickup Stop: <strong id="repPickupStop">—</strong>
           </div>
         </div>
 
         <div class="text-md-end p-3 bg-light rounded-3 border">
           <small class="text-muted d-block" style="font-size: 0.75rem;">Estimated Arrival</small>
-          <div class="fs-2 fw-bold text-primary" id="repETA">12 min</div>
+          <div class="fs-2 fw-bold text-primary" id="repETA">—</div>
         </div>
+
       </div>
     </div>
 
@@ -162,11 +163,11 @@
           <h5 class="fw-bold mb-3">Replacement Vehicle Information</h5>
           <table class="table table-sm table-borderless small mb-0" style="font-size: 0.85rem;">
             <tbody>
-              <tr><td class="text-muted py-2">Bus Model / Type:</td><td class="fw-bold py-2">Standard Transit (40-Seater)</td></tr>
-              <tr><td class="text-muted py-2">Registration Number:</td><td class="fw-bold py-2" id="cardReg">MH-12-RN-3456</td></tr>
-              <tr><td class="text-muted py-2">Operating Depot:</td><td class="fw-bold py-2">Pune Central Depot</td></tr>
-              <tr><td class="text-muted py-2">Driver Contact:</td><td class="fw-bold py-2">+91 98765 43210</td></tr>
-              <tr><td class="text-muted py-2">Incident Reference:</td><td class="fw-bold py-2" id="cardIncRef">INC-001</td></tr>
+              <tr><td class="text-muted py-2">Bus Model / Type:</td><td class="fw-bold py-2" id="cardModel">Standard Transit</td></tr>
+              <tr><td class="text-muted py-2">Registration Number:</td><td class="fw-bold py-2" id="cardReg">—</td></tr>
+              <tr><td class="text-muted py-2">Operating Depot:</td><td class="fw-bold py-2" id="cardDepot">—</td></tr>
+              <tr><td class="text-muted py-2">Driver Contact:</td><td class="fw-bold py-2" id="cardDriverContact">—</td></tr>
+              <tr><td class="text-muted py-2">Incident Reference:</td><td class="fw-bold py-2" id="cardIncRef">—</td></tr>
             </tbody>
           </table>
         </div>
@@ -197,17 +198,25 @@
       document.getElementById('repDriverName').textContent = req.replacement_driver_name || 'Awaiting Driver';
       document.getElementById('repDriverCode').textContent = req.replacement_driver_code || '--';
       document.getElementById('repPickupStop').textContent = req.stop_name || 'En route';
-      document.getElementById('repETA').textContent = req.status === 'ARRIVED' || req.status === 'RESOLVED' ? 'Arrived' : `${req.eta_minutes || 12} min`;
+      document.getElementById('repETA').textContent = req.status === 'ARRIVED' || req.status === 'RESOLVED' ? 'Arrived' : (req.eta_minutes != null ? `${req.eta_minutes} min` : 'Calculating...');
 
       // Cards
       document.getElementById('cardAffected').textContent = `${req.affected_passengers} Passengers`;
       document.getElementById('cardTransferred').textContent = `${req.transferred_passengers} Transferred`;
       document.getElementById('cardRemaining').textContent = `${req.remaining_passengers} Remaining`;
-      document.getElementById('cardIncRef').textContent = req.incident_number || 'INC-001';
+      document.getElementById('cardIncRef').textContent = req.incident_number || '—';
 
       if (req.replacement_bus_number) {
-        document.getElementById('cardReg').textContent = `MH-12-${req.replacement_bus_number}`;
+        document.getElementById('cardReg').textContent = req.replacement_bus_registration || `MH-12-${req.replacement_bus_number}`;
+        document.getElementById('cardModel').textContent = req.replacement_bus_capacity ? `Standard Transit (${req.replacement_bus_capacity}-Seater)` : 'Standard Transit';
+        document.getElementById('cardDepot').textContent = req.replacement_bus_depot || 'Central Transit Depot';
+      } else {
+        document.getElementById('cardReg').textContent = '—';
+        document.getElementById('cardModel').textContent = 'Standard Transit';
+        document.getElementById('cardDepot').textContent = '—';
       }
+      document.getElementById('cardDriverContact').textContent = req.replacement_driver_phone || (req.replacement_driver_name ? 'Dispatched on active duty' : '—');
+
 
       // Progress bar
       const pct = req.affected_passengers > 0 ? Math.round((req.transferred_passengers / req.affected_passengers) * 100) : 0;

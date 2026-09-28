@@ -241,8 +241,8 @@
       document.getElementById('breadBusNum').textContent = bus.bus_number;
       document.getElementById('routeNumberBadge').textContent = `Route ${route.route_number || 'N/A'}`;
       document.getElementById('routeName').textContent = `${route.name || ''} (${route.source || ''} → ${route.destination || ''})`;
-      document.getElementById('scheduledArrival').textContent = data.scheduled_arrival || '5:40 PM';
-      document.getElementById('expectedArrival').textContent = data.expected_arrival || '5:54 PM';
+      document.getElementById('scheduledArrival').textContent = data.scheduled_arrival || '—';
+      document.getElementById('expectedArrival').textContent = data.expected_arrival || (data.scheduled_arrival || '—');
       document.getElementById('lastUpdate').textContent = `Updated ${data.last_update || 'just now'}`;
       document.getElementById('statusBadgeContainer').innerHTML = TransitUI.getStatusBadge(trip.status || bus.current_status);
 
@@ -250,10 +250,11 @@
       if (incident && incident.status === 'OPEN') {
         const incAlert = document.getElementById('activeIncidentAlert');
         incAlert.classList.remove('d-none');
-        document.getElementById('incidentSummary').textContent = `${incident.incident_type} reported at ${incident.stop_name || 'En route'}. ${incident.affected_passengers || 40} passengers affected.`;
+        document.getElementById('incidentSummary').textContent = `${incident.incident_type} reported at ${incident.stop_name || 'En route'}. ${incident.affected_passengers != null ? incident.affected_passengers : 0} passengers affected.`;
         document.getElementById('altBusBtn').classList.remove('d-none');
         document.getElementById('altBusBtn').href = `/passenger/emergency?incident_id=${incident.id}`;
       }
+
 
       // Statistics
       const count = stats.count !== undefined && stats.count !== null ? stats.count : 0;

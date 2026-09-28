@@ -62,7 +62,7 @@
           <div class="row g-2 mb-3">
             <div class="col-6">
               <label class="tf-form-label">Affected Passengers</label>
-              <input type="number" id="incPax" class="tf-input" value="40" min="0" max="50" required>
+              <input type="number" id="incPax" class="tf-input" value="40" min="0" max="120" required>
             </div>
             <div class="col-6">
               <label class="tf-form-label">Priority Level</label>
@@ -78,8 +78,9 @@
           <!-- Description -->
           <div class="mb-4">
             <label class="tf-form-label">Incident Description & Context</label>
-            <textarea id="incDesc" class="tf-input" rows="3" placeholder="Describe the incident, road condition, or assistance required...">Rear tyre puncture occurred at Magarpatta junction. Vehicle immobilized. Passenger transfer to alternative buses and depot replacement requested.</textarea>
+            <textarea id="incDesc" class="tf-input" rows="3" placeholder="Describe the incident, road condition, or assistance required..."></textarea>
           </div>
+
 
           <div class="d-flex gap-2 pt-3 border-top">
             <a href="{{ url_for('views.driver_dashboard') }}" class="btn btn-tf-secondary w-50 justify-content-center">Cancel</a>

@@ -110,3 +110,137 @@ def test_passenger_intermediate_stop_search_api(client):
     data_dest = res_dest.get_json()
     assert data_dest["success"] is True
     assert len(data_dest["data"]) >= 1
+
+
+def test_passenger_summary_api(client):
+    res = client.get('/api/passenger/summary')
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["success"] is True
+    summary = data["data"]
+    assert "active_buses" in summary
+    assert "delayed_buses" in summary
+    assert "on_time_percentage" in summary
+    assert "open_incidents" in summary
+    assert "total_buses" in summary
+    assert summary["total_buses"] >= 3
+
+
+def test_passenger_replacement_alphanumeric_lookup(client, app):
+    from app.models.depot import DepotRequest
+    from app.models.incident import Incident
+    from app.extensions import db
+
+    with app.app_context():
+        inc = Incident(
+            incident_number="INC-ALPHA-01",
+            trip_id=1,
+            bus_id=1,
+            route_id=1,
+            stop_id=2,
+            incident_type="TYRE_PUNCTURE",
+            affected_passengers=40
+        )
+        db.session.add(inc)
+        db.session.flush()
+
+        req = DepotRequest(
+            request_code="DR-ALPHA-999",
+            incident_id=inc.id,
+            failed_bus_id=1,
+            route_id=1,
+            stop_id=2,
+            status="PENDING",
+            affected_passengers=40
+        )
+        db.session.add(req)
+        db.session.commit()
+
+    # Query by alphanumeric code via API
+    res = client.get('/api/passenger/replacement/DR-ALPHA-999')
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["success"] is True
+    assert data["data"]["request_code"] == "DR-ALPHA-999"
+
+    # Log in as passenger to view frontend page
+    login_res = client.post('/api/auth/login', json={
+        "identifier": "pax@test.com",
+        "password": "Password123!"
+    })
+    assert login_res.status_code == 200
+
+    # Query view route by alphanumeric code
+    view_res = client.get('/passenger/replacement/DR-ALPHA-999')
+    assert view_res.status_code == 200
+    assert b"DR-ALPHA-999" in view_res.data
+    client.post('/api/auth/logout')
+
+
+
+def test_driver_gps_auto_fallback(client):
+    # Authenticate as driver
+    login_res = client.post('/api/auth/login', json={
+        "identifier": "drv@test.com",
+        "password": "Password123!"
+    })
+    assert login_res.status_code == 200
+
+    # Post GPS telemetry without providing trip_id
+    gps_res = client.post('/api/driver/trip/gps', json={
+        "latitude": 18.5204,
+        "longitude": 73.8567,
+        "speed_kmh": 28.5
+    })
+    assert gps_res.status_code == 200
+    gps_data = gps_res.get_json()
+    assert gps_data["success"] is True
+    assert gps_data["data"]["latitude"] == 18.5204
+    assert gps_data["data"]["longitude"] == 73.8567
+
+    client.post('/api/auth/logout')
+
+
+def test_admin_crud_endpoints(client):
+    # Authenticate as admin
+    login_res = client.post('/api/auth/login', json={
+        "identifier": "admin@test.com",
+        "password": "Password123!"
+    })
+    assert login_res.status_code == 200
+
+    # Create Stop
+    stop_res = client.post('/api/admin/stops', json={
+        "stop_code": "STP-CRUD-1",
+        "name": "Deccan Corner",
+        "latitude": 18.5170,
+        "longitude": 73.8420,
+        "landmark": "Near FC Road"
+    })
+    assert stop_res.status_code == 201
+    stop_id = stop_res.get_json()["data"]["id"]
+
+    # Deactivate Stop (DELETE)
+    del_stop_res = client.delete(f'/api/admin/stops/{stop_id}')
+    assert del_stop_res.status_code == 200
+
+    # Create Driver
+    drv_res = client.post('/api/admin/drivers', json={
+        "driver_code": "D999",
+        "full_name": "Mahesh More",
+        "mobile_number": "9812345678",
+        "license_number": "MH12-99999"
+    })
+    assert drv_res.status_code == 201
+    drv_id = drv_res.get_json()["data"]["id"]
+
+    # Deactivate Driver (DELETE)
+    del_drv_res = client.delete(f'/api/admin/drivers/{drv_id}')
+    assert del_drv_res.status_code == 200
+
+    # Deactivate Route (DELETE)
+    del_route_res = client.delete('/api/admin/routes/1')
+    assert del_route_res.status_code == 200
+
+    client.post('/api/auth/logout')
+

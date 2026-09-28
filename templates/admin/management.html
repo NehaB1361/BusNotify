@@ -115,10 +115,11 @@
                 <th>Destination</th>
                 <th>Distance</th>
                 <th>Est. Duration</th>
+                <th class="text-end">Actions</th>
               </tr>
             </thead>
             <tbody id="crudRoutesTbody">
-              <tr><td colspan="6" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading routes...</td></tr>
+              <tr><td colspan="7" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading routes...</td></tr>
             </tbody>
           </table>
         </div>
@@ -146,10 +147,11 @@
                 <th>Marathi Name</th>
                 <th>Coordinates</th>
                 <th>Landmark</th>
+                <th class="text-end">Actions</th>
               </tr>
             </thead>
             <tbody id="crudStopsTbody">
-              <tr><td colspan="5" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading stops...</td></tr>
+              <tr><td colspan="6" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading stops...</td></tr>
             </tbody>
           </table>
         </div>
@@ -177,13 +179,15 @@
                 <th>Mobile</th>
                 <th>License No.</th>
                 <th>Status</th>
+                <th class="text-end">Actions</th>
               </tr>
             </thead>
             <tbody id="crudDriversTbody">
-              <tr><td colspan="5" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading drivers...</td></tr>
+              <tr><td colspan="6" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading drivers...</td></tr>
             </tbody>
           </table>
         </div>
+
       </div>
     </div>
 
@@ -275,7 +279,7 @@
   </div>
 </div>
 
-<!-- Modal: Add Stop (placeholder) -->
+<!-- Modal: Add Stop -->
 <div class="modal fade" id="addStopModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg">
@@ -284,22 +288,44 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body px-4 py-3">
-        <div class="alert alert-info py-2 small mb-0">
-          <i class="bi bi-info-circle me-1"></i>
-          Use the CSV Portal to bulk-add stops, or contact your system administrator.
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Stop Code</label>
+          <input type="text" id="newStopCode" class="form-control" placeholder="e.g. STOP_501" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Stop Name (English)</label>
+          <input type="text" id="newStopName" class="form-control" placeholder="e.g. Deccan Gymkhana" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Marathi Name (Optional)</label>
+          <input type="text" id="newStopNameMr" class="form-control" placeholder="e.g. डेक्कन जिमखाना">
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Latitude</label>
+            <input type="number" id="newStopLat" class="form-control" step="0.0001" placeholder="18.5167" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Longitude</label>
+            <input type="number" id="newStopLon" class="form-control" step="0.0001" placeholder="73.8417" required>
+          </div>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Landmark / Notes (Optional)</label>
+          <input type="text" id="newStopLandmark" class="form-control" placeholder="e.g. Near Sambhaji Park">
         </div>
       </div>
       <div class="modal-footer border-0 px-4 pb-4 pt-2">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-        <a href="{{ url_for('views.admin_csv_portal') }}" class="btn btn-tf-primary px-4">
-          <i class="bi bi-file-earmark-csv me-1"></i> Go to CSV Portal
-        </a>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-tf-primary px-4" onclick="saveNewStop()">
+          <i class="bi bi-check-lg me-1"></i> Save Stop
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal: Add Driver (placeholder) -->
+<!-- Modal: Add Driver -->
 <div class="modal fade" id="addDriverModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg">
@@ -308,20 +334,33 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body px-4 py-3">
-        <div class="alert alert-info py-2 small mb-0">
-          <i class="bi bi-info-circle me-1"></i>
-          Use the CSV Portal to bulk-add drivers with license verification.
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Driver Code</label>
+          <input type="text" id="newDriverCode" class="form-control" placeholder="e.g. D501" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Full Name</label>
+          <input type="text" id="newDriverName" class="form-control" placeholder="e.g. Suresh Shinde" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Mobile Number</label>
+          <input type="tel" id="newDriverMob" class="form-control" placeholder="e.g. 9876543210" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Heavy Vehicle License No.</label>
+          <input type="text" id="newDriverLic" class="form-control" placeholder="e.g. MH-12-2023-0005432" required>
         </div>
       </div>
       <div class="modal-footer border-0 px-4 pb-4 pt-2">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-        <a href="{{ url_for('views.admin_csv_portal') }}" class="btn btn-tf-primary px-4">
-          <i class="bi bi-file-earmark-csv me-1"></i> Go to CSV Portal
-        </a>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-tf-primary px-4" onclick="saveNewDriver()">
+          <i class="bi bi-check-lg me-1"></i> Save Driver
+        </button>
       </div>
     </div>
   </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -374,7 +413,7 @@
       const tbody = document.getElementById('crudRoutesTbody');
       document.getElementById('routeCount').textContent = routes.length;
       if (!routes.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No routes found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No routes found.</td></tr>';
         return;
       }
       tbody.innerHTML = routes.map(r => `
@@ -385,6 +424,11 @@
           <td>${r.destination}</td>
           <td>${r.total_distance_km} km</td>
           <td>${r.estimated_duration_min} min</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill" onclick="deleteRoute(${r.id})" title="Deactivate route">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
         </tr>
       `).join('');
     } catch (e) {
@@ -398,7 +442,7 @@
       const tbody = document.getElementById('crudStopsTbody');
       document.getElementById('stopCount').textContent = stops.length;
       if (!stops.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No stops found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No stops found.</td></tr>';
         return;
       }
       tbody.innerHTML = stops.map(s => `
@@ -408,6 +452,11 @@
           <td class="text-muted">${s.name_mr || s.name}</td>
           <td class="text-muted small">${s.latitude.toFixed(4)}, ${s.longitude.toFixed(4)}</td>
           <td class="text-muted small">${s.landmark || '—'}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill" onclick="deleteStop(${s.id})" title="Deactivate stop">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
         </tr>
       `).join('');
     } catch (e) {
@@ -421,7 +470,7 @@
       const tbody = document.getElementById('crudDriversTbody');
       document.getElementById('driverCount').textContent = drivers.length;
       if (!drivers.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No drivers registered.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No drivers registered.</td></tr>';
         return;
       }
       tbody.innerHTML = drivers.map(d => `
@@ -431,6 +480,11 @@
           <td>${d.mobile_number || '—'}</td>
           <td><code class="small">${d.license_number || '—'}</code></td>
           <td>${TransitUI.getStatusBadge(d.status)}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill" onclick="deleteDriver(${d.id})" title="Deactivate driver">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
         </tr>
       `).join('');
     } catch (e) {
@@ -494,6 +548,46 @@
     } catch (e) { TransitUI.showToast(e.message, 'danger'); }
   }
 
+  async function saveNewStop() {
+    const payload = {
+      stop_code: document.getElementById('newStopCode').value.trim(),
+      name: document.getElementById('newStopName').value.trim(),
+      name_mr: document.getElementById('newStopNameMr').value.trim() || undefined,
+      latitude: parseFloat(document.getElementById('newStopLat').value),
+      longitude: parseFloat(document.getElementById('newStopLon').value),
+      landmark: document.getElementById('newStopLandmark').value.trim() || undefined
+    };
+    if (!payload.stop_code || !payload.name || isNaN(payload.latitude) || isNaN(payload.longitude)) {
+      TransitUI.showToast('Stop code, name, latitude, and longitude are required', 'warning');
+      return;
+    }
+    try {
+      await API.post('/api/admin/stops', payload);
+      addStopModalInst.hide();
+      TransitUI.showToast('Stop ' + payload.name + ' created successfully', 'success');
+      loadStopsCrud();
+    } catch (e) { TransitUI.showToast(e.message, 'danger'); }
+  }
+
+  async function saveNewDriver() {
+    const payload = {
+      driver_code: document.getElementById('newDriverCode').value.trim(),
+      full_name: document.getElementById('newDriverName').value.trim(),
+      mobile_number: document.getElementById('newDriverMob').value.trim(),
+      license_number: document.getElementById('newDriverLic').value.trim()
+    };
+    if (!payload.driver_code || !payload.full_name || !payload.mobile_number || !payload.license_number) {
+      TransitUI.showToast('All driver fields are required', 'warning');
+      return;
+    }
+    try {
+      await API.post('/api/admin/drivers', payload);
+      addDriverModalInst.hide();
+      TransitUI.showToast('Driver ' + payload.full_name + ' registered successfully', 'success');
+      loadDriversCrud();
+    } catch (e) { TransitUI.showToast(e.message, 'danger'); }
+  }
+
   async function deleteBus(id) {
     if (!confirm('Remove this bus from the fleet registry? This cannot be undone.')) return;
     try {
@@ -503,8 +597,36 @@
     } catch (e) { TransitUI.showToast(e.message, 'danger'); }
   }
 
+  async function deleteRoute(id) {
+    if (!confirm('Deactivate this route? This will mark it inactive.')) return;
+    try {
+      await API.delete(`/api/admin/routes/${id}`);
+      TransitUI.showToast('Route deactivated', 'success');
+      loadRoutesCrud();
+    } catch (e) { TransitUI.showToast(e.message, 'danger'); }
+  }
+
+  async function deleteStop(id) {
+    if (!confirm('Deactivate this stop? This will mark it inactive.')) return;
+    try {
+      await API.delete(`/api/admin/stops/${id}`);
+      TransitUI.showToast('Stop deactivated', 'success');
+      loadStopsCrud();
+    } catch (e) { TransitUI.showToast(e.message, 'danger'); }
+  }
+
+  async function deleteDriver(id) {
+    if (!confirm('Deactivate this driver? This will set status to off-duty.')) return;
+    try {
+      await API.delete(`/api/admin/drivers/${id}`);
+      TransitUI.showToast('Driver deactivated', 'success');
+      loadDriversCrud();
+    } catch (e) { TransitUI.showToast(e.message, 'danger'); }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     loadAllCrudData();
   });
 </script>
+
 {% endblock %}

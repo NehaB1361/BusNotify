@@ -47,7 +47,7 @@
             </label>
             <select id="busSelect" class="form-select tf-select" required>
               {% for b in buses %}
-                <option value="{{ b.id }}" {% if b.bus_number == '123' %}selected{% endif %}>
+                <option value="{{ b.id }}" {% if (assigned_bus and b.id == assigned_bus.id) or (not assigned_bus and loop.first) %}selected{% endif %}>
                   Bus {{ b.bus_number }} ({{ b.registration_number }}) — Capacity: {{ b.capacity }} seats
                 </option>
               {% endfor %}
@@ -62,13 +62,14 @@
             </label>
             <select id="routeSelect" class="form-select tf-select" required>
               {% for r in routes %}
-                <option value="{{ r.id }}" {% if r.route_number == '101' %}selected{% endif %}>
+                <option value="{{ r.id }}" {% if (assigned_route and r.id == assigned_route.id) or (not assigned_route and loop.first) %}selected{% endif %}>
                   Route {{ r.route_number }} — {{ r.name }} ({{ r.source }} → {{ r.destination }})
                 </option>
               {% endfor %}
             </select>
             <div class="form-text">Choose the route you are operating today.</div>
           </div>
+
 
           <!-- Initial Passenger Count -->
           <div class="mb-4">

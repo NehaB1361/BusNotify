@@ -262,17 +262,18 @@
     targetRequestId = reqId;
     document.getElementById('modalReqCode').textContent = reqCode;
 
-    // Populate Bus select with Bus 189 preselected if available
+    // Populate Bus select with available spare buses
     const busSelect = document.getElementById('modalBusSelect');
-    busSelect.innerHTML = availableBusesList.map(b => `
-      <option value="${b.id}" ${b.bus_number === '189' ? 'selected' : ''}>Bus ${b.bus_number} (Cap: ${b.capacity}) - ${b.depot_name}</option>
-    `).join('');
+    busSelect.innerHTML = availableBusesList.map((b, idx) => `
+      <option value="${b.id}" ${idx === 0 ? 'selected' : ''}>Bus ${b.bus_number} (Cap: ${b.capacity}) - ${b.depot_name || 'Depot'}</option>
+    `).join('') || '<option value="" disabled selected>No spare buses available</option>';
 
-    // Populate Driver select with Rajesh Patil preselected if available
+    // Populate Driver select with available relief drivers
     const drvSelect = document.getElementById('modalDriverSelect');
-    drvSelect.innerHTML = availableDriversList.map(d => `
-      <option value="${d.id}" ${d.driver_code === 'D104' ? 'selected' : ''}>${d.full_name} (${d.driver_code}) - Status: ${d.status}</option>
-    `).join('');
+    drvSelect.innerHTML = availableDriversList.map((d, idx) => `
+      <option value="${d.id}" ${idx === 0 ? 'selected' : ''}>${d.full_name} (${d.driver_code}) - Status: ${d.status}</option>
+    `).join('') || '<option value="" disabled selected>No relief drivers available</option>';
+
 
     if (!assignModalInstance) assignModalInstance = new bootstrap.Modal(document.getElementById('assignModal'));
     assignModalInstance.show();

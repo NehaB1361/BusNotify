@@ -44,23 +44,24 @@
       </div>
       <div class="flex-grow-1">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-          <span class="tf-badge badge-critical" id="incidentPriorityBadge">HIGH PRIORITY</span>
-          <span class="badge bg-white text-secondary border fw-bold" id="incidentNumberBadge">INC-001</span>
-          <strong class="text-dark fs-5">Bus <span id="incBusNumber">123</span> &bull; <span id="incType">TYRE PUNCTURE</span></strong>
+          <span class="tf-badge badge-critical" id="incidentPriorityBadge">CRITICAL</span>
+          <span class="badge bg-white text-secondary border fw-bold" id="incidentNumberBadge">—</span>
+          <strong class="text-dark fs-5">Bus <span id="incBusNumber">—</span> &bull; <span id="incType">INCIDENT</span></strong>
         </div>
-        <div class="text-secondary fw-semibold mb-2" id="incRoute">Pune Station &rarr; Hadapsar</div>
+        <div class="text-secondary fw-semibold mb-2" id="incRoute">—</div>
         
         <div class="d-flex flex-wrap gap-2 mb-2">
           <span class="badge bg-white text-dark border px-3 py-2 fw-medium">
-            <i class="bi bi-geo-alt-fill text-danger me-1"></i> Location: <strong id="incLocation">Magarpatta</strong>
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i> Location: <strong id="incLocation">—</strong>
           </span>
           <span class="badge bg-white text-dark border px-3 py-2 fw-medium">
-            <i class="bi bi-people-fill text-primary me-1"></i> Affected Passengers: <strong id="incAffected">40</strong>
+            <i class="bi bi-people-fill text-primary me-1"></i> Affected Passengers: <strong id="incAffected">—</strong>
           </span>
           <span class="badge bg-white text-dark border px-3 py-2 fw-medium">
-            <i class="bi bi-clock-history text-warning me-1"></i> Expected Impact: <strong>10–18 min delay</strong>
+            <i class="bi bi-clock-history text-warning me-1"></i> Expected Impact: <strong id="incImpact">Estimating...</strong>
           </span>
         </div>
+
 
         <div class="tf-stat-disclaimer py-1 px-2" style="max-width: 520px;">
           <i class="bi bi-info-circle"></i>
@@ -83,7 +84,7 @@
           <div class="small text-muted" style="font-size: 0.75rem;">Greedy allocation of affected passengers across available seats</div>
         </div>
         <span class="tf-badge badge-ontime" id="transferStatusBadge">
-          <i class="bi bi-check-circle-fill"></i> All 40 Passengers Accommodated
+          <i class="bi bi-clock-history"></i> Calculating Allocation...
         </span>
       </div>
 
@@ -96,21 +97,22 @@
         <div class="col-6 col-md-3">
           <div class="p-2 border rounded-3 bg-light">
             <span class="text-muted d-block" style="font-size: 0.72rem;">Affected Passengers</span>
-            <strong class="fs-5 text-dark" id="distAffected">40</strong>
+            <strong class="fs-5 text-dark" id="distAffected">—</strong>
           </div>
         </div>
         <div class="col-6 col-md-3">
           <div class="p-2 border rounded-3 bg-light">
             <span class="text-muted d-block" style="font-size: 0.72rem;">Transferred Total</span>
-            <strong class="fs-5 text-success" id="distTransferred">40</strong>
+            <strong class="fs-5 text-success" id="distTransferred">—</strong>
           </div>
         </div>
         <div class="col-6 col-md-3">
           <div class="p-2 border rounded-3 bg-light">
             <span class="text-muted d-block" style="font-size: 0.72rem;">Remaining Stranded</span>
-            <strong class="fs-5 text-primary" id="distRemaining">0</strong>
+            <strong class="fs-5 text-primary" id="distRemaining">—</strong>
           </div>
         </div>
+
         <div class="col-6 col-md-3">
           <div class="p-2 border rounded-3 bg-light">
             <span class="text-muted d-block" style="font-size: 0.72rem;">Depot Replacement Capacity</span>
@@ -270,8 +272,9 @@
     tableBody.innerHTML = alternatives.map(alt => {
       const isRec = alt.is_recommended;
       const rationale = isRec 
-        ? 'Direct route &bull; 15 seats &bull; 12 min ETA' 
+        ? `Direct route &bull; ${alt.available_seats} seats &bull; ${alt.eta_minutes} min ETA` 
         : (alt.walking_distance_m > 0 ? `Direct route &bull; ${alt.available_seats} seats &bull; ${alt.walking_distance_m}m walk` : `Direct route &bull; ${alt.available_seats} seats &bull; ${alt.eta_minutes} min ETA`);
+
 
       return `
         <tr class="${isRec ? 'bg-primary-subtle fw-semibold' : ''}">

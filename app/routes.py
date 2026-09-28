@@ -396,12 +396,18 @@ def get_alternatives(incident_id: int):
     })
 
 
-@passenger_bp.route("/replacement/<int:request_id>", methods=["GET"])
-def get_replacement_status(request_id: int):
-    req = DepotRequest.query.get(request_id)
+@passenger_bp.route("/replacement/<string:request_identifier>", methods=["GET"])
+@passenger_bp.route("/replacement/<int:request_identifier>", methods=["GET"])
+def get_replacement_status(request_identifier):
+    req = None
+    if isinstance(request_identifier, int) or str(request_identifier).isdigit():
+        req = DepotRequest.query.get(int(request_identifier))
     if not req:
-        return api_error(code="NOT_FOUND", message="Depot request not found", status_code=404)
+        req = DepotRequest.query.filter_by(request_code=str(request_identifier)).first()
+    if not req:
+        return api_error(code="NOT_FOUND", message=f"Depot request '{request_identifier}' not found", status_code=404)
     return api_success(data=req.to_dict())
+
 
 
 @passenger_bp.route("/summary", methods=["GET"])
@@ -642,16 +648,26 @@ def update_gps():
     speed = float(data.get("speed_kmh", 0.0))
     source = data.get("source", "GPS")
 
-    trip = Trip.query.get(trip_id)
-    if not trip:
-        return api_error(code="NOT_FOUND", message="Trip not found.", status_code=404)
-
     user_id = session.get("user_id")
     user = User.query.get(user_id) if user_id else None
+    driver = Driver.query.filter_by(user_id=user_id).first() if user_id else None
+
+    trip = None
+    if trip_id:
+        trip = Trip.query.get(trip_id)
+    elif driver:
+        trip = Trip.query.filter(
+            Trip.driver_id == driver.id,
+            Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN"])
+        ).order_by(Trip.id.desc()).first()
+
+    if not trip:
+        return api_error(code="NOT_FOUND", message="Active trip not found.", status_code=404)
+
     if user and user.role != "admin":
-        driver = Driver.query.filter_by(user_id=user_id).first()
         if not driver or (trip.driver_id and trip.driver_id != driver.id):
             return api_error(code="FORBIDDEN", message="You are not authorized to update this trip.", status_code=403)
+
 
     if latitude is None or longitude is None:
         return api_error(code="VALIDATION_ERROR", message="Latitude and longitude are required.", status_code=400)
@@ -1348,6 +1364,33 @@ def handle_routes():
     return api_success(data=[r.to_dict(include_stops=True) for r in routes])
 
 
+@admin_bp.route("/routes/<int:route_id>", methods=["PUT", "DELETE"])
+@role_required("admin")
+def update_delete_route(route_id: int):
+    route = Route.query.get(route_id)
+    if not route:
+        return api_error(code="NOT_FOUND", message="Route not found", status_code=404)
+    if request.method == "DELETE":
+        route.is_active = False
+        db.session.commit()
+        return api_success(message=f"Route {route.route_number} deactivated successfully")
+    data = request.get_json() or {}
+    if "name" in data:
+        route.name = data["name"]
+    if "source" in data:
+        route.source = data["source"]
+    if "destination" in data:
+        route.destination = data["destination"]
+    if "total_distance_km" in data:
+        route.total_distance_km = float(data["total_distance_km"])
+    if "estimated_duration_min" in data:
+        route.estimated_duration_min = int(data["estimated_duration_min"])
+    if "is_active" in data:
+        route.is_active = bool(data["is_active"])
+    db.session.commit()
+    return api_success(data=route.to_dict(), message="Route updated successfully")
+
+
 @admin_bp.route("/stops", methods=["GET", "POST"])
 @role_required("admin")
 def handle_stops():
@@ -1355,19 +1398,47 @@ def handle_stops():
         data = request.get_json() or {}
         code = data.get("stop_code")
         name = data.get("name")
+        name_mr = data.get("name_mr")
         lat = data.get("latitude")
         lon = data.get("longitude")
 
         if not code or not name or lat is None or lon is None:
             return api_error(code="VALIDATION_ERROR", message="Stop code, name, latitude, and longitude are required.", status_code=400)
 
-        stop = Stop(stop_code=code, name=name, latitude=float(lat), longitude=float(lon), landmark=data.get("landmark"))
+        stop = Stop(stop_code=code, name=name, name_mr=name_mr, latitude=float(lat), longitude=float(lon), landmark=data.get("landmark"))
         db.session.add(stop)
         db.session.commit()
         return api_success(data=stop.to_dict(), message="Stop created successfully", status_code=201)
 
     stops = Stop.query.all()
     return api_success(data=[s.to_dict() for s in stops])
+
+
+@admin_bp.route("/stops/<int:stop_id>", methods=["PUT", "DELETE"])
+@role_required("admin")
+def update_delete_stop(stop_id: int):
+    stop = Stop.query.get(stop_id)
+    if not stop:
+        return api_error(code="NOT_FOUND", message="Stop not found", status_code=404)
+    if request.method == "DELETE":
+        stop.is_active = False
+        db.session.commit()
+        return api_success(message=f"Stop {stop.stop_code} deactivated successfully")
+    data = request.get_json() or {}
+    if "name" in data:
+        stop.name = data["name"]
+    if "name_mr" in data:
+        stop.name_mr = data["name_mr"]
+    if "latitude" in data:
+        stop.latitude = float(data["latitude"])
+    if "longitude" in data:
+        stop.longitude = float(data["longitude"])
+    if "landmark" in data:
+        stop.landmark = data["landmark"]
+    if "is_active" in data:
+        stop.is_active = bool(data["is_active"])
+    db.session.commit()
+    return api_success(data=stop.to_dict(), message="Stop updated successfully")
 
 
 @admin_bp.route("/drivers", methods=["GET", "POST"])
@@ -1384,10 +1455,12 @@ def handle_drivers():
             return api_error(code="VALIDATION_ERROR", message="Driver code, full name, mobile, and license are required.", status_code=400)
 
         username = f"driver_{code.lower()}"
-        user = User(username=username, email=f"{username}@busnotify.com", role="driver")
-        user.set_password("Password123!")
-        db.session.add(user)
-        db.session.flush()
+        user = User.query.filter((User.username == username) | (User.email == f"{username}@busnotify.com")).first()
+        if not user:
+            user = User(username=username, email=f"{username}@busnotify.com", role="driver")
+            user.set_password("Password123!")
+            db.session.add(user)
+            db.session.flush()
 
         driver = Driver(user_id=user.id, driver_code=code, full_name=name, mobile_number=mob, license_number=lic)
         db.session.add(driver)
@@ -1396,6 +1469,32 @@ def handle_drivers():
 
     drivers = Driver.query.all()
     return api_success(data=[d.to_dict() for d in drivers])
+
+
+@admin_bp.route("/drivers/<int:driver_id>", methods=["PUT", "DELETE"])
+@role_required("admin")
+def update_delete_driver(driver_id: int):
+    driver = Driver.query.get(driver_id)
+    if not driver:
+        return api_error(code="NOT_FOUND", message="Driver not found", status_code=404)
+    if request.method == "DELETE":
+        driver.status = "OFF_DUTY"
+        if driver.user:
+            driver.user.is_active = False
+        db.session.commit()
+        return api_success(message=f"Driver {driver.driver_code} deactivated successfully")
+    data = request.get_json() or {}
+    if "full_name" in data:
+        driver.full_name = data["full_name"]
+    if "mobile_number" in data:
+        driver.mobile_number = data["mobile_number"]
+    if "license_number" in data:
+        driver.license_number = data["license_number"]
+    if "status" in data:
+        driver.status = data["status"]
+    db.session.commit()
+    return api_success(data=driver.to_dict(), message="Driver updated successfully")
+
 
 
 @admin_bp.route("/csv-import", methods=["POST"])
@@ -1646,9 +1745,14 @@ def passenger_emergency():
     return render_template("passenger/emergency.html", incident=incident)
 
 
-@view_bp.route("/passenger/replacement/<int:request_id>")
-def passenger_replacement(request_id):
-    depot_req = DepotRequest.query.get(request_id)
+@view_bp.route("/passenger/replacement/<string:request_identifier>")
+@view_bp.route("/passenger/replacement/<int:request_identifier>")
+def passenger_replacement(request_identifier):
+    depot_req = None
+    if isinstance(request_identifier, int) or str(request_identifier).isdigit():
+        depot_req = DepotRequest.query.get(int(request_identifier))
+    if not depot_req:
+        depot_req = DepotRequest.query.filter_by(request_code=str(request_identifier)).first()
     return render_template("passenger/replacement.html", depot_request=depot_req)
 
 
@@ -1670,9 +1774,24 @@ def driver_dashboard():
 
 @view_bp.route("/driver/start-trip")
 def driver_start_trip():
-    routes = Route.query.filter_by(is_active=True).all()
-    buses = Bus.query.filter_by(is_active=True).all()
-    return render_template("driver/start_trip.html", routes=routes, buses=buses)
+    user_id = session.get("user_id")
+    driver = Driver.query.filter_by(user_id=user_id).first() if user_id else None
+
+    assigned_bus = driver.assigned_bus if driver and driver.assigned_bus else None
+    assigned_route = driver.assigned_route if driver and driver.assigned_route else None
+
+    # Fetch active routes, prioritizing assigned route
+    routes = Route.query.filter_by(is_active=True).limit(100).all()
+    if assigned_route and assigned_route not in routes:
+        routes.insert(0, assigned_route)
+
+    # Fetch available buses, prioritizing assigned bus
+    buses = Bus.query.filter_by(is_active=True).limit(100).all()
+    if assigned_bus and assigned_bus not in buses:
+        buses.insert(0, assigned_bus)
+
+    return render_template("driver/start_trip.html", routes=routes, buses=buses, assigned_bus=assigned_bus, assigned_route=assigned_route)
+
 
 
 @view_bp.route("/driver/live-trip")

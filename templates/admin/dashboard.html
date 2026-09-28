@@ -303,17 +303,34 @@
     }
   }
 
-  function initQuickAnalyticsChart() {
+  async function initQuickAnalyticsChart() {
     const ctx = document.getElementById('quickAnalyticsChart');
     if (!ctx) return;
+
+    let chartLabels = [];
+    let chartValues = [];
+
+    try {
+      const res = await API.get('/api/admin/analytics');
+      if (res && res.route_delays && res.route_delays.labels) {
+        chartLabels = res.route_delays.labels.slice(0, 7);
+        chartValues = res.route_delays.values.slice(0, 7);
+      }
+    } catch (e) {
+      console.debug('Failed to load dynamic route delays:', e);
+    }
+
+    if (analyticsChartInstance) {
+      analyticsChartInstance.destroy();
+    }
 
     analyticsChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['Route 101 (Pune-Hadapsar)', 'Route 102 (Swargate-Katraj)', 'Route 103 (Kothrud-Viman)', 'Route 104 (Hinjewadi-Pune)', 'Route 105 (Deccan-Pimpri)', 'PUNE_MUM (Shivneri)', 'PUNE_NASHIK'],
+        labels: chartLabels.length ? chartLabels : ['No Delay Records'],
         datasets: [{
           label: 'Historical Avg Delay (Minutes)',
-          data: [14.0, 8.2, 11.5, 16.4, 7.8, 14.0, 16.5],
+          data: chartValues.length ? chartValues : [0],
           backgroundColor: 'rgba(232, 93, 4, 0.75)',
           borderColor: '#E85D04',
           borderWidth: 1,
@@ -335,6 +352,7 @@
       }
     });
   }
+
 
   document.addEventListener('DOMContentLoaded', () => {
     loadAdminDashboard();
