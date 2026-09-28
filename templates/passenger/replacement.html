@@ -187,7 +187,7 @@
       const pathParts = window.location.pathname.split('/');
       const reqId = pathParts[pathParts.length - 1];
 
-      const req = await API.get(`/api/depot/requests/${reqId}`);
+      const req = await API.get(`/api/passenger/replacement/${reqId}`);
       document.getElementById('replacementLoading').classList.add('d-none');
       document.getElementById('replacementContent').classList.remove('d-none');
 

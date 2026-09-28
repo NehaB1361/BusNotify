@@ -157,9 +157,19 @@ def search_buses():
         )
 
     if source:
-        trips_query = trips_query.filter(Route.source.ilike(f"%{source}%"))
+        trips_query = trips_query.filter(
+            or_(
+                Route.source.ilike(f"%{source}%"),
+                Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{source}%")))
+            )
+        )
     if destination:
-        trips_query = trips_query.filter(Route.destination.ilike(f"%{destination}%"))
+        trips_query = trips_query.filter(
+            or_(
+                Route.destination.ilike(f"%{destination}%"),
+                Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{destination}%")))
+            )
+        )
 
     if status_filter != "ALL":
         if status_filter == "ON TIME":
@@ -230,7 +240,13 @@ def get_bus_details(bus_identifier: str):
     if not bus:
         return api_error(code="NOT_FOUND", message=f"Bus '{bus_identifier}' not found.", status_code=404)
 
-    active_trip = Trip.query.filter_by(bus_id=bus.id).order_by(Trip.id.desc()).first()
+    active_trip = Trip.query.filter(
+        Trip.bus_id == bus.id,
+        Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "SCHEDULED"])
+    ).order_by(Trip.id.desc()).first()
+    if not active_trip:
+        active_trip = Trip.query.filter_by(bus_id=bus.id).order_by(Trip.id.desc()).first()
+
     route = bus.assigned_route or (active_trip.route if active_trip else None)
 
     stats = {}
@@ -241,12 +257,7 @@ def get_bus_details(bus_identifier: str):
         if stop_id:
             stats = DelayStatisticsService.get_stop_delay_stats(route.id, stop_id)
         else:
-            stats = DelayStatisticsService.calculate_stats([12.0, 14.0, 15.0, 16.0, 14.0, 13.0])
-    
-    # Fallback only if no historical records exist
-    if not stats or stats.get("count", 0) == 0:
-        if bus.bus_number == "123":
-            stats = DelayStatisticsService.calculate_stats([12.0, 14.0, 15.0, 16.0, 14.0, 13.0, 14.0, 14.0, 15.0, 14.0])
+            stats = DelayStatisticsService.calculate_stats([])
 
     active_incident = None
     depot_req = None
@@ -259,15 +270,24 @@ def get_bus_details(bus_identifier: str):
 
     route_timeline = []
     if route:
+        current_seq = None
+        if active_trip and active_trip.current_stop_id:
+            for rs in route.route_stops:
+                if rs.stop_id == active_trip.current_stop_id:
+                    current_seq = rs.sequence_order
+                    break
+
         for rs in route.route_stops:
+            is_cur = bool(active_trip and active_trip.current_stop_id == rs.stop.id)
+            is_pas = bool(current_seq is not None and rs.sequence_order < current_seq)
             route_timeline.append({
                 "sequence": rs.sequence_order,
                 "stop_id": rs.stop.id,
                 "stop_name": rs.stop.name,
                 "latitude": rs.stop.latitude,
                 "longitude": rs.stop.longitude,
-                "is_current": (active_trip and active_trip.current_stop_id == rs.stop.id),
-                "is_passed": False
+                "is_current": is_cur,
+                "is_passed": is_pas
             })
 
     now = datetime.utcnow()
@@ -446,14 +466,16 @@ driver_bp = Blueprint("driver_api", __name__, url_prefix="/api/driver")
 
 
 @driver_bp.route("/dashboard", methods=["GET"])
+@role_required("driver", "admin")
 def get_driver_dashboard():
     user_id = session.get("user_id")
+    user = User.query.get(user_id) if user_id else None
     driver = Driver.query.filter_by(user_id=user_id).first() if user_id else None
     if not driver:
-        driver = Driver.query.filter_by(driver_code="D104").first() or Driver.query.first()
-
-    if not driver:
-        return api_error(code="NOT_FOUND", message="No driver profile found.", status_code=404)
+        if user and user.role == "admin":
+            driver = Driver.query.first()
+        else:
+            return api_error(code="NOT_FOUND", message="No driver profile found.", status_code=404)
 
     active_trip = None
     if driver.assigned_bus_id:
@@ -491,6 +513,7 @@ def get_driver_dashboard():
 
 
 @driver_bp.route("/trip/start", methods=["POST"])
+@role_required("driver", "admin")
 def start_trip():
     data = request.get_json() or {}
     bus_id = data.get("bus_id")
@@ -499,9 +522,13 @@ def start_trip():
     initial_passenger_count = int(data.get("passenger_count", 0))
 
     user_id = session.get("user_id")
+    user = User.query.get(user_id) if user_id else None
     driver = Driver.query.filter_by(user_id=user_id).first() if user_id else None
+    if not driver and user and user.role == "admin":
+        driver = Driver.query.first()
+
     if not driver:
-        driver = Driver.query.filter_by(driver_code="D104").first() or Driver.query.first()
+        return api_error(code="NOT_FOUND", message="No driver profile found.", status_code=404)
 
     bus = Bus.query.get(bus_id) if bus_id else (driver.assigned_bus if driver else None)
     if not bus:
@@ -543,6 +570,7 @@ def start_trip():
 @driver_bp.route("/trip/stop-update", methods=["POST"])
 @driver_bp.route("/trip/stop", methods=["POST"])
 @driver_bp.route("/trip/passengers", methods=["POST"])
+@role_required("driver", "admin")
 def update_stop():
     data = request.get_json() or {}
     trip_id = data.get("trip_id")
@@ -552,6 +580,13 @@ def update_stop():
     trip = Trip.query.get(trip_id)
     if not trip:
         return api_error(code="NOT_FOUND", message="Trip not found.", status_code=404)
+
+    user_id = session.get("user_id")
+    user = User.query.get(user_id) if user_id else None
+    if user and user.role != "admin":
+        driver = Driver.query.filter_by(user_id=user_id).first()
+        if not driver or (trip.driver_id and trip.driver_id != driver.id):
+            return api_error(code="FORBIDDEN", message="You are not authorized to update this trip.", status_code=403)
 
     stop = Stop.query.get(stop_id) if stop_id else trip.current_stop
     if not stop:
@@ -588,7 +623,7 @@ def update_stop():
         bus_id=trip.bus_id,
         latitude=stop.latitude,
         longitude=stop.longitude,
-        speed_kmh=24.0,
+        speed_kmh=0.0,
         source="MANUAL_STOP",
         timestamp=datetime.utcnow()
     )
@@ -598,6 +633,7 @@ def update_stop():
 
 
 @driver_bp.route("/trip/gps", methods=["POST"])
+@role_required("driver", "admin")
 def update_gps():
     data = request.get_json() or {}
     trip_id = data.get("trip_id")
@@ -609,6 +645,13 @@ def update_gps():
     trip = Trip.query.get(trip_id)
     if not trip:
         return api_error(code="NOT_FOUND", message="Trip not found.", status_code=404)
+
+    user_id = session.get("user_id")
+    user = User.query.get(user_id) if user_id else None
+    if user and user.role != "admin":
+        driver = Driver.query.filter_by(user_id=user_id).first()
+        if not driver or (trip.driver_id and trip.driver_id != driver.id):
+            return api_error(code="FORBIDDEN", message="You are not authorized to update this trip.", status_code=403)
 
     if latitude is None or longitude is None:
         return api_error(code="VALIDATION_ERROR", message="Latitude and longitude are required.", status_code=400)
@@ -628,7 +671,7 @@ def update_gps():
 
 
 @driver_bp.route("/gps", methods=["POST"])
-@role_required("driver")
+@role_required("driver", "admin")
 def update_driver_gps():
     """Secure endpoint for driver browser watchPosition(). Derives bus and trip from session."""
     user_id = session.get("user_id")
@@ -732,6 +775,7 @@ def update_driver_gps():
 
 
 @driver_bp.route("/trip/emergency", methods=["POST"])
+@role_required("driver", "admin")
 def report_emergency():
     data = request.get_json() or {}
     trip_id = data.get("trip_id")
@@ -744,8 +788,18 @@ def report_emergency():
     if not trip_id:
         return api_error(code="VALIDATION_ERROR", message="Trip ID is required.", status_code=400)
 
+    trip = Trip.query.get(int(trip_id))
+    if not trip:
+        return api_error(code="NOT_FOUND", message="Trip not found.", status_code=404)
+
+    user_id = session.get("user_id")
+    user = User.query.get(user_id) if user_id else None
+    if user and user.role != "admin":
+        driver = Driver.query.filter_by(user_id=user_id).first()
+        if not driver or (trip.driver_id and trip.driver_id != driver.id):
+            return api_error(code="FORBIDDEN", message="You are not authorized to report an emergency on this trip.", status_code=403)
+
     try:
-        user_id = session.get("user_id")
         result = IncidentService.report_emergency(
             trip_id=int(trip_id),
             incident_type=incident_type,
@@ -761,6 +815,7 @@ def report_emergency():
 
 
 @driver_bp.route("/trip/end", methods=["POST"])
+@role_required("driver", "admin")
 def end_trip():
     data = request.get_json() or {}
     trip_id = data.get("trip_id")
@@ -768,6 +823,13 @@ def end_trip():
     trip = Trip.query.get(trip_id)
     if not trip:
         return api_error(code="NOT_FOUND", message="Trip not found.", status_code=404)
+
+    user_id = session.get("user_id")
+    user = User.query.get(user_id) if user_id else None
+    if user and user.role != "admin":
+        driver = Driver.query.filter_by(user_id=user_id).first()
+        if not driver or (trip.driver_id and trip.driver_id != driver.id):
+            return api_error(code="FORBIDDEN", message="You are not authorized to end this trip.", status_code=403)
 
     trip.status = "COMPLETED"
     trip.actual_end_time = datetime.utcnow()
@@ -787,6 +849,7 @@ depot_bp = Blueprint("depot_api", __name__, url_prefix="/api/depot")
 
 
 @depot_bp.route("/dashboard", methods=["GET"])
+@role_required("depot_operator", "admin")
 def get_depot_dashboard():
     total_reqs = DepotRequest.query.count()
     pending = DepotRequest.query.filter_by(status="PENDING").count()
@@ -828,6 +891,7 @@ def get_depot_dashboard():
 
 
 @depot_bp.route("/requests", methods=["GET"])
+@role_required("depot_operator", "admin")
 def get_requests():
     status = request.args.get("status")
     query = DepotRequest.query
@@ -838,6 +902,7 @@ def get_requests():
 
 
 @depot_bp.route("/requests/<int:request_id>", methods=["GET"])
+@role_required("depot_operator", "admin")
 def get_request_detail(request_id: int):
     req = DepotRequest.query.get(request_id)
     if not req:
@@ -846,6 +911,7 @@ def get_request_detail(request_id: int):
 
 
 @depot_bp.route("/assign", methods=["POST"])
+@role_required("depot_operator", "admin")
 def assign():
     data = request.get_json() or {}
     request_id = data.get("request_id")
@@ -871,6 +937,7 @@ def assign():
 
 
 @depot_bp.route("/dispatch", methods=["POST"])
+@role_required("depot_operator", "admin")
 def dispatch():
     data = request.get_json() or {}
     request_id = data.get("request_id")
@@ -886,6 +953,7 @@ def dispatch():
 
 
 @depot_bp.route("/arrive", methods=["POST"])
+@role_required("depot_operator", "admin")
 def arrive():
     data = request.get_json() or {}
     request_id = data.get("request_id")
@@ -901,6 +969,7 @@ def arrive():
 
 
 @depot_bp.route("/transfer", methods=["POST"])
+@role_required("depot_operator", "admin")
 def record_transfer():
     data = request.get_json() or {}
     request_id = data.get("request_id")
@@ -922,6 +991,7 @@ def record_transfer():
 
 
 @depot_bp.route("/resolve", methods=["POST"])
+@role_required("depot_operator", "admin")
 def resolve():
     data = request.get_json() or {}
     request_id = data.get("request_id")
@@ -949,6 +1019,7 @@ admin_bp = Blueprint("admin_api", __name__, url_prefix="/api/admin")
 
 
 @admin_bp.route("/dashboard", methods=["GET"])
+@role_required("admin")
 def get_admin_dashboard():
     total_buses = Bus.query.count()
     active_buses = Bus.query.filter(Bus.current_status.in_(["RUNNING", "DELAYED", "PUNCTURED"])).count()
@@ -984,6 +1055,7 @@ def get_admin_dashboard():
 
 
 @admin_bp.route("/live-buses", methods=["GET"])
+@role_required("admin")
 def get_live_buses():
     trips = Trip.query.filter(Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "SCHEDULED"])).all()
     results = []
@@ -1049,6 +1121,7 @@ def get_live_buses():
 
 
 @admin_bp.route("/analytics", methods=["GET"])
+@role_required("admin")
 def get_analytics():
     # 1. Delay Reasons aggregation from MySQL
     reasons_query = db.session.query(
@@ -1202,6 +1275,7 @@ def get_analytics():
 
 
 @admin_bp.route("/buses", methods=["GET", "POST"])
+@role_required("admin")
 def handle_buses():
     if request.method == "POST":
         data = request.get_json() or {}
@@ -1223,6 +1297,7 @@ def handle_buses():
 
 
 @admin_bp.route("/buses/<int:bus_id>", methods=["PUT", "DELETE"])
+@role_required("admin")
 def update_delete_bus(bus_id: int):
     bus = Bus.query.get(bus_id)
     if not bus:
@@ -1250,6 +1325,7 @@ def update_delete_bus(bus_id: int):
 
 
 @admin_bp.route("/routes", methods=["GET", "POST"])
+@role_required("admin")
 def handle_routes():
     if request.method == "POST":
         data = request.get_json() or {}
@@ -1258,11 +1334,12 @@ def handle_routes():
         src = data.get("source")
         dest = data.get("destination")
         dist = float(data.get("total_distance_km", 0.0))
+        est_duration = int(data.get("estimated_duration_min", 45))
 
         if not r_num or not name or not src or not dest:
             return api_error(code="VALIDATION_ERROR", message="Route number, name, source, and destination are required.", status_code=400)
 
-        route = Route(route_number=r_num, name=name, source=src, destination=dest, total_distance_km=dist)
+        route = Route(route_number=r_num, name=name, source=src, destination=dest, total_distance_km=dist, estimated_duration_min=est_duration)
         db.session.add(route)
         db.session.commit()
         return api_success(data=route.to_dict(), message="Route created successfully", status_code=201)
@@ -1272,6 +1349,7 @@ def handle_routes():
 
 
 @admin_bp.route("/stops", methods=["GET", "POST"])
+@role_required("admin")
 def handle_stops():
     if request.method == "POST":
         data = request.get_json() or {}
@@ -1293,6 +1371,7 @@ def handle_stops():
 
 
 @admin_bp.route("/drivers", methods=["GET", "POST"])
+@role_required("admin")
 def handle_drivers():
     if request.method == "POST":
         data = request.get_json() or {}
@@ -1320,6 +1399,7 @@ def handle_drivers():
 
 
 @admin_bp.route("/csv-import", methods=["POST"])
+@role_required("admin")
 def import_csv():
     if "file" not in request.files:
         return api_error(code="FILE_REQUIRED", message="CSV file is required in 'file' form field.", status_code=400)
@@ -1335,6 +1415,7 @@ def import_csv():
 
 
 @admin_bp.route("/csv-export/<table_name>", methods=["GET"])
+@role_required("admin")
 def export_csv(table_name: str):
     try:
         csv_data = CSVService.export_csv(table_name)

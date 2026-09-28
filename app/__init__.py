@@ -99,7 +99,8 @@ def create_app(config_name=None):
     def internal_server_error(error):
         db.session.rollback()
         if request.path.startswith("/api/"):
-            return api_error(code="SERVER_ERROR", message="An internal server error occurred.", details=str(error), status_code=500)
+            details = str(error) if app.debug else "Internal server error. Please try again later."
+            return api_error(code="SERVER_ERROR", message="An internal server error occurred.", details=details, status_code=500)
         return render_template("auth/500.html"), 500
 
     @app.errorhandler(Exception)
@@ -112,7 +113,8 @@ def create_app(config_name=None):
         db.session.rollback()
         app.logger.exception(f"Unhandled Exception: {error}")
         if request.path.startswith("/api/"):
-            return api_error(code="UNHANDLED_EXCEPTION", message="An unexpected server error occurred.", details=str(error), status_code=500)
+            details = str(error) if app.debug else "An unexpected error occurred."
+            return api_error(code="UNHANDLED_EXCEPTION", message="An unexpected server error occurred.", details=details, status_code=500)
         return render_template("auth/500.html"), 500
 
     # Auto-create tables if not present

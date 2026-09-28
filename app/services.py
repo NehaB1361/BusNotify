@@ -12,14 +12,17 @@ Includes:
 import sys
 import io
 import csv
+import time
 import math
 import heapq
 import numpy as np
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple
+from sqlalchemy import func
 
 from app.models import (
     db,
+    User,
     Route, Stop, RouteStop, RouteConnectivity,
     Bus, BusCapacity, Driver,
     Trip, LiveGPS, PassengerCount, HistoricalDelay,
@@ -338,9 +341,29 @@ class AlternativeBusService:
             if available_seats <= 0:
                 continue
 
-            eta = 12 if bus.bus_number == "156" else (18 if bus.bus_number == "178" else 15)
+            # Dynamic ETA and walking distance calculation
+            dist_km = 0.0
+            if current_stop:
+                latest_gps = trip.gps_records.first()
+                if latest_gps and latest_gps.latitude and latest_gps.longitude:
+                    dist_km = haversine_distance_km(
+                        latest_gps.latitude, latest_gps.longitude,
+                        current_stop.latitude, current_stop.longitude
+                    )
+                elif trip.current_stop:
+                    dist_km = haversine_distance_km(
+                        trip.current_stop.latitude, trip.current_stop.longitude,
+                        current_stop.latitude, current_stop.longitude
+                    )
+
+            stop_stats = DelayStatisticsService.get_stop_delay_stats(
+                route_id=trip.route_id,
+                stop_id=current_stop.id if current_stop else (trip.current_stop_id or 1)
+            )
+            hist_delay = round(float(stop_stats.get("expected_delay", 8.0)), 1)
+            travel_time_min = max(4, int(round((dist_km / 24.0) * 60))) if dist_km > 0 else (10 if direct_route else 15)
+            eta = travel_time_min + int(round(hist_delay * 0.4))
             walking_dist = 0 if passes_stop else 250
-            hist_delay = 8.0 if bus.bus_number == "156" else (11.0 if bus.bus_number == "178" else 10.0)
 
             candidates.append({
                 "bus_id": bus.id,
@@ -404,8 +427,10 @@ class IncidentService:
             trip.current_stop_id = current_stop_id
         bus.current_status = bus_status
 
-        incident_count = Incident.query.count() + 1
-        incident_number = f"INC-{incident_count:03d}"
+        max_inc = db.session.query(func.max(Incident.id)).scalar() or 0
+        incident_number = f"INC-{max_inc + 1:03d}"
+        if Incident.query.filter_by(incident_number=incident_number).first():
+            incident_number = f"INC-{max_inc + 1:03d}-{int(time.time()) % 1000:03d}"
 
         incident = Incident(
             incident_number=incident_number,
@@ -423,8 +448,10 @@ class IncidentService:
         db.session.add(incident)
         db.session.flush()
 
-        depot_req_count = DepotRequest.query.count() + 1
-        request_code = f"DR{depot_req_count:03d}"
+        max_dr = db.session.query(func.max(DepotRequest.id)).scalar() or 0
+        request_code = f"DR{max_dr + 1:03d}"
+        if DepotRequest.query.filter_by(request_code=request_code).first():
+            request_code = f"DR{max_dr + 1:03d}-{int(time.time()) % 1000:03d}"
 
         depot_request = DepotRequest(
             request_code=request_code,
@@ -664,6 +691,27 @@ class DepotWorkflowService:
 
         if req.replacement_bus:
             req.replacement_bus.current_status = "RUNNING"
+            active_rep_trip = Trip.query.filter(
+                Trip.bus_id == req.replacement_bus.id,
+                Trip.status.in_(["RUNNING", "DELAYED"])
+            ).first()
+            if not active_rep_trip:
+                max_trip = db.session.query(func.max(Trip.id)).scalar() or 0
+                rep_trip = Trip(
+                    trip_code=f"TRIP-{req.replacement_bus.bus_number}-RELIEF-{max_trip + 1:03d}",
+                    bus_id=req.replacement_bus.id,
+                    driver_id=req.replacement_driver_id,
+                    route_id=req.route_id,
+                    current_stop_id=req.stop_id,
+                    status="RUNNING",
+                    passenger_count=req.transferred_passengers or 0,
+                    scheduled_start_time=datetime.utcnow(),
+                    actual_start_time=datetime.utcnow()
+                )
+                db.session.add(rep_trip)
+
+        if req.failed_bus:
+            req.failed_bus.current_status = "MAINTENANCE"
 
         db.session.add(Notification(
             target_role="passenger",
@@ -690,7 +738,7 @@ class CSVService:
             "model": Stop
         },
         "buses": {
-            "required_headers": ["bus_number", "registration_number", "capacity", "depot_name"],
+            "required_headers": ["bus_number", "registration_number", "capacity"],
             "model": Bus
         },
         "drivers": {
@@ -700,6 +748,10 @@ class CSVService:
         "historical_delays": {
             "required_headers": ["route_number", "stop_code", "weekday", "hour_of_day", "delay_minutes", "delay_reason", "sample_date"],
             "model": HistoricalDelay
+        },
+        "bus_capacity": {
+            "required_headers": ["bus_number", "capacity"],
+            "model": BusCapacity
         },
     }
 
@@ -744,28 +796,70 @@ class CSVService:
                     )
                     db.session.add(s)
                 elif table_name == "buses":
+                    route_id_raw = row.get("assigned_route_id")
+                    route_id = int(route_id_raw) if route_id_raw and str(route_id_raw).isdigit() else None
                     b = Bus(
                         bus_number=row["bus_number"].strip(),
                         registration_number=row["registration_number"].strip(),
                         capacity=int(row.get("capacity", 40)),
-                        depot_name=row.get("depot_name", "Pune Central Depot").strip()
+                        depot_name=row.get("depot_name", "Pune Central Depot").strip() if row.get("depot_name") else "Pune Central Depot",
+                        assigned_route_id=route_id
                     )
                     db.session.add(b)
                 elif table_name == "drivers":
+                    code_clean = row["driver_code"].strip()
+                    username = f"driver_{code_clean.lower()}"
+                    user = User.query.filter_by(username=username).first()
+                    if not user:
+                        user = User(
+                            username=username,
+                            email=f"{username}@busnotify.com",
+                            role="driver"
+                        )
+                        user.set_password("Password123!")
+                        db.session.add(user)
+                        db.session.flush()
+
                     d = Driver(
-                        user_id=1,  # fallback
-                        driver_code=row["driver_code"].strip(),
+                        user_id=user.id,
+                        driver_code=code_clean,
                         full_name=row["full_name"].strip(),
                         mobile_number=row["mobile_number"].strip(),
                         license_number=row["license_number"].strip()
                     )
                     db.session.add(d)
+                elif table_name == "bus_capacity":
+                    b_num = row["bus_number"].strip()
+                    bus_obj = Bus.query.filter_by(bus_number=b_num).first()
+                    if bus_obj:
+                        cap_total = int(row.get("capacity", 40))
+                        bc = BusCapacity.query.filter_by(bus_id=bus_obj.id).first()
+                        if not bc:
+                            bc = BusCapacity(
+                                bus_id=bus_obj.id,
+                                total_capacity=cap_total,
+                                seated_capacity=int(cap_total * 0.8),
+                                standing_capacity=int(cap_total * 0.2)
+                            )
+                            db.session.add(bc)
                 imported += 1
             except Exception as e:
-                errors.append(f"Row {row_num}: {str(e)}")
+                errors.append({"row": row_num, "error": str(e)})
 
-        db.session.commit()
-        return {"imported": imported, "errors": errors}
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            raise ValueError(f"Database commit error during import: {e}")
+
+        total_processed = imported + len(errors)
+        return {
+            "total_processed": total_processed,
+            "successful_rows": imported,
+            "failed_rows": len(errors),
+            "imported": imported,
+            "errors": errors
+        }
 
     @classmethod
     def export_csv(cls, table_name: str) -> str:

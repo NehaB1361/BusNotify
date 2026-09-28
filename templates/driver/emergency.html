@@ -148,7 +148,10 @@
   }
 
   async function executeEmergencyReport() {
-    if (!currentTripId) currentTripId = 1;
+    if (!currentTripId) {
+      TransitUI.showToast('No active trip found. Please start a trip before reporting an emergency.', 'danger');
+      return;
+    }
 
     const type = document.getElementById('incTypeSelect').value;
     const stopId = document.getElementById('incStopSelect').value;
@@ -171,9 +174,9 @@
       });
 
       emergencyModal.hide();
-      TransitUI.showToast('Emergency report submitted successfully. Operations alerted!', 'success');
+      TransitUI.showToast('Emergency report submitted successfully. Depot dispatch initiated!', 'success');
       setTimeout(() => {
-        window.location.href = `/passenger/emergency?incident_id=${res.incident.id}`;
+        window.location.href = '/driver/live-trip?incident_reported=1';
       }, 1000);
 
     } catch (err) {

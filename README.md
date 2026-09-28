@@ -13,7 +13,7 @@
 
 ## Overview
 
-BusNotify is a **full-stack college final-year project** demonstrating real-world software engineering. It provides:
+BusNotify is a **full-stack college project** demonstrating real-world software engineering. It provides:
 
 - 🔍 **Live Bus Tracking** — Passengers search buses by route, stop, or bus number
 - 📊 **Historical Statistical Estimates** — Descriptive statistics (mean, median, P90) from 90+ days of trip data *(not AI)*

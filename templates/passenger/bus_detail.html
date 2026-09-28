@@ -256,24 +256,36 @@
       }
 
       // Statistics
-      document.getElementById('sampleCountBadge').textContent = `Sample: ${stats.count || 128} trips`;
-      document.getElementById('statExpectedDelay').textContent = `${stats.expected_delay || stats.mean || 14} min`;
-      document.getElementById('statExpectedRange').textContent = `${stats.expected_range_min || 10}–${stats.expected_range_max || 18} min`;
-      document.getElementById('statOnTimePct').textContent = `${stats.on_time_percentage || 78.5}%`;
-      document.getElementById('statMean').textContent = `${stats.mean || 14.0} min`;
-      document.getElementById('statMedian').textContent = `${stats.median || 14.0} min`;
-      document.getElementById('statP90').textContent = `${stats.p90 || 18.0} min`;
-      document.getElementById('statMin').textContent = `${stats.min || 5.0} min`;
-      document.getElementById('statMax').textContent = `${stats.max || 28.0} min`;
-      document.getElementById('statStd').textContent = `${stats.std_dev || 3.4} min`;
+      const count = stats.count !== undefined && stats.count !== null ? stats.count : 0;
+      const expDelay = stats.expected_delay !== undefined && stats.expected_delay !== null ? stats.expected_delay : (stats.mean !== undefined && stats.mean !== null ? stats.mean : 0);
+      const rangeMin = stats.expected_range_min !== undefined && stats.expected_range_min !== null ? stats.expected_range_min : 0;
+      const rangeMax = stats.expected_range_max !== undefined && stats.expected_range_max !== null ? stats.expected_range_max : 0;
+      const onTime = stats.on_time_percentage !== undefined && stats.on_time_percentage !== null ? stats.on_time_percentage : 100.0;
+      const mean = stats.mean !== undefined && stats.mean !== null ? stats.mean : 0.0;
+      const median = stats.median !== undefined && stats.median !== null ? stats.median : 0.0;
+      const p90 = stats.p90 !== undefined && stats.p90 !== null ? stats.p90 : 0.0;
+      const min = stats.min !== undefined && stats.min !== null ? stats.min : 0.0;
+      const max = stats.max !== undefined && stats.max !== null ? stats.max : 0.0;
+      const std = stats.std_dev !== undefined && stats.std_dev !== null ? stats.std_dev : 0.0;
+
+      document.getElementById('sampleCountBadge').textContent = `Sample: ${count} trips`;
+      document.getElementById('statExpectedDelay').textContent = `${expDelay} min`;
+      document.getElementById('statExpectedRange').textContent = `${rangeMin}–${rangeMax} min`;
+      document.getElementById('statOnTimePct').textContent = `${onTime}%`;
+      document.getElementById('statMean').textContent = `${mean} min`;
+      document.getElementById('statMedian').textContent = `${median} min`;
+      document.getElementById('statP90').textContent = `${p90} min`;
+      document.getElementById('statMin').textContent = `${min} min`;
+      document.getElementById('statMax').textContent = `${max} min`;
+      document.getElementById('statStd').textContent = `${std} min`;
 
       if (stats.limited_data) {
         document.getElementById('limitedDataAlert').classList.remove('d-none');
       }
 
       // Card stops
-      document.getElementById('cardCurrentStop').textContent = trip.current_stop_name || 'Magarpatta';
-      document.getElementById('cardNextStop').textContent = trip.next_stop_name || 'Hadapsar';
+      document.getElementById('cardCurrentStop').textContent = trip.current_stop_name || (route ? route.source : 'In Transit');
+      document.getElementById('cardNextStop').textContent = trip.next_stop_name || 'Terminus';
 
       // Render Map
       renderMap(data);
