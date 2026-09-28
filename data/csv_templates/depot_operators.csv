@@ -1,0 +1,331 @@
+operator_id,operator_name,email,status
+1,Pune Depot Operator,pune.depot@example.com,ACTIVE
+2,Mumbai Depot Operator,mumbai.depot@example.com,ACTIVE
+3,Swargate Depot Operator,swargate.depot@example.com,ACTIVE
+4,Shivajinagar Depot Operator,shivajinagar.depot@example.com,ACTIVE
+5,Hadapsar Depot Operator,hadapsar.depot@example.com,ACTIVE
+6,Pimpri Depot Operator,pimpri.depot@example.com,ACTIVE
+7,Chinchwad Depot Operator,chinchwad.depot@example.com,ACTIVE
+8,Nigdi Depot Operator,nigdi.depot@example.com,ACTIVE
+9,Kothrud Depot Operator,kothrud.depot@example.com,ACTIVE
+10,Katraj Depot Operator,katraj.depot@example.com,ACTIVE
+11,Wakad Depot Operator,wakad.depot@example.com,ACTIVE
+12,Baramati Depot Operator,baramati.depot@example.com,ACTIVE
+13,Junnar Depot Operator,junnar.depot@example.com,ACTIVE
+14,Shirur Depot Operator,shirur.depot@example.com,ACTIVE
+15,Indapur Depot Operator,indapur.depot@example.com,ACTIVE
+16,Daund Depot Operator,daund.depot@example.com,ACTIVE
+17,Lonavala Depot Operator,lonavala.depot@example.com,ACTIVE
+18,Talegaon Depot Operator,talegaon.depot@example.com,ACTIVE
+19,Bhor Depot Operator,bhor.depot@example.com,ACTIVE
+20,Saswad Depot Operator,saswad.depot@example.com,ACTIVE
+21,Manchar Depot Operator,manchar.depot@example.com,ACTIVE
+22,Rajgurunagar Depot Operator,rajgurunagar.depot@example.com,ACTIVE
+23,Colaba Depot Operator,colaba.depot@example.com,ACTIVE
+24,Dadar Depot Operator,dadar.depot@example.com,ACTIVE
+25,Kurla Depot Operator,kurla.depot@example.com,ACTIVE
+26,Bandra Depot Operator,bandra.depot@example.com,ACTIVE
+27,Andheri Depot Operator,andheri.depot@example.com,INACTIVE
+28,Borivali Depot Operator,borivali.depot@example.com,ACTIVE
+29,Goregaon Depot Operator,goregaon.depot@example.com,ACTIVE
+30,Mulund Depot Operator,mulund.depot@example.com,ACTIVE
+31,Chembur Depot Operator,chembur.depot@example.com,ACTIVE
+32,Worli Depot Operator,worli.depot@example.com,ACTIVE
+33,Parel Depot Operator,parel.depot@example.com,ACTIVE
+34,Sion Depot Operator,sion.depot@example.com,ACTIVE
+35,Dharavi Depot Operator,dharavi.depot@example.com,ACTIVE
+36,Malad Depot Operator,malad.depot@example.com,INACTIVE
+37,Kandivali Depot Operator,kandivali.depot@example.com,ACTIVE
+38,Thane Depot Operator,thane.depot@example.com,ACTIVE
+39,Kalyan Depot Operator,kalyan.depot@example.com,ACTIVE
+40,Dombivli Depot Operator,dombivli.depot@example.com,ACTIVE
+41,Ulhasnagar Depot Operator,ulhasnagar.depot@example.com,ACTIVE
+42,Bhiwandi Depot Operator,bhiwandi.depot@example.com,ACTIVE
+43,Ambernath Depot Operator,ambernath.depot@example.com,ACTIVE
+44,Badlapur Depot Operator,badlapur.depot@example.com,ACTIVE
+45,Murbad Depot Operator,murbad.depot@example.com,ACTIVE
+46,Shahapur Depot Operator,shahapur.depot@example.com,ACTIVE
+47,Mira Road Depot Operator,mira.road.depot@example.com,ACTIVE
+48,Vasai Depot Operator,vasai.depot@example.com,ACTIVE
+49,Virar Depot Operator,virar.depot@example.com,ACTIVE
+50,Nalasopara Depot Operator,nalasopara.depot@example.com,ACTIVE
+51,Palghar Depot Operator,palghar.depot@example.com,ACTIVE
+52,Dahanu Depot Operator,dahanu.depot@example.com,ACTIVE
+53,Jawhar Depot Operator,jawhar.depot@example.com,ACTIVE
+54,Boisar Depot Operator,boisar.depot@example.com,ACTIVE
+55,Vashi Depot Operator,vashi.depot@example.com,ACTIVE
+56,Nerul Depot Operator,nerul.depot@example.com,INACTIVE
+57,Panvel Depot Operator,panvel.depot@example.com,ACTIVE
+58,Kharghar Depot Operator,kharghar.depot@example.com,ACTIVE
+59,Belapur Depot Operator,belapur.depot@example.com,ACTIVE
+60,Airoli Depot Operator,airoli.depot@example.com,ACTIVE
+61,Uran Depot Operator,uran.depot@example.com,ACTIVE
+62,Alibag Depot Operator,alibag.depot@example.com,ACTIVE
+63,Pen Depot Operator,pen.depot@example.com,INACTIVE
+64,Mahad Depot Operator,mahad.depot@example.com,ACTIVE
+65,Roha Depot Operator,roha.depot@example.com,ACTIVE
+66,Khopoli Depot Operator,khopoli.depot@example.com,ACTIVE
+67,Karjat Depot Operator,karjat.depot@example.com,ACTIVE
+68,Murud Depot Operator,murud.depot@example.com,ACTIVE
+69,Shrivardhan Depot Operator,shrivardhan.depot@example.com,ACTIVE
+70,Mangaon Depot Operator,mangaon.depot@example.com,ACTIVE
+71,Ratnagiri Depot Operator,ratnagiri.depot@example.com,ACTIVE
+72,Chiplun Depot Operator,chiplun.depot@example.com,ACTIVE
+73,Khed Depot Operator,khed.depot@example.com,ACTIVE
+74,Dapoli Depot Operator,dapoli.depot@example.com,INACTIVE
+75,Rajapur Depot Operator,rajapur.depot@example.com,ACTIVE
+76,Lanja Depot Operator,lanja.depot@example.com,ACTIVE
+77,Sangameshwar Depot Operator,sangameshwar.depot@example.com,ACTIVE
+78,Guhagar Depot Operator,guhagar.depot@example.com,ACTIVE
+79,Kudal Depot Operator,kudal.depot@example.com,INACTIVE
+80,Sawantwadi Depot Operator,sawantwadi.depot@example.com,ACTIVE
+81,Kankavli Depot Operator,kankavli.depot@example.com,ACTIVE
+82,Malvan Depot Operator,malvan.depot@example.com,ACTIVE
+83,Vengurla Depot Operator,vengurla.depot@example.com,ACTIVE
+84,Devgad Depot Operator,devgad.depot@example.com,ACTIVE
+85,Nashik Depot Operator,nashik.depot@example.com,ACTIVE
+86,Nashik Road Depot Operator,nashik.road.depot@example.com,ACTIVE
+87,Malegaon Depot Operator,malegaon.depot@example.com,ACTIVE
+88,Sinnar Depot Operator,sinnar.depot@example.com,ACTIVE
+89,Igatpuri Depot Operator,igatpuri.depot@example.com,INACTIVE
+90,Niphad Depot Operator,niphad.depot@example.com,ACTIVE
+91,Yeola Depot Operator,yeola.depot@example.com,ACTIVE
+92,Manmad Depot Operator,manmad.depot@example.com,ACTIVE
+93,Dindori Depot Operator,dindori.depot@example.com,ACTIVE
+94,Satana Depot Operator,satana.depot@example.com,ACTIVE
+95,Trimbak Depot Operator,trimbak.depot@example.com,ACTIVE
+96,Lasalgaon Depot Operator,lasalgaon.depot@example.com,ACTIVE
+97,Nandgaon Depot Operator,nandgaon.depot@example.com,ACTIVE
+98,Ahmednagar Depot Operator,ahmednagar.depot@example.com,ACTIVE
+99,Shrirampur Depot Operator,shrirampur.depot@example.com,INACTIVE
+100,Sangamner Depot Operator,sangamner.depot@example.com,ACTIVE
+101,Kopargaon Depot Operator,kopargaon.depot@example.com,INACTIVE
+102,Rahuri Depot Operator,rahuri.depot@example.com,ACTIVE
+103,Shevgaon Depot Operator,shevgaon.depot@example.com,ACTIVE
+104,Pathardi Depot Operator,pathardi.depot@example.com,ACTIVE
+105,Jamkhed Depot Operator,jamkhed.depot@example.com,ACTIVE
+106,Karjat Ahmednagar Depot Operator,karjat.ahmednagar.depot@example.com,ACTIVE
+107,Newasa Depot Operator,newasa.depot@example.com,ACTIVE
+108,Akole Depot Operator,akole.depot@example.com,ACTIVE
+109,Dhule Depot Operator,dhule.depot@example.com,ACTIVE
+110,Shirpur Depot Operator,shirpur.depot@example.com,ACTIVE
+111,Sakri Depot Operator,sakri.depot@example.com,ACTIVE
+112,Shindkheda Depot Operator,shindkheda.depot@example.com,INACTIVE
+113,Nandurbar Depot Operator,nandurbar.depot@example.com,ACTIVE
+114,Shahada Depot Operator,shahada.depot@example.com,ACTIVE
+115,Taloda Depot Operator,taloda.depot@example.com,ACTIVE
+116,Akkalkuwa Depot Operator,akkalkuwa.depot@example.com,ACTIVE
+117,Jalgaon Depot Operator,jalgaon.depot@example.com,INACTIVE
+118,Bhusawal Depot Operator,bhusawal.depot@example.com,ACTIVE
+119,Amalner Depot Operator,amalner.depot@example.com,ACTIVE
+120,Chalisgaon Depot Operator,chalisgaon.depot@example.com,ACTIVE
+121,Pachora Depot Operator,pachora.depot@example.com,ACTIVE
+122,Raver Depot Operator,raver.depot@example.com,ACTIVE
+123,Yawal Depot Operator,yawal.depot@example.com,ACTIVE
+124,Erandol Depot Operator,erandol.depot@example.com,ACTIVE
+125,Parola Depot Operator,parola.depot@example.com,ACTIVE
+126,Muktainagar Depot Operator,muktainagar.depot@example.com,ACTIVE
+127,Kolhapur Depot Operator,kolhapur.depot@example.com,ACTIVE
+128,Ichalkaranji Depot Operator,ichalkaranji.depot@example.com,ACTIVE
+129,Kagal Depot Operator,kagal.depot@example.com,ACTIVE
+130,Gadhinglaj Depot Operator,gadhinglaj.depot@example.com,INACTIVE
+131,Radhanagari Depot Operator,radhanagari.depot@example.com,ACTIVE
+132,Jaysingpur Depot Operator,jaysingpur.depot@example.com,ACTIVE
+133,Panhala Depot Operator,panhala.depot@example.com,ACTIVE
+134,Shirol Depot Operator,shirol.depot@example.com,ACTIVE
+135,Sangli Depot Operator,sangli.depot@example.com,ACTIVE
+136,Miraj Depot Operator,miraj.depot@example.com,INACTIVE
+137,Islampur Depot Operator,islampur.depot@example.com,ACTIVE
+138,Tasgaon Depot Operator,tasgaon.depot@example.com,ACTIVE
+139,Vita Depot Operator,vita.depot@example.com,ACTIVE
+140,Jat Depot Operator,jat.depot@example.com,ACTIVE
+141,Kavathe Mahankal Depot Operator,kavathe.mahankal.depot@example.com,ACTIVE
+142,Atpadi Depot Operator,atpadi.depot@example.com,ACTIVE
+143,Satara Depot Operator,satara.depot@example.com,ACTIVE
+144,Karad Depot Operator,karad.depot@example.com,ACTIVE
+145,Wai Depot Operator,wai.depot@example.com,ACTIVE
+146,Mahabaleshwar Depot Operator,mahabaleshwar.depot@example.com,ACTIVE
+147,Koregaon Depot Operator,koregaon.depot@example.com,ACTIVE
+148,Phaltan Depot Operator,phaltan.depot@example.com,ACTIVE
+149,Man Dahiwadi Depot Operator,man.dahiwadi.depot@example.com,ACTIVE
+150,Patan Depot Operator,patan.depot@example.com,ACTIVE
+151,Khandala Depot Operator,khandala.depot@example.com,ACTIVE
+152,Solapur Depot Operator,solapur.depot@example.com,ACTIVE
+153,Pandharpur Depot Operator,pandharpur.depot@example.com,INACTIVE
+154,Barshi Depot Operator,barshi.depot@example.com,ACTIVE
+155,Akkalkot Depot Operator,akkalkot.depot@example.com,ACTIVE
+156,Sangola Depot Operator,sangola.depot@example.com,ACTIVE
+157,Mangalvedha Depot Operator,mangalvedha.depot@example.com,ACTIVE
+158,Karmala Depot Operator,karmala.depot@example.com,ACTIVE
+159,Malshiras Depot Operator,malshiras.depot@example.com,ACTIVE
+160,Madha Depot Operator,madha.depot@example.com,ACTIVE
+161,Sambhajinagar Depot Operator,sambhajinagar.depot@example.com,ACTIVE
+162,Paithan Depot Operator,paithan.depot@example.com,ACTIVE
+163,Gangapur Depot Operator,gangapur.depot@example.com,ACTIVE
+164,Vaijapur Depot Operator,vaijapur.depot@example.com,ACTIVE
+165,Kannad Depot Operator,kannad.depot@example.com,ACTIVE
+166,Sillod Depot Operator,sillod.depot@example.com,INACTIVE
+167,Khuldabad Depot Operator,khuldabad.depot@example.com,ACTIVE
+168,Soegaon Depot Operator,soegaon.depot@example.com,ACTIVE
+169,Jalna Depot Operator,jalna.depot@example.com,ACTIVE
+170,Partur Depot Operator,partur.depot@example.com,ACTIVE
+171,Ambad Depot Operator,ambad.depot@example.com,ACTIVE
+172,Bhokardan Depot Operator,bhokardan.depot@example.com,ACTIVE
+173,Mantha Depot Operator,mantha.depot@example.com,INACTIVE
+174,Beed Depot Operator,beed.depot@example.com,ACTIVE
+175,Georai Depot Operator,georai.depot@example.com,ACTIVE
+176,Majalgaon Depot Operator,majalgaon.depot@example.com,ACTIVE
+177,Parli Depot Operator,parli.depot@example.com,ACTIVE
+178,Ashti Depot Operator,ashti.depot@example.com,ACTIVE
+179,Ambajogai Depot Operator,ambajogai.depot@example.com,ACTIVE
+180,Kaij Depot Operator,kaij.depot@example.com,ACTIVE
+181,Patoda Depot Operator,patoda.depot@example.com,ACTIVE
+182,Latur Depot Operator,latur.depot@example.com,ACTIVE
+183,Udgir Depot Operator,udgir.depot@example.com,ACTIVE
+184,Ausa Depot Operator,ausa.depot@example.com,ACTIVE
+185,Nilanga Depot Operator,nilanga.depot@example.com,INACTIVE
+186,Ahmedpur Depot Operator,ahmedpur.depot@example.com,ACTIVE
+187,Renapur Depot Operator,renapur.depot@example.com,ACTIVE
+188,Dharashiv Depot Operator,dharashiv.depot@example.com,ACTIVE
+189,Tuljapur Depot Operator,tuljapur.depot@example.com,ACTIVE
+190,Omerga Depot Operator,omerga.depot@example.com,ACTIVE
+191,Kalamb Depot Operator,kalamb.depot@example.com,ACTIVE
+192,Bhum Depot Operator,bhum.depot@example.com,ACTIVE
+193,Paranda Depot Operator,paranda.depot@example.com,ACTIVE
+194,Nanded Depot Operator,nanded.depot@example.com,ACTIVE
+195,Bhokar Depot Operator,bhokar.depot@example.com,ACTIVE
+196,Deglur Depot Operator,deglur.depot@example.com,INACTIVE
+197,Kinwat Depot Operator,kinwat.depot@example.com,ACTIVE
+198,Hadgaon Depot Operator,hadgaon.depot@example.com,ACTIVE
+199,Mukhed Depot Operator,mukhed.depot@example.com,ACTIVE
+200,Biloli Depot Operator,biloli.depot@example.com,ACTIVE
+201,Loha Depot Operator,loha.depot@example.com,INACTIVE
+202,Parbhani Depot Operator,parbhani.depot@example.com,ACTIVE
+203,Gangakhed Depot Operator,gangakhed.depot@example.com,INACTIVE
+204,Pathri Depot Operator,pathri.depot@example.com,INACTIVE
+205,Sonpeth Depot Operator,sonpeth.depot@example.com,ACTIVE
+206,Jintur Depot Operator,jintur.depot@example.com,ACTIVE
+207,Selu Depot Operator,selu.depot@example.com,ACTIVE
+208,Hingoli Depot Operator,hingoli.depot@example.com,ACTIVE
+209,Basmath Depot Operator,basmath.depot@example.com,ACTIVE
+210,Kalamnuri Depot Operator,kalamnuri.depot@example.com,ACTIVE
+211,Sengaon Depot Operator,sengaon.depot@example.com,ACTIVE
+212,Nagpur Depot Operator,nagpur.depot@example.com,INACTIVE
+213,Kamptee Depot Operator,kamptee.depot@example.com,ACTIVE
+214,Katol Depot Operator,katol.depot@example.com,ACTIVE
+215,Narkhed Depot Operator,narkhed.depot@example.com,ACTIVE
+216,Ramtek Depot Operator,ramtek.depot@example.com,ACTIVE
+217,Umred Depot Operator,umred.depot@example.com,INACTIVE
+218,Hingna Depot Operator,hingna.depot@example.com,INACTIVE
+219,Saoner Depot Operator,saoner.depot@example.com,ACTIVE
+220,Kalmeshwar Depot Operator,kalmeshwar.depot@example.com,ACTIVE
+221,Butibori Depot Operator,butibori.depot@example.com,ACTIVE
+222,Wardha Depot Operator,wardha.depot@example.com,ACTIVE
+223,Hinganghat Depot Operator,hinganghat.depot@example.com,INACTIVE
+224,Arvi Depot Operator,arvi.depot@example.com,ACTIVE
+225,Pulgaon Depot Operator,pulgaon.depot@example.com,ACTIVE
+226,Seloo Depot Operator,seloo.depot@example.com,ACTIVE
+227,Bhandara Depot Operator,bhandara.depot@example.com,ACTIVE
+228,Tumsar Depot Operator,tumsar.depot@example.com,ACTIVE
+229,Pauni Depot Operator,pauni.depot@example.com,ACTIVE
+230,Sakoli Depot Operator,sakoli.depot@example.com,ACTIVE
+231,Gondia Depot Operator,gondia.depot@example.com,ACTIVE
+232,Tirora Depot Operator,tirora.depot@example.com,INACTIVE
+233,Arjuni Morgaon Depot Operator,arjuni.morgaon.depot@example.com,ACTIVE
+234,Deori Depot Operator,deori.depot@example.com,ACTIVE
+235,Chandrapur Depot Operator,chandrapur.depot@example.com,ACTIVE
+236,Ballarpur Depot Operator,ballarpur.depot@example.com,ACTIVE
+237,Warora Depot Operator,warora.depot@example.com,ACTIVE
+238,Bhadravati Depot Operator,bhadravati.depot@example.com,ACTIVE
+239,Rajura Depot Operator,rajura.depot@example.com,ACTIVE
+240,Mul Depot Operator,mul.depot@example.com,ACTIVE
+241,Brahmapuri Depot Operator,brahmapuri.depot@example.com,ACTIVE
+242,Gadchiroli Depot Operator,gadchiroli.depot@example.com,ACTIVE
+243,Aheri Depot Operator,aheri.depot@example.com,ACTIVE
+244,Armori Depot Operator,armori.depot@example.com,ACTIVE
+245,Desaiganj Depot Operator,desaiganj.depot@example.com,ACTIVE
+246,Sironcha Depot Operator,sironcha.depot@example.com,INACTIVE
+247,Amravati Depot Operator,amravati.depot@example.com,ACTIVE
+248,Achalpur Depot Operator,achalpur.depot@example.com,ACTIVE
+249,Daryapur Depot Operator,daryapur.depot@example.com,ACTIVE
+250,Morshi Depot Operator,morshi.depot@example.com,ACTIVE
+251,Anjangaon Depot Operator,anjangaon.depot@example.com,ACTIVE
+252,Chandur Railway Depot Operator,chandur.railway.depot@example.com,ACTIVE
+253,Warud Depot Operator,warud.depot@example.com,ACTIVE
+254,Dhamangaon Depot Operator,dhamangaon.depot@example.com,ACTIVE
+255,Akola Depot Operator,akola.depot@example.com,ACTIVE
+256,Akot Depot Operator,akot.depot@example.com,ACTIVE
+257,Murtizapur Depot Operator,murtizapur.depot@example.com,INACTIVE
+258,Balapur Depot Operator,balapur.depot@example.com,INACTIVE
+259,Patur Depot Operator,patur.depot@example.com,ACTIVE
+260,Telhara Depot Operator,telhara.depot@example.com,ACTIVE
+261,Washim Depot Operator,washim.depot@example.com,ACTIVE
+262,Karanja Depot Operator,karanja.depot@example.com,INACTIVE
+263,Mangrulpir Depot Operator,mangrulpir.depot@example.com,ACTIVE
+264,Risod Depot Operator,risod.depot@example.com,ACTIVE
+265,Buldhana Depot Operator,buldhana.depot@example.com,ACTIVE
+266,Khamgaon Depot Operator,khamgaon.depot@example.com,ACTIVE
+267,Shegaon Depot Operator,shegaon.depot@example.com,ACTIVE
+268,Chikhli Depot Operator,chikhli.depot@example.com,ACTIVE
+269,Malkapur Depot Operator,malkapur.depot@example.com,ACTIVE
+270,Mehkar Depot Operator,mehkar.depot@example.com,INACTIVE
+271,Jalgaon Jamod Depot Operator,jalgaon.jamod.depot@example.com,ACTIVE
+272,Deulgaon Raja Depot Operator,deulgaon.raja.depot@example.com,ACTIVE
+273,Yavatmal Depot Operator,yavatmal.depot@example.com,ACTIVE
+274,Pusad Depot Operator,pusad.depot@example.com,ACTIVE
+275,Wani Depot Operator,wani.depot@example.com,ACTIVE
+276,Darwha Depot Operator,darwha.depot@example.com,INACTIVE
+277,Digras Depot Operator,digras.depot@example.com,ACTIVE
+278,Umarkhed Depot Operator,umarkhed.depot@example.com,ACTIVE
+279,Pandharkawada Depot Operator,pandharkawada.depot@example.com,ACTIVE
+280,Ghatanji Depot Operator,ghatanji.depot@example.com,ACTIVE
+281,Pune Central Depot Operator,pune.central.depot@example.com,ACTIVE
+282,Pune East Depot Operator,pune.east.depot@example.com,ACTIVE
+283,Pune West Depot Operator,pune.west.depot@example.com,ACTIVE
+284,Pune North Depot Operator,pune.north.depot@example.com,ACTIVE
+285,Pune South Depot Operator,pune.south.depot@example.com,ACTIVE
+286,Mumbai Central Depot Operator,mumbai.central.depot@example.com,ACTIVE
+287,Mumbai East Depot Operator,mumbai.east.depot@example.com,ACTIVE
+288,Mumbai West Depot Operator,mumbai.west.depot@example.com,INACTIVE
+289,Mumbai North Depot Operator,mumbai.north.depot@example.com,ACTIVE
+290,Mumbai South Depot Operator,mumbai.south.depot@example.com,ACTIVE
+291,Nagpur Central Depot Operator,nagpur.central.depot@example.com,ACTIVE
+292,Nagpur East Depot Operator,nagpur.east.depot@example.com,ACTIVE
+293,Nagpur West Depot Operator,nagpur.west.depot@example.com,ACTIVE
+294,Nagpur North Depot Operator,nagpur.north.depot@example.com,ACTIVE
+295,Nagpur South Depot Operator,nagpur.south.depot@example.com,ACTIVE
+296,Nashik Central Depot Operator,nashik.central.depot@example.com,ACTIVE
+297,Nashik East Depot Operator,nashik.east.depot@example.com,ACTIVE
+298,Nashik West Depot Operator,nashik.west.depot@example.com,ACTIVE
+299,Nashik North Depot Operator,nashik.north.depot@example.com,ACTIVE
+300,Nashik South Depot Operator,nashik.south.depot@example.com,ACTIVE
+301,Thane Central Depot Operator,thane.central.depot@example.com,ACTIVE
+302,Thane East Depot Operator,thane.east.depot@example.com,ACTIVE
+303,Thane West Depot Operator,thane.west.depot@example.com,INACTIVE
+304,Thane North Depot Operator,thane.north.depot@example.com,ACTIVE
+305,Thane South Depot Operator,thane.south.depot@example.com,ACTIVE
+306,Sambhajinagar Central Depot Operator,sambhajinagar.central.depot@example.com,ACTIVE
+307,Sambhajinagar East Depot Operator,sambhajinagar.east.depot@example.com,ACTIVE
+308,Sambhajinagar West Depot Operator,sambhajinagar.west.depot@example.com,ACTIVE
+309,Sambhajinagar North Depot Operator,sambhajinagar.north.depot@example.com,ACTIVE
+310,Sambhajinagar South Depot Operator,sambhajinagar.south.depot@example.com,ACTIVE
+311,Kolhapur Central Depot Operator,kolhapur.central.depot@example.com,ACTIVE
+312,Kolhapur East Depot Operator,kolhapur.east.depot@example.com,ACTIVE
+313,Kolhapur West Depot Operator,kolhapur.west.depot@example.com,ACTIVE
+314,Kolhapur North Depot Operator,kolhapur.north.depot@example.com,ACTIVE
+315,Kolhapur South Depot Operator,kolhapur.south.depot@example.com,ACTIVE
+316,Solapur Central Depot Operator,solapur.central.depot@example.com,ACTIVE
+317,Solapur East Depot Operator,solapur.east.depot@example.com,ACTIVE
+318,Solapur West Depot Operator,solapur.west.depot@example.com,ACTIVE
+319,Solapur North Depot Operator,solapur.north.depot@example.com,ACTIVE
+320,Solapur South Depot Operator,solapur.south.depot@example.com,ACTIVE
+321,Amravati Central Depot Operator,amravati.central.depot@example.com,ACTIVE
+322,Amravati East Depot Operator,amravati.east.depot@example.com,INACTIVE
+323,Amravati West Depot Operator,amravati.west.depot@example.com,ACTIVE
+324,Amravati North Depot Operator,amravati.north.depot@example.com,INACTIVE
+325,Amravati South Depot Operator,amravati.south.depot@example.com,ACTIVE
+326,Navi Mumbai Central Depot Operator,navi.mumbai.central.depot@example.com,ACTIVE
+327,Navi Mumbai East Depot Operator,navi.mumbai.east.depot@example.com,ACTIVE
+328,Navi Mumbai West Depot Operator,navi.mumbai.west.depot@example.com,ACTIVE
+329,Navi Mumbai North Depot Operator,navi.mumbai.north.depot@example.com,ACTIVE
+330,Navi Mumbai South Depot Operator,navi.mumbai.south.depot@example.com,INACTIVE

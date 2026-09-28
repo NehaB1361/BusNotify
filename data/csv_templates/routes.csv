@@ -1,14 +1,1018 @@
-route_number,name,source,destination,total_distance_km,estimated_duration_min
-PUNE_MUM,Pune to Mumbai Shivneri AC Express,Pune Station,Dadar Mumbai,150.0,210
-PUNE_NASHIK,Pune to Nashik Semi-Luxury,Shivajinagar,Nashik CBS,210.0,270
-MUM_NAGPUR,Mumbai to Nagpur Superfast Express,Mumbai Central,Nagpur Mor Bhavan,820.0,780
-PUNE_SOLAPUR,Pune to Solapur Express,Swargate,Solapur Bus Stand,250.0,300
-MUM_AHMEDABAD,Mumbai to Ahmedabad Intercity,Borivali Mumbai,Geeta Mandir Ahmedabad,530.0,540
-PUNE_BANGALORE,Pune to Bangalore Deluxe Sleeper,Katraj Pune,Majestic Bangalore,840.0,810
-101,Pune Station to Hadapsar,Pune Station,Hadapsar,12.5,45
-102,Swargate to Katraj,Swargate,Katraj,8.0,30
-103,Kothrud to Viman Nagar,Kothrud,Viman Nagar,16.0,55
-104,Hinjewadi to Pune Station,Hinjewadi Phase 1,Pune Station,21.0,65
-105,Deccan to Pimpri,Deccan Gymkhana,Pimpri,18.0,50
-106,Swargate to Hadapsar,Swargate,Hadapsar,10.5,40
-107,Hadapsar to Kharadi,Hadapsar,Kharadi,9.0,35
+route_id,route_short_name,route_name,distance_km,scheduled_duration_min
+PUNE_MUM,123,Pune to Mumbai,148,210
+PUNE_NASHIK,501,Pune to Nashik,220,180
+MUM_NAGPUR,789,Mumbai to Nagpur,840,480
+PUNE_SOLAPUR,456,Pune to Solapur,260,240
+MUM_AHMEDABAD,321,Mumbai to Ahmedabad,530,360
+PUNE_BANGALORE,654,Pune to Bangalore,840,540
+MUM_PUNE,100,Mumbai to Pune,148,200
+NASHIK_PUNE,101,Nashik to Pune,220,270
+SOLAPUR_PUNE,102,Solapur to Pune,260,305
+PUNE_SAMBHAJINAGAR,103,Pune to Chhatrapati Sambhajinagar,235,300
+SAMBHAJINAGAR_PUNE,104,Chhatrapati Sambhajinagar to Pune,235,320
+PUNE_THANE,105,Pune to Thane,150,200
+THANE_PUNE,106,Thane to Pune,150,210
+PUNE_VASAI,107,Pune to Vasai,185,230
+VASAI_PUNE,108,Vasai to Pune,185,240
+PUNE_KOLHAPUR,109,Pune to Kolhapur,230,285
+KOLHAPUR_PUNE,110,Kolhapur to Pune,230,290
+PUNE_SANGLI,111,Pune to Sangli,230,305
+SANGLI_PUNE,112,Sangli to Pune,230,285
+PUNE_SATARA,113,Pune to Satara,110,150
+SATARA_PUNE,114,Satara to Pune,110,160
+PUNE_AHMEDNAGAR,115,Pune to Ahmednagar,120,160
+AHMEDNAGAR_PUNE,116,Ahmednagar to Pune,120,150
+PUNE_SHIRDI,117,Pune to Shirdi,185,245
+SHIRDI_PUNE,118,Shirdi to Pune,185,255
+PUNE_JALGAON,119,Pune to Jalgaon,420,475
+JALGAON_PUNE,120,Jalgaon to Pune,420,530
+PUNE_LATUR,121,Pune to Latur,350,435
+LATUR_PUNE,122,Latur to Pune,350,415
+PUNE_BEED,124,Pune to Beed,260,300
+BEED_PUNE,125,Beed to Pune,260,335
+PUNE_JALNA,126,Pune to Jalna,330,390
+JALNA_PUNE,127,Jalna to Pune,330,375
+PUNE_DHARASHIV,128,Pune to Dharashiv,295,340
+DHARASHIV_PUNE,129,Dharashiv to Pune,295,375
+PUNE_RATNAGIRI,130,Pune to Ratnagiri,255,370
+RATNAGIRI_PUNE,131,Ratnagiri to Pune,255,380
+PUNE_KALYAN,132,Pune to Kalyan,140,190
+KALYAN_PUNE,133,Kalyan to Pune,140,185
+PUNE_PANVEL,134,Pune to Panvel,120,170
+PANVEL_PUNE,135,Panvel to Pune,120,155
+PUNE_VASHI,136,Pune to Vashi,140,185
+VASHI_PUNE,137,Vashi to Pune,140,195
+PUNE_ALIBAG,138,Pune to Alibag,150,200
+ALIBAG_PUNE,139,Alibag to Pune,150,210
+PUNE_LONAVALA,140,Pune to Lonavala,65,95
+LONAVALA_PUNE,141,Lonavala to Pune,65,95
+PUNE_BARAMATI,142,Pune to Baramati,100,135
+BARAMATI_PUNE,143,Baramati to Pune,100,140
+PUNE_KARAD,144,Pune to Karad,160,205
+KARAD_PUNE,145,Karad to Pune,160,200
+PUNE_MAHABALESHWAR,146,Pune to Mahabaleshwar,120,180
+MAHABALESHWAR_PUNE,147,Mahabaleshwar to Pune,120,175
+PUNE_CHIPLUN,148,Pune to Chiplun,165,250
+CHIPLUN_PUNE,149,Chiplun to Pune,165,260
+PUNE_MALEGAON,150,Pune to Malegaon,300,355
+MALEGAON_PUNE,151,Malegaon to Pune,300,355
+PUNE_MANMAD,152,Pune to Manmad,255,295
+MANMAD_PUNE,153,Manmad to Pune,255,300
+PUNE_IGATPURI,154,Pune to Igatpuri,170,240
+IGATPURI_PUNE,155,Igatpuri to Pune,170,230
+PUNE_PANDHARPUR,156,Pune to Pandharpur,230,310
+PANDHARPUR_PUNE,157,Pandharpur to Pune,230,290
+PUNE_BARSHI,158,Pune to Barshi,250,315
+BARSHI_PUNE,159,Barshi to Pune,250,290
+PUNE_ICHALKARANJI,160,Pune to Ichalkaranji,275,330
+ICHALKARANJI_PUNE,161,Ichalkaranji to Pune,275,355
+PUNE_MIRAJ,162,Pune to Miraj,265,325
+MIRAJ_PUNE,163,Miraj to Pune,265,325
+PUNE_VIRAR,164,Pune to Virar,195,265
+VIRAR_PUNE,165,Virar to Pune,195,270
+PUNE_PALGHAR,166,Pune to Palghar,225,310
+PALGHAR_PUNE,167,Palghar to Pune,225,285
+PUNE_DAHANU,168,Pune to Dahanu,255,290
+DAHANU_PUNE,169,Dahanu to Pune,255,300
+PUNE_MAHAD,170,Pune to Mahad,95,155
+MAHAD_PUNE,171,Mahad to Pune,95,155
+PUNE_SANGAMNER,172,Pune to Sangamner,155,215
+SANGAMNER_PUNE,173,Sangamner to Pune,155,215
+PUNE_KOPARGAON,174,Pune to Kopargaon,210,270
+KOPARGAON_PUNE,175,Kopargaon to Pune,210,285
+PUNE_PHALTAN,176,Pune to Phaltan,105,150
+PHALTAN_PUNE,177,Phaltan to Pune,105,160
+PUNE_WAI,178,Pune to Wai,80,115
+WAI_PUNE,179,Wai to Pune,80,110
+PUNE_CHALISGAON,180,Pune to Chalisgaon,315,370
+CHALISGAON_PUNE,181,Chalisgaon to Pune,315,385
+PUNE_YEOLA,182,Pune to Yeola,230,295
+YEOLA_PUNE,183,Yeola to Pune,230,305
+PUNE_SINNAR,184,Pune to Sinnar,190,265
+SINNAR_PUNE,185,Sinnar to Pune,190,245
+PUNE_KARJAT,186,Pune to Karjat,90,125
+KARJAT_PUNE,187,Karjat to Pune,90,140
+PUNE_PEN,188,Pune to Pen,120,160
+PEN_PUNE,189,Pen to Pune,120,150
+PUNE_KHOPOLI,190,Pune to Khopoli,80,110
+KHOPOLI_PUNE,191,Khopoli to Pune,80,110
+PUNE_BHIWANDI,192,Pune to Bhiwandi,155,210
+BHIWANDI_PUNE,193,Bhiwandi to Pune,155,210
+PUNE_PANCHGANI,194,Pune to Panchgani,85,145
+PANCHGANI_PUNE,195,Panchgani to Pune,85,135
+PUNE_KHED,196,Pune to Khed Ratnagiri,145,220
+KHED_PUNE,197,Khed Ratnagiri to Pune,145,240
+PUNE_DAPOLI,198,Pune to Dapoli,155,240
+DAPOLI_PUNE,199,Dapoli to Pune,155,255
+PUNE_ISLAMPUR,200,Pune to Islampur,215,295
+ISLAMPUR_PUNE,201,Islampur to Pune,215,265
+PUNE_TASGAON,202,Pune to Tasgaon,235,320
+TASGAON_PUNE,203,Tasgaon to Pune,235,315
+PUNE_MUM_AIRPORT,204,Pune to Mumbai Airport,160,210
+MUM_AIRPORT_PUNE,205,Mumbai Airport to Pune,160,205
+MUM_NASHIK,206,Mumbai to Nashik,165,220
+NASHIK_MUM,207,Nashik to Mumbai,165,205
+MUM_SAMBHAJINAGAR,208,Mumbai to Chhatrapati Sambhajinagar,335,400
+SAMBHAJINAGAR_MUM,209,Chhatrapati Sambhajinagar to Mumbai,335,405
+MUM_VASAI,210,Mumbai to Vasai,55,95
+VASAI_MUM,211,Vasai to Mumbai,55,90
+MUM_KOLHAPUR,212,Mumbai to Kolhapur,375,440
+KOLHAPUR_MUM,213,Kolhapur to Mumbai,375,455
+MUM_SANGLI,214,Mumbai to Sangli,380,440
+SANGLI_MUM,215,Sangli to Mumbai,380,485
+MUM_SATARA,216,Mumbai to Satara,270,345
+SATARA_MUM,217,Satara to Mumbai,270,320
+MUM_AHMEDNAGAR,218,Mumbai to Ahmednagar,260,320
+AHMEDNAGAR_MUM,219,Ahmednagar to Mumbai,260,320
+MUM_SHIRDI,220,Mumbai to Shirdi,240,300
+SHIRDI_MUM,221,Shirdi to Mumbai,240,330
+MUM_JALGAON,222,Mumbai to Jalgaon,420,510
+JALGAON_MUM,223,Jalgaon to Mumbai,420,530
+MUM_KALYAN,224,Mumbai to Kalyan,55,90
+KALYAN_MUM,225,Kalyan to Mumbai,55,80
+MUM_PANVEL,226,Mumbai to Panvel,40,60
+PANVEL_MUM,227,Panvel to Mumbai,40,60
+MUM_VASHI,228,Mumbai to Vashi,30,50
+VASHI_MUM,229,Vashi to Mumbai,30,50
+MUM_ALIBAG,230,Mumbai to Alibag,95,145
+ALIBAG_MUM,231,Alibag to Mumbai,95,135
+MUM_LONAVALA,232,Mumbai to Lonavala,85,115
+LONAVALA_MUM,233,Lonavala to Mumbai,85,130
+MUM_BARAMATI,234,Mumbai to Baramati,265,340
+BARAMATI_MUM,235,Baramati to Mumbai,265,305
+MUM_KARAD,236,Mumbai to Karad,300,365
+KARAD_MUM,237,Karad to Mumbai,300,340
+MUM_MAHABALESHWAR,238,Mumbai to Mahabaleshwar,185,295
+MAHABALESHWAR_MUM,239,Mahabaleshwar to Mumbai,185,295
+MUM_CHIPLUN,240,Mumbai to Chiplun,250,340
+CHIPLUN_MUM,241,Chiplun to Mumbai,250,355
+MUM_MALEGAON,242,Mumbai to Malegaon,320,390
+MALEGAON_MUM,243,Malegaon to Mumbai,320,375
+MUM_MANMAD,244,Mumbai to Manmad,285,365
+MANMAD_MUM,245,Manmad to Mumbai,285,340
+MUM_IGATPURI,246,Mumbai to Igatpuri,145,185
+IGATPURI_MUM,247,Igatpuri to Mumbai,145,190
+MUM_VIRAR,248,Mumbai to Virar,70,105
+VIRAR_MUM,249,Virar to Mumbai,70,95
+MUM_PALGHAR,250,Mumbai to Palghar,105,150
+PALGHAR_MUM,251,Palghar to Mumbai,105,160
+MUM_DAHANU,252,Mumbai to Dahanu,130,175
+DAHANU_MUM,253,Dahanu to Mumbai,130,170
+MUM_MAHAD,254,Mumbai to Mahad,165,255
+MAHAD_MUM,255,Mahad to Mumbai,165,240
+MUM_SANGAMNER,256,Mumbai to Sangamner,205,260
+SANGAMNER_MUM,257,Sangamner to Mumbai,205,265
+MUM_KOPARGAON,258,Mumbai to Kopargaon,260,320
+KOPARGAON_MUM,259,Kopargaon to Mumbai,260,305
+MUM_PHALTAN,260,Mumbai to Phaltan,260,305
+PHALTAN_MUM,261,Phaltan to Mumbai,260,295
+MUM_WAI,262,Mumbai to Wai,205,275
+WAI_MUM,263,Wai to Mumbai,205,260
+MUM_YEOLA,264,Mumbai to Yeola,270,345
+YEOLA_MUM,265,Yeola to Mumbai,270,345
+MUM_SINNAR,266,Mumbai to Sinnar,200,250
+SINNAR_MUM,267,Sinnar to Mumbai,200,255
+MUM_KARJAT,268,Mumbai to Karjat,70,105
+KARJAT_MUM,269,Karjat to Mumbai,70,95
+MUM_PEN,270,Mumbai to Pen,55,85
+PEN_MUM,271,Pen to Mumbai,55,95
+MUM_KHOPOLI,272,Mumbai to Khopoli,75,110
+KHOPOLI_MUM,273,Khopoli to Mumbai,75,110
+MUM_BHIWANDI,274,Mumbai to Bhiwandi,55,90
+BHIWANDI_MUM,275,Bhiwandi to Mumbai,55,90
+MUM_PANCHGANI,276,Mumbai to Panchgani,200,295
+PANCHGANI_MUM,277,Panchgani to Mumbai,200,295
+MUM_KHED,278,Mumbai to Khed Ratnagiri,210,320
+KHED_MUM,279,Khed Ratnagiri to Mumbai,210,320
+MUM_DAPOLI,280,Mumbai to Dapoli,195,300
+DAPOLI_MUM,281,Dapoli to Mumbai,195,310
+NASHIK_SOLAPUR,282,Nashik to Solapur,440,545
+SOLAPUR_NASHIK,283,Solapur to Nashik,440,570
+NASHIK_SAMBHAJINAGAR,284,Nashik to Chhatrapati Sambhajinagar,190,235
+SAMBHAJINAGAR_NASHIK,285,Chhatrapati Sambhajinagar to Nashik,190,245
+NASHIK_THANE,286,Nashik to Thane,140,180
+THANE_NASHIK,287,Thane to Nashik,140,195
+NASHIK_VASAI,288,Nashik to Vasai,155,195
+VASAI_NASHIK,289,Vasai to Nashik,155,195
+NASHIK_SATARA,290,Nashik to Satara,330,395
+SATARA_NASHIK,291,Satara to Nashik,330,395
+NASHIK_AHMEDNAGAR,292,Nashik to Ahmednagar,210,270
+AHMEDNAGAR_NASHIK,293,Ahmednagar to Nashik,210,265
+NASHIK_SHIRDI,294,Nashik to Shirdi,90,135
+SHIRDI_NASHIK,295,Shirdi to Nashik,90,130
+NASHIK_JALGAON,296,Nashik to Jalgaon,210,290
+JALGAON_NASHIK,297,Jalgaon to Nashik,210,280
+NASHIK_DHULE,298,Nashik to Dhule,165,205
+DHULE_NASHIK,299,Dhule to Nashik,165,230
+NASHIK_LATUR,300,Nashik to Latur,435,550
+LATUR_NASHIK,301,Latur to Nashik,435,560
+NASHIK_AKOLA,302,Nashik to Akola,440,565
+AKOLA_NASHIK,303,Akola to Nashik,440,560
+NASHIK_KALYAN,304,Nashik to Kalyan,140,175
+KALYAN_NASHIK,305,Kalyan to Nashik,140,185
+NASHIK_PANVEL,306,Nashik to Panvel,170,215
+PANVEL_NASHIK,307,Panvel to Nashik,170,220
+NASHIK_VASHI,308,Nashik to Vashi,170,210
+VASHI_NASHIK,309,Vashi to Nashik,170,220
+NASHIK_LONAVALA,310,Nashik to Lonavala,185,260
+LONAVALA_NASHIK,311,Lonavala to Nashik,185,235
+NASHIK_MALEGAON,312,Nashik to Malegaon,105,155
+MALEGAON_NASHIK,313,Malegaon to Nashik,105,150
+NASHIK_MANMAD,314,Nashik to Manmad,95,135
+MANMAD_NASHIK,315,Manmad to Nashik,95,145
+NASHIK_IGATPURI,316,Nashik to Igatpuri,45,75
+IGATPURI_NASHIK,317,Igatpuri to Nashik,45,70
+NASHIK_VIRAR,318,Nashik to Virar,150,205
+VIRAR_NASHIK,319,Virar to Nashik,150,190
+NASHIK_PALGHAR,320,Nashik to Palghar,145,185
+PALGHAR_NASHIK,322,Palghar to Nashik,145,205
+NASHIK_DAHANU,323,Nashik to Dahanu,145,195
+DAHANU_NASHIK,324,Dahanu to Nashik,145,190
+NASHIK_NANDURBAR,325,Nashik to Nandurbar,205,280
+NANDURBAR_NASHIK,326,Nandurbar to Nashik,205,255
+NASHIK_SANGAMNER,327,Nashik to Sangamner,85,125
+SANGAMNER_NASHIK,328,Sangamner to Nashik,85,125
+NASHIK_KOPARGAON,329,Nashik to Kopargaon,95,145
+KOPARGAON_NASHIK,330,Kopargaon to Nashik,95,130
+NASHIK_CHALISGAON,331,Nashik to Chalisgaon,175,245
+CHALISGAON_NASHIK,332,Chalisgaon to Nashik,175,215
+NASHIK_YEOLA,333,Nashik to Yeola,95,130
+YEOLA_NASHIK,334,Yeola to Nashik,95,140
+NASHIK_SINNAR,335,Nashik to Sinnar,35,55
+SINNAR_NASHIK,336,Sinnar to Nashik,35,55
+NASHIK_KARJAT,337,Nashik to Karjat,165,205
+KARJAT_NASHIK,338,Karjat to Nashik,165,230
+NASHIK_PEN,339,Nashik to Pen,220,280
+PEN_NASHIK,340,Pen to Nashik,220,295
+NASHIK_KHOPOLI,341,Nashik to Khopoli,185,250
+KHOPOLI_NASHIK,342,Khopoli to Nashik,185,240
+NASHIK_BHIWANDI,343,Nashik to Bhiwandi,140,185
+BHIWANDI_NASHIK,344,Bhiwandi to Nashik,140,185
+NASHIK_PACHORA,345,Nashik to Pachora,230,320
+PACHORA_NASHIK,346,Pachora to Nashik,230,290
+NASHIK_AMALNER,347,Nashik to Amalner,225,305
+AMALNER_NASHIK,348,Amalner to Nashik,225,285
+NASHIK_MUM_AIRPORT,349,Nashik to Mumbai Airport,180,235
+MUM_AIRPORT_NASHIK,350,Mumbai Airport to Nashik,180,245
+NAGPUR_NANDED,351,Nagpur to Nanded,370,435
+NANDED_NAGPUR,352,Nanded to Nagpur,370,435
+NAGPUR_AKOLA,353,Nagpur to Akola,250,315
+AKOLA_NAGPUR,354,Akola to Nagpur,250,285
+NAGPUR_AMRAVATI,355,Nagpur to Amravati,155,205
+AMRAVATI_NAGPUR,356,Amravati to Nagpur,155,220
+NAGPUR_WARDHA,357,Nagpur to Wardha,75,115
+WARDHA_NAGPUR,358,Wardha to Nagpur,75,100
+NAGPUR_CHANDRAPUR,359,Nagpur to Chandrapur,150,190
+CHANDRAPUR_NAGPUR,360,Chandrapur to Nagpur,150,190
+NAGPUR_GONDIA,361,Nagpur to Gondia,165,230
+GONDIA_NAGPUR,362,Gondia to Nagpur,165,230
+NAGPUR_BHANDARA,363,Nagpur to Bhandara,60,90
+BHANDARA_NAGPUR,364,Bhandara to Nagpur,60,85
+NAGPUR_YAVATMAL,365,Nagpur to Yavatmal,150,190
+YAVATMAL_NAGPUR,366,Yavatmal to Nagpur,150,205
+NAGPUR_GADCHIROLI,367,Nagpur to Gadchiroli,185,250
+GADCHIROLI_NAGPUR,368,Gadchiroli to Nagpur,185,245
+NAGPUR_HINGANGHAT,369,Nagpur to Hinganghat,90,140
+HINGANGHAT_NAGPUR,370,Hinganghat to Nagpur,90,135
+NAGPUR_ACHALPUR,371,Nagpur to Achalpur,210,260
+ACHALPUR_NAGPUR,372,Achalpur to Nagpur,210,290
+NAGPUR_RAMTEK,373,Nagpur to Ramtek,50,80
+RAMTEK_NAGPUR,374,Ramtek to Nagpur,50,80
+NAGPUR_KATOL,375,Nagpur to Katol,70,105
+KATOL_NAGPUR,376,Katol to Nagpur,70,95
+NAGPUR_BRAMHAPURI,377,Nagpur to Bramhapuri,130,160
+BRAMHAPURI_NAGPUR,378,Bramhapuri to Nagpur,130,160
+SOLAPUR_SAMBHAJINAGAR,379,Solapur to Chhatrapati Sambhajinagar,325,395
+SAMBHAJINAGAR_SOLAPUR,380,Chhatrapati Sambhajinagar to Solapur,325,380
+SOLAPUR_THANE,381,Solapur to Thane,450,510
+THANE_SOLAPUR,382,Thane to Solapur,450,520
+SOLAPUR_KOLHAPUR,383,Solapur to Kolhapur,210,265
+KOLHAPUR_SOLAPUR,384,Kolhapur to Solapur,210,280
+SOLAPUR_SANGLI,385,Solapur to Sangli,160,205
+SANGLI_SOLAPUR,386,Sangli to Solapur,160,210
+SOLAPUR_SATARA,387,Solapur to Satara,255,325
+SATARA_SOLAPUR,388,Satara to Solapur,255,325
+SOLAPUR_AHMEDNAGAR,389,Solapur to Ahmednagar,255,290
+AHMEDNAGAR_SOLAPUR,390,Ahmednagar to Solapur,255,305
+SOLAPUR_NANDED,391,Solapur to Nanded,285,335
+NANDED_SOLAPUR,392,Nanded to Solapur,285,320
+SOLAPUR_LATUR,393,Solapur to Latur,110,165
+LATUR_SOLAPUR,394,Latur to Solapur,110,160
+SOLAPUR_DHARASHIV,395,Solapur to Dharashiv,75,105
+DHARASHIV_SOLAPUR,396,Dharashiv to Solapur,75,110
+SOLAPUR_PANDHARPUR,397,Solapur to Pandharpur,72,105
+PANDHARPUR_SOLAPUR,398,Pandharpur to Solapur,72,105
+SOLAPUR_BARSHI,399,Solapur to Barshi,85,115
+BARSHI_SOLAPUR,400,Barshi to Solapur,85,115
+SOLAPUR_AMBAJOGAI,401,Solapur to Ambajogai,165,230
+AMBAJOGAI_SOLAPUR,402,Ambajogai to Solapur,165,230
+SOLAPUR_AKKALKOT,403,Solapur to Akkalkot,45,70
+AKKALKOT_SOLAPUR,404,Akkalkot to Solapur,45,75
+SAMBHAJINAGAR_THANE,405,Chhatrapati Sambhajinagar to Thane,330,405
+THANE_SAMBHAJINAGAR,406,Thane to Chhatrapati Sambhajinagar,330,380
+SAMBHAJINAGAR_SANGLI,407,Chhatrapati Sambhajinagar to Sangli,445,510
+SANGLI_SAMBHAJINAGAR,408,Sangli to Chhatrapati Sambhajinagar,445,525
+SAMBHAJINAGAR_SATARA,409,Chhatrapati Sambhajinagar to Satara,360,460
+SATARA_SAMBHAJINAGAR,410,Satara to Chhatrapati Sambhajinagar,360,455
+SAMBHAJINAGAR_AHMEDNAGAR,411,Chhatrapati Sambhajinagar to Ahmednagar,115,175
+AHMEDNAGAR_SAMBHAJINAGAR,412,Ahmednagar to Chhatrapati Sambhajinagar,115,175
+SAMBHAJINAGAR_SHIRDI,413,Chhatrapati Sambhajinagar to Shirdi,115,160
+SHIRDI_SAMBHAJINAGAR,414,Shirdi to Chhatrapati Sambhajinagar,115,160
+SAMBHAJINAGAR_JALGAON,415,Chhatrapati Sambhajinagar to Jalgaon,160,200
+JALGAON_SAMBHAJINAGAR,416,Jalgaon to Chhatrapati Sambhajinagar,160,220
+SAMBHAJINAGAR_DHULE,417,Chhatrapati Sambhajinagar to Dhule,165,230
+DHULE_SAMBHAJINAGAR,418,Dhule to Chhatrapati Sambhajinagar,165,215
+SAMBHAJINAGAR_NANDED,419,Chhatrapati Sambhajinagar to Nanded,275,340
+NANDED_SAMBHAJINAGAR,420,Nanded to Chhatrapati Sambhajinagar,275,315
+SAMBHAJINAGAR_LATUR,421,Chhatrapati Sambhajinagar to Latur,260,335
+LATUR_SAMBHAJINAGAR,422,Latur to Chhatrapati Sambhajinagar,260,330
+SAMBHAJINAGAR_BEED,423,Chhatrapati Sambhajinagar to Beed,135,190
+BEED_SAMBHAJINAGAR,424,Beed to Chhatrapati Sambhajinagar,135,185
+SAMBHAJINAGAR_JALNA,425,Chhatrapati Sambhajinagar to Jalna,60,90
+JALNA_SAMBHAJINAGAR,426,Jalna to Chhatrapati Sambhajinagar,60,80
+SAMBHAJINAGAR_PARBHANI,427,Chhatrapati Sambhajinagar to Parbhani,210,285
+PARBHANI_SAMBHAJINAGAR,428,Parbhani to Chhatrapati Sambhajinagar,210,270
+SAMBHAJINAGAR_AKOLA,429,Chhatrapati Sambhajinagar to Akola,250,320
+AKOLA_SAMBHAJINAGAR,430,Akola to Chhatrapati Sambhajinagar,250,315
+SAMBHAJINAGAR_AMRAVATI,431,Chhatrapati Sambhajinagar to Amravati,355,450
+AMRAVATI_SAMBHAJINAGAR,432,Amravati to Chhatrapati Sambhajinagar,355,450
+SAMBHAJINAGAR_BULDHANA,433,Chhatrapati Sambhajinagar to Buldhana,145,185
+BULDHANA_SAMBHAJINAGAR,434,Buldhana to Chhatrapati Sambhajinagar,145,200
+SAMBHAJINAGAR_MALEGAON,435,Chhatrapati Sambhajinagar to Malegaon,145,180
+MALEGAON_SAMBHAJINAGAR,436,Malegaon to Chhatrapati Sambhajinagar,145,200
+SAMBHAJINAGAR_MANMAD,437,Chhatrapati Sambhajinagar to Manmad,130,180
+MANMAD_SAMBHAJINAGAR,438,Manmad to Chhatrapati Sambhajinagar,130,165
+SAMBHAJINAGAR_AMBAJOGAI,439,Chhatrapati Sambhajinagar to Ambajogai,215,295
+AMBAJOGAI_SAMBHAJINAGAR,440,Ambajogai to Chhatrapati Sambhajinagar,215,280
+SAMBHAJINAGAR_KHAMGAON,441,Chhatrapati Sambhajinagar to Khamgaon,200,255
+KHAMGAON_SAMBHAJINAGAR,442,Khamgaon to Chhatrapati Sambhajinagar,200,275
+SAMBHAJINAGAR_SHIRPUR,443,Chhatrapati Sambhajinagar to Shirpur,220,280
+SHIRPUR_SAMBHAJINAGAR,444,Shirpur to Chhatrapati Sambhajinagar,220,270
+SAMBHAJINAGAR_BHUSAWAL,445,Chhatrapati Sambhajinagar to Bhusawal,175,220
+BHUSAWAL_SAMBHAJINAGAR,446,Bhusawal to Chhatrapati Sambhajinagar,175,225
+SAMBHAJINAGAR_SANGAMNER,447,Chhatrapati Sambhajinagar to Sangamner,160,220
+SANGAMNER_SAMBHAJINAGAR,448,Sangamner to Chhatrapati Sambhajinagar,160,225
+SAMBHAJINAGAR_KOPARGAON,449,Chhatrapati Sambhajinagar to Kopargaon,115,160
+KOPARGAON_SAMBHAJINAGAR,450,Kopargaon to Chhatrapati Sambhajinagar,115,170
+SAMBHAJINAGAR_CHALISGAON,451,Chhatrapati Sambhajinagar to Chalisgaon,95,135
+CHALISGAON_SAMBHAJINAGAR,452,Chalisgaon to Chhatrapati Sambhajinagar,95,145
+SAMBHAJINAGAR_YEOLA,453,Chhatrapati Sambhajinagar to Yeola,115,165
+YEOLA_SAMBHAJINAGAR,454,Yeola to Chhatrapati Sambhajinagar,115,175
+SAMBHAJINAGAR_SINNAR,455,Chhatrapati Sambhajinagar to Sinnar,180,225
+SINNAR_SAMBHAJINAGAR,457,Sinnar to Chhatrapati Sambhajinagar,180,255
+SAMBHAJINAGAR_PACHORA,458,Chhatrapati Sambhajinagar to Pachora,115,160
+PACHORA_SAMBHAJINAGAR,459,Pachora to Chhatrapati Sambhajinagar,115,175
+SAMBHAJINAGAR_AMALNER,460,Chhatrapati Sambhajinagar to Amalner,170,215
+AMALNER_SAMBHAJINAGAR,461,Amalner to Chhatrapati Sambhajinagar,170,210
+SAMBHAJINAGAR_MALKAPUR,462,Chhatrapati Sambhajinagar to Malkapur,185,240
+MALKAPUR_SAMBHAJINAGAR,463,Malkapur to Chhatrapati Sambhajinagar,185,250
+SAMBHAJINAGAR_SHEGAON,464,Chhatrapati Sambhajinagar to Shegaon,220,280
+SHEGAON_SAMBHAJINAGAR,465,Shegaon to Chhatrapati Sambhajinagar,220,295
+THANE_VASAI,466,Thane to Vasai,35,55
+VASAI_THANE,467,Vasai to Thane,35,55
+THANE_KOLHAPUR,468,Thane to Kolhapur,395,485
+KOLHAPUR_THANE,469,Kolhapur to Thane,395,460
+THANE_SANGLI,470,Thane to Sangli,395,495
+SANGLI_THANE,471,Sangli to Thane,395,445
+THANE_SATARA,472,Thane to Satara,255,325
+SATARA_THANE,473,Satara to Thane,255,310
+THANE_AHMEDNAGAR,474,Thane to Ahmednagar,240,325
+AHMEDNAGAR_THANE,475,Ahmednagar to Thane,240,325
+THANE_JALGAON,476,Thane to Jalgaon,430,535
+JALGAON_THANE,477,Jalgaon to Thane,430,510
+THANE_KALYAN,478,Thane to Kalyan,30,45
+KALYAN_THANE,479,Kalyan to Thane,30,50
+THANE_PANVEL,480,Thane to Panvel,35,55
+PANVEL_THANE,481,Panvel to Thane,35,55
+THANE_ALIBAG,482,Thane to Alibag,85,130
+ALIBAG_THANE,483,Alibag to Thane,85,125
+THANE_LONAVALA,484,Thane to Lonavala,85,120
+LONAVALA_THANE,485,Lonavala to Thane,85,120
+THANE_IGATPURI,486,Thane to Igatpuri,105,150
+IGATPURI_THANE,487,Igatpuri to Thane,105,150
+THANE_VIRAR,488,Thane to Virar,45,70
+VIRAR_THANE,489,Virar to Thane,45,70
+THANE_PALGHAR,490,Thane to Palghar,80,115
+PALGHAR_THANE,491,Palghar to Thane,80,120
+THANE_DAHANU,492,Thane to Dahanu,115,170
+DAHANU_THANE,493,Dahanu to Thane,115,175
+THANE_SINNAR,494,Thane to Sinnar,165,220
+SINNAR_THANE,495,Sinnar to Thane,165,210
+THANE_KARJAT,496,Thane to Karjat,60,85
+KARJAT_THANE,497,Karjat to Thane,60,80
+THANE_PEN,498,Thane to Pen,70,100
+PEN_THANE,499,Pen to Thane,70,100
+THANE_KHOPOLI,500,Thane to Khopoli,75,110
+KHOPOLI_THANE,502,Khopoli to Thane,75,110
+VASAI_KALYAN,503,Vasai to Kalyan,45,70
+KALYAN_VASAI,504,Kalyan to Vasai,45,70
+VASAI_PANVEL,505,Vasai to Panvel,70,95
+PANVEL_VASAI,506,Panvel to Vasai,70,100
+VASAI_VASHI,507,Vasai to Vashi,50,85
+VASHI_VASAI,508,Vashi to Vasai,50,85
+VASAI_PALGHAR,509,Vasai to Palghar,45,70
+PALGHAR_VASAI,510,Palghar to Vasai,45,70
+VASAI_BHIWANDI,511,Vasai to Bhiwandi,35,55
+BHIWANDI_VASAI,512,Bhiwandi to Vasai,35,55
+VASAI_MUM_AIRPORT,513,Vasai to Mumbai Airport,40,60
+MUM_AIRPORT_VASAI,514,Mumbai Airport to Vasai,40,65
+KOLHAPUR_SANGLI,515,Kolhapur to Sangli,50,85
+SANGLI_KOLHAPUR,516,Sangli to Kolhapur,50,80
+KOLHAPUR_SATARA,517,Kolhapur to Satara,125,160
+SATARA_KOLHAPUR,518,Satara to Kolhapur,125,160
+KOLHAPUR_AHMEDNAGAR,519,Kolhapur to Ahmednagar,345,390
+AHMEDNAGAR_KOLHAPUR,520,Ahmednagar to Kolhapur,345,405
+KOLHAPUR_LATUR,521,Kolhapur to Latur,395,475
+LATUR_KOLHAPUR,522,Latur to Kolhapur,395,500
+KOLHAPUR_RATNAGIRI,523,Kolhapur to Ratnagiri,140,205
+RATNAGIRI_KOLHAPUR,524,Ratnagiri to Kolhapur,140,215
+KOLHAPUR_KARAD,525,Kolhapur to Karad,85,125
+KARAD_KOLHAPUR,526,Karad to Kolhapur,85,115
+KOLHAPUR_CHIPLUN,527,Kolhapur to Chiplun,170,270
+CHIPLUN_KOLHAPUR,528,Chiplun to Kolhapur,170,265
+KOLHAPUR_SAWANTWADI,529,Kolhapur to Sawantwadi,140,210
+SAWANTWADI_KOLHAPUR,530,Sawantwadi to Kolhapur,140,220
+KOLHAPUR_ICHALKARANJI,531,Kolhapur to Ichalkaranji,30,45
+ICHALKARANJI_KOLHAPUR,532,Ichalkaranji to Kolhapur,30,50
+KOLHAPUR_MIRAJ,533,Kolhapur to Miraj,55,90
+MIRAJ_KOLHAPUR,534,Miraj to Kolhapur,55,85
+KOLHAPUR_KUDAL,535,Kolhapur to Kudal,135,205
+KUDAL_KOLHAPUR,536,Kudal to Kolhapur,135,200
+KOLHAPUR_MALVAN,537,Kolhapur to Malvan,155,255
+MALVAN_KOLHAPUR,538,Malvan to Kolhapur,155,240
+KOLHAPUR_KANKAVLI,539,Kolhapur to Kankavli,105,165
+KANKAVLI_KOLHAPUR,540,Kankavli to Kolhapur,105,170
+KOLHAPUR_ISLAMPUR,541,Kolhapur to Islampur,50,85
+ISLAMPUR_KOLHAPUR,542,Islampur to Kolhapur,50,80
+KOLHAPUR_TASGAON,543,Kolhapur to Tasgaon,70,105
+TASGAON_KOLHAPUR,544,Tasgaon to Kolhapur,70,105
+SANGLI_SATARA,545,Sangli to Satara,115,175
+SATARA_SANGLI,546,Satara to Sangli,115,170
+SANGLI_AHMEDNAGAR,547,Sangli to Ahmednagar,320,410
+AHMEDNAGAR_SANGLI,548,Ahmednagar to Sangli,320,410
+SANGLI_LATUR,549,Sangli to Latur,350,430
+LATUR_SANGLI,550,Latur to Sangli,350,435
+SANGLI_KARAD,551,Sangli to Karad,85,125
+KARAD_SANGLI,552,Karad to Sangli,85,130
+SANGLI_PANDHARPUR,553,Sangli to Pandharpur,155,205
+PANDHARPUR_SANGLI,554,Pandharpur to Sangli,155,215
+SANGLI_ICHALKARANJI,555,Sangli to Ichalkaranji,30,50
+ICHALKARANJI_SANGLI,556,Ichalkaranji to Sangli,30,50
+SANGLI_PHALTAN,557,Sangli to Phaltan,165,210
+PHALTAN_SANGLI,558,Phaltan to Sangli,165,210
+SANGLI_KANKAVLI,559,Sangli to Kankavli,160,255
+KANKAVLI_SANGLI,560,Kankavli to Sangli,160,255
+SANGLI_ISLAMPUR,561,Sangli to Islampur,50,80
+ISLAMPUR_SANGLI,562,Islampur to Sangli,50,80
+SATARA_AHMEDNAGAR,563,Satara to Ahmednagar,225,285
+AHMEDNAGAR_SATARA,564,Ahmednagar to Satara,225,280
+SATARA_LATUR,565,Satara to Latur,360,425
+LATUR_SATARA,566,Latur to Satara,360,425
+SATARA_RATNAGIRI,567,Satara to Ratnagiri,150,225
+RATNAGIRI_SATARA,568,Ratnagiri to Satara,150,235
+SATARA_BARAMATI,569,Satara to Baramati,100,135
+BARAMATI_SATARA,570,Baramati to Satara,100,140
+SATARA_KARAD,571,Satara to Karad,60,90
+KARAD_SATARA,572,Karad to Satara,60,90
+SATARA_MAHABALESHWAR,573,Satara to Mahabaleshwar,60,95
+MAHABALESHWAR_SATARA,574,Mahabaleshwar to Satara,60,100
+SATARA_CHIPLUN,575,Satara to Chiplun,80,135
+CHIPLUN_SATARA,576,Chiplun to Satara,80,135
+SATARA_ICHALKARANJI,577,Satara to Ichalkaranji,155,195
+ICHALKARANJI_SATARA,578,Ichalkaranji to Satara,155,200
+SATARA_MIRAJ,579,Satara to Miraj,150,210
+MIRAJ_SATARA,580,Miraj to Satara,150,200
+SATARA_MAHAD,581,Satara to Mahad,110,190
+MAHAD_SATARA,582,Mahad to Satara,110,195
+SATARA_PHALTAN,583,Satara to Phaltan,70,105
+PHALTAN_SATARA,584,Phaltan to Satara,70,100
+SATARA_WAI,585,Satara to Wai,40,60
+WAI_SATARA,586,Wai to Satara,40,60
+SATARA_PANCHGANI,587,Satara to Panchgani,45,85
+PANCHGANI_SATARA,588,Panchgani to Satara,45,90
+SATARA_KHED,589,Satara to Khed Ratnagiri,95,170
+KHED_SATARA,590,Khed Ratnagiri to Satara,95,160
+SATARA_DAPOLI,591,Satara to Dapoli,125,200
+DAPOLI_SATARA,592,Dapoli to Satara,125,195
+SATARA_ISLAMPUR,593,Satara to Islampur,95,140
+ISLAMPUR_SATARA,594,Islampur to Satara,95,130
+SATARA_TASGAON,595,Satara to Tasgaon,120,150
+TASGAON_SATARA,596,Tasgaon to Satara,120,155
+AHMEDNAGAR_SHIRDI,597,Ahmednagar to Shirdi,85,115
+SHIRDI_AHMEDNAGAR,598,Shirdi to Ahmednagar,85,120
+AHMEDNAGAR_JALGAON,599,Ahmednagar to Jalgaon,295,365
+JALGAON_AHMEDNAGAR,600,Jalgaon to Ahmednagar,295,355
+AHMEDNAGAR_NANDED,601,Ahmednagar to Nanded,345,400
+NANDED_AHMEDNAGAR,602,Nanded to Ahmednagar,345,415
+AHMEDNAGAR_LATUR,603,Ahmednagar to Latur,265,305
+LATUR_AHMEDNAGAR,604,Latur to Ahmednagar,265,325
+AHMEDNAGAR_BEED,605,Ahmednagar to Beed,135,165
+BEED_AHMEDNAGAR,606,Beed to Ahmednagar,135,175
+AHMEDNAGAR_AKOLA,607,Ahmednagar to Akola,380,465
+AKOLA_AHMEDNAGAR,608,Akola to Ahmednagar,380,430
+AHMEDNAGAR_BARAMATI,609,Ahmednagar to Baramati,135,180
+BARAMATI_AHMEDNAGAR,610,Baramati to Ahmednagar,135,170
+AHMEDNAGAR_MANMAD,611,Ahmednagar to Manmad,170,225
+MANMAD_AHMEDNAGAR,612,Manmad to Ahmednagar,170,210
+AHMEDNAGAR_SANGAMNER,613,Ahmednagar to Sangamner,100,140
+SANGAMNER_AHMEDNAGAR,614,Sangamner to Ahmednagar,100,140
+AHMEDNAGAR_KOPARGAON,615,Ahmednagar to Kopargaon,115,160
+KOPARGAON_AHMEDNAGAR,616,Kopargaon to Ahmednagar,115,170
+AHMEDNAGAR_PHALTAN,617,Ahmednagar to Phaltan,165,215
+PHALTAN_AHMEDNAGAR,618,Phaltan to Ahmednagar,165,225
+AHMEDNAGAR_YEOLA,619,Ahmednagar to Yeola,140,195
+YEOLA_AHMEDNAGAR,620,Yeola to Ahmednagar,140,180
+AHMEDNAGAR_SINNAR,621,Ahmednagar to Sinnar,145,180
+SINNAR_AHMEDNAGAR,622,Sinnar to Ahmednagar,145,180
+SHIRDI_MANMAD,623,Shirdi to Manmad,70,100
+MANMAD_SHIRDI,624,Manmad to Shirdi,70,110
+SHIRDI_SANGAMNER,625,Shirdi to Sangamner,45,70
+SANGAMNER_SHIRDI,626,Sangamner to Shirdi,45,75
+SHIRDI_YEOLA,627,Shirdi to Yeola,40,65
+YEOLA_SHIRDI,628,Yeola to Shirdi,40,65
+SHIRDI_SINNAR,629,Shirdi to Sinnar,65,95
+SINNAR_SHIRDI,630,Sinnar to Shirdi,65,100
+JALGAON_DHULE,631,Jalgaon to Dhule,100,140
+DHULE_JALGAON,632,Dhule to Jalgaon,100,135
+JALGAON_NANDED,633,Jalgaon to Nanded,355,410
+NANDED_JALGAON,634,Nanded to Jalgaon,355,410
+JALGAON_LATUR,635,Jalgaon to Latur,395,490
+LATUR_JALGAON,636,Latur to Jalgaon,395,485
+JALGAON_JALNA,637,Jalgaon to Jalna,170,215
+JALNA_JALGAON,638,Jalna to Jalgaon,170,230
+JALGAON_AKOLA,639,Jalgaon to Akola,190,260
+AKOLA_JALGAON,640,Akola to Jalgaon,190,240
+JALGAON_AMRAVATI,641,Jalgaon to Amravati,290,355
+AMRAVATI_JALGAON,642,Amravati to Jalgaon,290,365
+JALGAON_BULDHANA,643,Jalgaon to Buldhana,105,145
+BULDHANA_JALGAON,644,Buldhana to Jalgaon,105,160
+JALGAON_MALEGAON,645,Jalgaon to Malegaon,150,210
+MALEGAON_JALGAON,646,Malegaon to Jalgaon,150,185
+JALGAON_KHAMGAON,647,Jalgaon to Khamgaon,140,170
+KHAMGAON_JALGAON,648,Khamgaon to Jalgaon,140,180
+JALGAON_SHIRPUR,649,Jalgaon to Shirpur,105,155
+SHIRPUR_JALGAON,650,Shirpur to Jalgaon,105,160
+JALGAON_BHUSAWAL,651,Jalgaon to Bhusawal,30,45
+BHUSAWAL_JALGAON,652,Bhusawal to Jalgaon,30,50
+JALGAON_CHALISGAON,653,Jalgaon to Chalisgaon,105,145
+CHALISGAON_JALGAON,655,Chalisgaon to Jalgaon,105,155
+JALGAON_PACHORA,656,Jalgaon to Pachora,55,90
+PACHORA_JALGAON,657,Pachora to Jalgaon,55,85
+JALGAON_AMALNER,658,Jalgaon to Amalner,65,95
+AMALNER_JALGAON,659,Amalner to Jalgaon,65,100
+JALGAON_MALKAPUR,660,Jalgaon to Malkapur,85,125
+MALKAPUR_JALGAON,661,Malkapur to Jalgaon,85,115
+JALGAON_SHEGAON,662,Jalgaon to Shegaon,155,220
+SHEGAON_JALGAON,663,Shegaon to Jalgaon,155,210
+DHULE_MALEGAON,664,Dhule to Malegaon,60,85
+MALEGAON_DHULE,665,Malegaon to Dhule,60,85
+DHULE_SHIRPUR,666,Dhule to Shirpur,65,90
+SHIRPUR_DHULE,667,Shirpur to Dhule,65,95
+DHULE_CHALISGAON,668,Dhule to Chalisgaon,70,100
+CHALISGAON_DHULE,669,Chalisgaon to Dhule,70,105
+DHULE_AMALNER,670,Dhule to Amalner,45,75
+AMALNER_DHULE,671,Amalner to Dhule,45,70
+NANDED_LATUR,672,Nanded to Latur,150,210
+LATUR_NANDED,673,Latur to Nanded,150,200
+NANDED_PARBHANI,674,Nanded to Parbhani,75,115
+PARBHANI_NANDED,675,Parbhani to Nanded,75,110
+NANDED_HINGOLI,676,Nanded to Hingoli,85,120
+HINGOLI_NANDED,677,Hingoli to Nanded,85,125
+NANDED_AKOLA,678,Nanded to Akola,230,325
+AKOLA_NANDED,679,Akola to Nanded,230,295
+NANDED_AMRAVATI,680,Nanded to Amravati,260,330
+AMRAVATI_NANDED,681,Amravati to Nanded,260,315
+NANDED_WASHIM,682,Nanded to Washim,140,185
+WASHIM_NANDED,683,Washim to Nanded,140,185
+NANDED_AMBAJOGAI,684,Nanded to Ambajogai,140,190
+AMBAJOGAI_NANDED,685,Ambajogai to Nanded,140,180
+NANDED_UDGIR,686,Nanded to Udgir,110,165
+UDGIR_NANDED,687,Udgir to Nanded,110,165
+NANDED_PUSAD,688,Nanded to Pusad,115,155
+PUSAD_NANDED,689,Pusad to Nanded,115,175
+NANDED_UMARKHED,690,Nanded to Umarkhed,85,120
+UMARKHED_NANDED,691,Umarkhed to Nanded,85,120
+NANDED_DIGRAS,692,Nanded to Digras,145,195
+DIGRAS_NANDED,693,Digras to Nanded,145,190
+LATUR_BEED,694,Latur to Beed,135,165
+BEED_LATUR,695,Beed to Latur,135,185
+LATUR_PARBHANI,696,Latur to Parbhani,125,155
+PARBHANI_LATUR,697,Parbhani to Latur,125,160
+LATUR_DHARASHIV,698,Latur to Dharashiv,75,115
+DHARASHIV_LATUR,699,Dharashiv to Latur,75,105
+LATUR_AKOLA,700,Latur to Akola,335,425
+AKOLA_LATUR,701,Akola to Latur,335,415
+LATUR_AMRAVATI,702,Latur to Amravati,395,465
+AMRAVATI_LATUR,703,Amravati to Latur,395,445
+LATUR_BARSHI,704,Latur to Barshi,120,170
+BARSHI_LATUR,705,Barshi to Latur,120,150
+LATUR_AMBAJOGAI,706,Latur to Ambajogai,50,80
+AMBAJOGAI_LATUR,707,Ambajogai to Latur,50,80
+LATUR_UDGIR,708,Latur to Udgir,75,110
+UDGIR_LATUR,709,Udgir to Latur,75,110
+LATUR_AKKALKOT,710,Latur to Akkalkot,135,180
+AKKALKOT_LATUR,711,Akkalkot to Latur,135,180
+PARBHANI_HINGOLI,712,Parbhani to Hingoli,80,120
+HINGOLI_PARBHANI,713,Hingoli to Parbhani,80,110
+HINGOLI_AKOLA,714,Hingoli to Akola,145,185
+AKOLA_HINGOLI,715,Akola to Hingoli,145,195
+HINGOLI_WASHIM,716,Hingoli to Washim,55,85
+WASHIM_HINGOLI,717,Washim to Hingoli,55,90
+HINGOLI_PUSAD,718,Hingoli to Pusad,65,95
+PUSAD_HINGOLI,719,Pusad to Hingoli,65,95
+HINGOLI_UMARKHED,720,Hingoli to Umarkhed,75,105
+UMARKHED_HINGOLI,721,Umarkhed to Hingoli,75,110
+DHARASHIV_BARSHI,722,Dharashiv to Barshi,50,80
+BARSHI_DHARASHIV,723,Barshi to Dharashiv,50,80
+AKOLA_AMRAVATI,724,Akola to Amravati,100,140
+AMRAVATI_AKOLA,725,Amravati to Akola,100,140
+AKOLA_YAVATMAL,726,Akola to Yavatmal,155,195
+YAVATMAL_AKOLA,727,Yavatmal to Akola,155,195
+AKOLA_BULDHANA,728,Akola to Buldhana,115,155
+BULDHANA_AKOLA,729,Buldhana to Akola,115,165
+AKOLA_WASHIM,730,Akola to Washim,85,125
+WASHIM_AKOLA,731,Washim to Akola,85,115
+AKOLA_KHAMGAON,732,Akola to Khamgaon,60,85
+KHAMGAON_AKOLA,733,Khamgaon to Akola,60,85
+AKOLA_BHUSAWAL,734,Akola to Bhusawal,170,230
+BHUSAWAL_AKOLA,735,Bhusawal to Akola,170,240
+AKOLA_ACHALPUR,736,Akola to Achalpur,105,150
+ACHALPUR_AKOLA,737,Achalpur to Akola,105,145
+AKOLA_PUSAD,738,Akola to Pusad,135,170
+PUSAD_AKOLA,739,Pusad to Akola,135,170
+AKOLA_DIGRAS,740,Akola to Digras,130,165
+DIGRAS_AKOLA,741,Digras to Akola,130,165
+AKOLA_MALKAPUR,742,Akola to Malkapur,110,150
+MALKAPUR_AKOLA,743,Malkapur to Akola,110,160
+AKOLA_SHEGAON,744,Akola to Shegaon,45,70
+SHEGAON_AKOLA,745,Shegaon to Akola,45,75
+AMRAVATI_WARDHA,746,Amravati to Wardha,115,165
+WARDHA_AMRAVATI,747,Wardha to Amravati,115,170
+AMRAVATI_YAVATMAL,748,Amravati to Yavatmal,90,125
+YAVATMAL_AMRAVATI,749,Yavatmal to Amravati,90,135
+AMRAVATI_WASHIM,750,Amravati to Washim,145,190
+WASHIM_AMRAVATI,751,Washim to Amravati,145,200
+AMRAVATI_KHAMGAON,752,Amravati to Khamgaon,160,215
+KHAMGAON_AMRAVATI,753,Khamgaon to Amravati,160,210
+AMRAVATI_HINGANGHAT,754,Amravati to Hinganghat,155,205
+HINGANGHAT_AMRAVATI,755,Hinganghat to Amravati,155,195
+AMRAVATI_ACHALPUR,756,Amravati to Achalpur,55,80
+ACHALPUR_AMRAVATI,757,Achalpur to Amravati,55,95
+AMRAVATI_PUSAD,758,Amravati to Pusad,145,190
+PUSAD_AMRAVATI,759,Pusad to Amravati,145,200
+AMRAVATI_KATOL,760,Amravati to Katol,120,155
+KATOL_AMRAVATI,761,Katol to Amravati,120,150
+AMRAVATI_DIGRAS,762,Amravati to Digras,120,160
+DIGRAS_AMRAVATI,763,Digras to Amravati,120,150
+AMRAVATI_SHEGAON,764,Amravati to Shegaon,145,180
+SHEGAON_AMRAVATI,765,Shegaon to Amravati,145,195
+WARDHA_YAVATMAL,766,Wardha to Yavatmal,80,110
+YAVATMAL_WARDHA,767,Yavatmal to Wardha,80,125
+WARDHA_HINGANGHAT,768,Wardha to Hinganghat,40,60
+HINGANGHAT_WARDHA,769,Hinganghat to Wardha,40,65
+WARDHA_NAGPUR_AIRPORT,770,Wardha to Nagpur Airport,75,110
+NAGPUR_AIRPORT_WARDHA,771,Nagpur Airport to Wardha,75,115
+WARDHA_KATOL,772,Wardha to Katol,75,105
+KATOL_WARDHA,773,Katol to Wardha,75,110
+BHANDARA_NAGPUR_AIRPORT,774,Bhandara to Nagpur Airport,80,115
+NAGPUR_AIRPORT_BHANDARA,775,Nagpur Airport to Bhandara,80,115
+BHANDARA_RAMTEK,776,Bhandara to Ramtek,55,90
+RAMTEK_BHANDARA,777,Ramtek to Bhandara,55,95
+YAVATMAL_DIGRAS,778,Yavatmal to Digras,70,100
+DIGRAS_YAVATMAL,779,Digras to Yavatmal,70,105
+BULDHANA_KHAMGAON,780,Buldhana to Khamgaon,55,90
+KHAMGAON_BULDHANA,781,Khamgaon to Buldhana,55,90
+BULDHANA_MALKAPUR,782,Buldhana to Malkapur,50,85
+MALKAPUR_BULDHANA,783,Malkapur to Buldhana,50,75
+BULDHANA_SHEGAON,784,Buldhana to Shegaon,75,105
+SHEGAON_BULDHANA,785,Shegaon to Buldhana,75,110
+WASHIM_PUSAD,786,Washim to Pusad,65,90
+PUSAD_WASHIM,787,Pusad to Washim,65,90
+WASHIM_DIGRAS,788,Washim to Digras,80,110
+DIGRAS_WASHIM,790,Digras to Washim,80,105
+KALYAN_PANVEL,791,Kalyan to Panvel,35,55
+PANVEL_KALYAN,792,Panvel to Kalyan,35,55
+KALYAN_LONAVALA,793,Kalyan to Lonavala,80,110
+LONAVALA_KALYAN,794,Lonavala to Kalyan,80,110
+KALYAN_VIRAR,795,Kalyan to Virar,55,90
+VIRAR_KALYAN,796,Virar to Kalyan,55,90
+KALYAN_PALGHAR,797,Kalyan to Palghar,80,115
+PALGHAR_KALYAN,798,Palghar to Kalyan,80,120
+KALYAN_KARJAT,799,Kalyan to Karjat,55,95
+KARJAT_KALYAN,800,Karjat to Kalyan,55,90
+KALYAN_PEN,801,Kalyan to Pen,80,115
+PEN_KALYAN,802,Pen to Kalyan,80,120
+KALYAN_KHOPOLI,803,Kalyan to Khopoli,70,105
+KHOPOLI_KALYAN,804,Khopoli to Kalyan,70,100
+KALYAN_MUM_AIRPORT,805,Kalyan to Mumbai Airport,40,65
+MUM_AIRPORT_KALYAN,806,Mumbai Airport to Kalyan,40,65
+PANVEL_ALIBAG,807,Panvel to Alibag,65,100
+ALIBAG_PANVEL,808,Alibag to Panvel,65,100
+PANVEL_LONAVALA,809,Panvel to Lonavala,50,75
+LONAVALA_PANVEL,810,Lonavala to Panvel,50,75
+PANVEL_VIRAR,811,Panvel to Virar,80,110
+VIRAR_PANVEL,812,Virar to Panvel,80,120
+PANVEL_PEN,813,Panvel to Pen,40,65
+PEN_PANVEL,814,Pen to Panvel,40,60
+PANVEL_KHOPOLI,815,Panvel to Khopoli,40,60
+KHOPOLI_PANVEL,816,Khopoli to Panvel,40,65
+PANVEL_BHIWANDI,817,Panvel to Bhiwandi,45,75
+BHIWANDI_PANVEL,818,Bhiwandi to Panvel,45,75
+PANVEL_MUM_AIRPORT,819,Panvel to Mumbai Airport,35,55
+MUM_AIRPORT_PANVEL,820,Mumbai Airport to Panvel,35,55
+VASHI_ALIBAG,821,Vashi to Alibag,70,95
+ALIBAG_VASHI,822,Alibag to Vashi,70,95
+VASHI_LONAVALA,823,Vashi to Lonavala,75,105
+LONAVALA_VASHI,824,Lonavala to Vashi,75,105
+VASHI_VIRAR,825,Vashi to Virar,60,85
+VIRAR_VASHI,826,Virar to Vashi,60,80
+VASHI_KARJAT,827,Vashi to Karjat,50,85
+KARJAT_VASHI,828,Karjat to Vashi,50,85
+VASHI_PEN,829,Vashi to Pen,55,90
+PEN_VASHI,830,Pen to Vashi,55,95
+VASHI_KHOPOLI,831,Vashi to Khopoli,65,100
+KHOPOLI_VASHI,832,Khopoli to Vashi,65,95
+ALIBAG_LONAVALA,833,Alibag to Lonavala,80,110
+LONAVALA_ALIBAG,834,Lonavala to Alibag,80,110
+ALIBAG_KARJAT,835,Alibag to Karjat,80,120
+KARJAT_ALIBAG,836,Karjat to Alibag,80,115
+ALIBAG_PEN,837,Alibag to Pen,35,55
+PEN_ALIBAG,838,Pen to Alibag,35,60
+ALIBAG_KHOPOLI,839,Alibag to Khopoli,75,105
+KHOPOLI_ALIBAG,840,Khopoli to Alibag,75,110
+ALIBAG_MUM_AIRPORT,841,Alibag to Mumbai Airport,70,105
+MUM_AIRPORT_ALIBAG,842,Mumbai Airport to Alibag,70,100
+LONAVALA_PEN,843,Lonavala to Pen,45,70
+PEN_LONAVALA,844,Pen to Lonavala,45,70
+KARAD_ISLAMPUR,845,Karad to Islampur,35,55
+ISLAMPUR_KARAD,846,Islampur to Karad,35,55
+KARAD_TASGAON,847,Karad to Tasgaon,65,100
+TASGAON_KARAD,848,Tasgaon to Karad,65,90
+MAHABALESHWAR_CHIPLUN,849,Mahabaleshwar to Chiplun,65,115
+CHIPLUN_MAHABALESHWAR,850,Chiplun to Mahabaleshwar,65,105
+MAHABALESHWAR_MAHAD,851,Mahabaleshwar to Mahad,45,90
+MAHAD_MAHABALESHWAR,852,Mahad to Mahabaleshwar,45,90
+MAHABALESHWAR_KHED,853,Mahabaleshwar to Khed Ratnagiri,50,95
+KHED_MAHABALESHWAR,854,Khed Ratnagiri to Mahabaleshwar,50,95
+MAHABALESHWAR_DAPOLI,855,Mahabaleshwar to Dapoli,75,125
+DAPOLI_MAHABALESHWAR,856,Dapoli to Mahabaleshwar,75,125
+CHIPLUN_PANCHGANI,857,Chiplun to Panchgani,75,135
+PANCHGANI_CHIPLUN,858,Panchgani to Chiplun,75,125
+CHIPLUN_KHED,859,Chiplun to Khed Ratnagiri,35,65
+KHED_CHIPLUN,860,Khed Ratnagiri to Chiplun,35,70
+CHIPLUN_DAPOLI,861,Chiplun to Dapoli,60,105
+DAPOLI_CHIPLUN,862,Dapoli to Chiplun,60,100
+SAWANTWADI_MALVAN,863,Sawantwadi to Malvan,60,100
+MALVAN_SAWANTWADI,864,Malvan to Sawantwadi,60,95
+SAWANTWADI_KANKAVLI,865,Sawantwadi to Kankavli,60,100
+KANKAVLI_SAWANTWADI,866,Kankavli to Sawantwadi,60,105
+MALEGAON_MANMAD,867,Malegaon to Manmad,45,75
+MANMAD_MALEGAON,868,Manmad to Malegaon,45,75
+MALEGAON_CHALISGAON,869,Malegaon to Chalisgaon,65,90
+CHALISGAON_MALEGAON,870,Chalisgaon to Malegaon,65,95
+MALEGAON_YEOLA,871,Malegaon to Yeola,75,115
+YEOLA_MALEGAON,872,Yeola to Malegaon,75,105
+MANMAD_KOPARGAON,873,Manmad to Kopargaon,55,90
+KOPARGAON_MANMAD,874,Kopargaon to Manmad,55,85
+MANMAD_SINNAR,875,Manmad to Sinnar,80,125
+SINNAR_MANMAD,876,Sinnar to Manmad,80,115
+IGATPURI_SINNAR,877,Igatpuri to Sinnar,65,90
+SINNAR_IGATPURI,878,Sinnar to Igatpuri,65,90
+ICHALKARANJI_ISLAMPUR,879,Ichalkaranji to Islampur,55,90
+ISLAMPUR_ICHALKARANJI,880,Islampur to Ichalkaranji,55,90
+ICHALKARANJI_TASGAON,881,Ichalkaranji to Tasgaon,55,85
+TASGAON_ICHALKARANJI,882,Tasgaon to Ichalkaranji,55,95
+MIRAJ_ISLAMPUR,883,Miraj to Islampur,60,90
+ISLAMPUR_MIRAJ,884,Islampur to Miraj,60,85
+VIRAR_PALGHAR,885,Virar to Palghar,35,55
+PALGHAR_VIRAR,886,Palghar to Virar,35,60
+VIRAR_DAHANU,887,Virar to Dahanu,75,110
+DAHANU_VIRAR,888,Dahanu to Virar,75,110
+VIRAR_BHIWANDI,889,Virar to Bhiwandi,40,65
+BHIWANDI_VIRAR,890,Bhiwandi to Virar,40,60
+VIRAR_MUM_AIRPORT,891,Virar to Mumbai Airport,55,90
+MUM_AIRPORT_VIRAR,892,Mumbai Airport to Virar,55,95
+PALGHAR_DAHANU,893,Palghar to Dahanu,40,60
+DAHANU_PALGHAR,894,Dahanu to Palghar,40,65
+PALGHAR_BHIWANDI,895,Palghar to Bhiwandi,70,100
+BHIWANDI_PALGHAR,896,Bhiwandi to Palghar,70,105
+MAHAD_WAI,897,Mahad to Wai,70,120
+WAI_MAHAD,898,Wai to Mahad,70,125
+MAHAD_PANCHGANI,899,Mahad to Panchgani,60,105
+PANCHGANI_MAHAD,900,Panchgani to Mahad,60,100
+MAHAD_KHED,901,Mahad to Khed Ratnagiri,55,105
+KHED_MAHAD,902,Khed Ratnagiri to Mahad,55,100
+MAHAD_DAPOLI,903,Mahad to Dapoli,60,110
+DAPOLI_MAHAD,904,Dapoli to Mahad,60,100
+KUDAL_MALVAN,905,Kudal to Malvan,35,70
+MALVAN_KUDAL,906,Malvan to Kudal,35,65
+KUDAL_KANKAVLI,907,Kudal to Kankavli,40,75
+KANKAVLI_KUDAL,908,Kankavli to Kudal,40,75
+MALVAN_KANKAVLI,909,Malvan to Kankavli,50,100
+KANKAVLI_MALVAN,910,Kankavli to Malvan,50,95
+KHAMGAON_MALKAPUR,911,Khamgaon to Malkapur,55,85
+MALKAPUR_KHAMGAON,912,Malkapur to Khamgaon,55,90
+SHIRPUR_AMALNER,913,Shirpur to Amalner,50,80
+AMALNER_SHIRPUR,914,Amalner to Shirpur,50,80
+BHUSAWAL_PACHORA,915,Bhusawal to Pachora,80,115
+PACHORA_BHUSAWAL,916,Pachora to Bhusawal,80,115
+BHUSAWAL_MALKAPUR,917,Bhusawal to Malkapur,60,85
+MALKAPUR_BHUSAWAL,918,Malkapur to Bhusawal,60,85
+SANGAMNER_KOPARGAON,919,Sangamner to Kopargaon,55,90
+KOPARGAON_SANGAMNER,920,Kopargaon to Sangamner,55,90
+SANGAMNER_YEOLA,921,Sangamner to Yeola,75,105
+YEOLA_SANGAMNER,922,Yeola to Sangamner,75,110
+SANGAMNER_SINNAR,923,Sangamner to Sinnar,50,75
+SINNAR_SANGAMNER,924,Sinnar to Sangamner,50,80
+KOPARGAON_SINNAR,925,Kopargaon to Sinnar,65,95
+SINNAR_KOPARGAON,926,Sinnar to Kopargaon,65,100
+PHALTAN_WAI,927,Phaltan to Wai,75,105
+WAI_PHALTAN,928,Wai to Phaltan,75,110
+WAI_KHED,929,Wai to Khed Ratnagiri,80,140
+KHED_WAI,930,Khed Ratnagiri to Wai,80,145
+CHALISGAON_PACHORA,931,Chalisgaon to Pachora,55,90
+PACHORA_CHALISGAON,932,Pachora to Chalisgaon,55,80
+YEOLA_SINNAR,933,Yeola to Sinnar,70,100
+SINNAR_YEOLA,934,Sinnar to Yeola,70,100
+GADCHIROLI_BRAMHAPURI,935,Gadchiroli to Bramhapuri,65,100
+BRAMHAPURI_GADCHIROLI,936,Bramhapuri to Gadchiroli,65,100
+HINGANGHAT_NAGPUR_AIRPORT,937,Hinganghat to Nagpur Airport,80,115
+NAGPUR_AIRPORT_HINGANGHAT,938,Nagpur Airport to Hinganghat,80,115
+PUSAD_UMARKHED,939,Pusad to Umarkhed,45,70
+UMARKHED_PUSAD,940,Umarkhed to Pusad,45,75
+PUSAD_DIGRAS,941,Pusad to Digras,35,55
+DIGRAS_PUSAD,942,Digras to Pusad,35,55
+KARJAT_PEN,943,Karjat to Pen,45,70
+PEN_KARJAT,944,Pen to Karjat,45,70
+KARJAT_BHIWANDI,945,Karjat to Bhiwandi,65,100
+BHIWANDI_KARJAT,946,Bhiwandi to Karjat,65,90
+KARJAT_MUM_AIRPORT,947,Karjat to Mumbai Airport,65,95
+MUM_AIRPORT_KARJAT,948,Mumbai Airport to Karjat,65,95
+PEN_KHOPOLI,949,Pen to Khopoli,35,60
+KHOPOLI_PEN,950,Khopoli to Pen,35,60
+PEN_MUM_AIRPORT,951,Pen to Mumbai Airport,65,100
+MUM_AIRPORT_PEN,952,Mumbai Airport to Pen,65,90
+KHOPOLI_BHIWANDI,953,Khopoli to Bhiwandi,80,110
+BHIWANDI_KHOPOLI,954,Bhiwandi to Khopoli,80,120
+KHOPOLI_MUM_AIRPORT,955,Khopoli to Mumbai Airport,80,120
+MUM_AIRPORT_KHOPOLI,956,Mumbai Airport to Khopoli,80,120
+BHIWANDI_MUM_AIRPORT,957,Bhiwandi to Mumbai Airport,40,60
+MUM_AIRPORT_BHIWANDI,958,Mumbai Airport to Bhiwandi,40,60
+PANCHGANI_KHED,959,Panchgani to Khed Ratnagiri,70,120
+KHED_PANCHGANI,960,Khed Ratnagiri to Panchgani,70,125
+ISLAMPUR_TASGAON,961,Islampur to Tasgaon,45,75
+TASGAON_ISLAMPUR,962,Tasgaon to Islampur,45,75
+UMARKHED_DIGRAS,963,Umarkhed to Digras,70,100
+DIGRAS_UMARKHED,964,Digras to Umarkhed,70,95
+PACHORA_AMALNER,965,Pachora to Amalner,65,95
+AMALNER_PACHORA,966,Amalner to Pachora,65,100
+NAGPUR_AIRPORT_RAMTEK,967,Nagpur Airport to Ramtek,55,85
+RAMTEK_NAGPUR_AIRPORT,968,Ramtek to Nagpur Airport,55,90
+NAGPUR_AIRPORT_KATOL,969,Nagpur Airport to Katol,65,100
+KATOL_NAGPUR_AIRPORT,970,Katol to Nagpur Airport,65,90
+MALKAPUR_SHEGAON,971,Malkapur to Shegaon,65,100
+SHEGAON_MALKAPUR,972,Shegaon to Malkapur,65,90
+PUNE_STATION_HINJEWADI_PHASE_1,973,Pune Station to Hinjewadi Phase 1,21,70
+HINJEWADI_PHASE_1_PUNE_STATION,974,Hinjewadi Phase 1 to Pune Station,21,75
+SWARGATE_HINJEWADI_PHASE_1,975,Swargate to Hinjewadi Phase 1,21,65
+HINJEWADI_PHASE_1_SWARGATE,976,Hinjewadi Phase 1 to Swargate,21,75
+PUNE_STATION_HADAPSAR,977,Pune Station to Hadapsar,8,30
+HADAPSAR_PUNE_STATION,978,Hadapsar to Pune Station,8,30
+SWARGATE_KATRAJ,979,Swargate to Katraj,8,35
+KATRAJ_SWARGATE,980,Katraj to Swargate,8,30
+SWARGATE_KOTHRUD_DEPOT,981,Swargate to Kothrud Depot,8,30
+KOTHRUD_DEPOT_SWARGATE,982,Kothrud Depot to Swargate,8,30
+PUNE_STATION_KHARADI,983,Pune Station to Kharadi,11,35
+KHARADI_PUNE_STATION,984,Kharadi to Pune Station,11,40
+PUNE_STATION_PIMPRI,985,Pune Station to Pimpri,18,60
+PIMPRI_PUNE_STATION,986,Pimpri to Pune Station,18,60
+SHIVAJINAGAR_BANER,987,Shivajinagar to Baner,10,30
+BANER_SHIVAJINAGAR,988,Baner to Shivajinagar,10,35
+SHIVAJINAGAR_WAKAD,989,Shivajinagar to Wakad,16,50
+WAKAD_SHIVAJINAGAR,990,Wakad to Shivajinagar,16,50
+SWARGATE_MAGARPATTA,991,Swargate to Magarpatta,2,10
+MAGARPATTA_SWARGATE,992,Magarpatta to Swargate,2,10
+DECCAN_GYMKHANA_KONDHWA,993,Deccan Gymkhana to Kondhwa,10,40
+KONDHWA_DECCAN_GYMKHANA,994,Kondhwa to Deccan Gymkhana,10,40
+PUNE_STATION_PUNE_AIRPORT,995,Pune Station to Pune Airport,10,40
+PUNE_AIRPORT_PUNE_STATION,996,Pune Airport to Pune Station,10,35
+SWARGATE_WARJE,997,Swargate to Warje,9,35
+WARJE_SWARGATE,998,Warje to Swargate,9,30
+HADAPSAR_KHARADI,999,Hadapsar to Kharadi,7,30
+KHARADI_HADAPSAR,1000,Kharadi to Hadapsar,7,25
+KATRAJ_HINJEWADI_PHASE_1,1001,Katraj to Hinjewadi Phase 1,27,80
+HINJEWADI_PHASE_1_KATRAJ,1002,Hinjewadi Phase 1 to Katraj,27,85
+PUNE_STATION_NIGDI,1003,Pune Station to Nigdi,23,80
+NIGDI_PUNE_STATION,1004,Nigdi to Pune Station,23,75
+SHIVAJINAGAR_AUNDH,1005,Shivajinagar to Aundh,7,30
+AUNDH_SHIVAJINAGAR,1006,Aundh to Shivajinagar,7,25
+PUNE_STATION_KOREGAON_PARK,1007,Pune Station to Koregaon Park,3,20
+KOREGAON_PARK_PUNE_STATION,1008,Koregaon Park to Pune Station,3,15
+SWARGATE_WAGHOLI,1009,Swargate to Wagholi,20,60
+WAGHOLI_SWARGATE,1010,Wagholi to Swargate,20,70
+PIMPRI_HINJEWADI_PHASE_1,1011,Pimpri to Hinjewadi Phase 1,10,40
+HINJEWADI_PHASE_1_PIMPRI,1012,Hinjewadi Phase 1 to Pimpri,10,35
+KOTHRUD_DEPOT_BANER,1013,Kothrud Depot to Baner,8,30
+BANER_KOTHRUD_DEPOT,1014,Baner to Kothrud Depot,8,25
+PUNE_STATION_VIMAN_NAGAR,1015,Pune Station to Viman Nagar,8,30
+VIMAN_NAGAR_PUNE_STATION,1016,Viman Nagar to Pune Station,8,25
+MUMBAI_CENTRAL_BORIVALI,1017,Mumbai Central to Borivali,39,110
+BORIVALI_MUMBAI_CENTRAL,1018,Borivali to Mumbai Central,39,110
+MUMBAI_CENTRAL_ANDHERI,1019,Mumbai Central to Andheri,23,70
+ANDHERI_MUMBAI_CENTRAL,1020,Andheri to Mumbai Central,23,70
+CSMT_BANDRA,1021,CSMT to Bandra,17,50
+BANDRA_CSMT,1022,Bandra to CSMT,17,50
+DADAR_BORIVALI,1023,Dadar to Borivali,32,95
+BORIVALI_DADAR,1024,Borivali to Dadar,32,95
+ANDHERI_POWAI,1025,Andheri to Powai,8,30
+POWAI_ANDHERI,1026,Powai to Andheri,8,30
+KURLA_BANDRA_KURLA_COMPLEX,1027,Kurla to Bandra Kurla Complex,2,15
+BANDRA_KURLA_COMPLEX_KURLA,1028,Bandra Kurla Complex to Kurla,2,10
+GHATKOPAR_ANDHERI,1029,Ghatkopar to Andheri,10,40
+ANDHERI_GHATKOPAR,1030,Andheri to Ghatkopar,10,35
+CSMT_MULUND,1031,CSMT to Mulund,39,110
+MULUND_CSMT,1032,Mulund to CSMT,39,140
+COLABA_DADAR,1033,Colaba to Dadar,17,60
+DADAR_COLABA,1034,Dadar to Colaba,17,55
+MUMBAI_CENTRAL_MUMBAI_AIRPORT_T2,1035,Mumbai Central to Mumbai Airport T2,19,70
+MUMBAI_AIRPORT_T2_MUMBAI_CENTRAL,1036,Mumbai Airport T2 to Mumbai Central,19,65
+KURLA_CHEMBUR,1037,Kurla to Chembur,3,15
+CHEMBUR_KURLA,1038,Chembur to Kurla,3,15
+DADAR_WORLI,1039,Dadar to Worli,3,15
+WORLI_DADAR,1040,Worli to Dadar,3,15
+BORIVALI_MIRA_ROAD,1041,Borivali to Mira Road,8,30
+MIRA_ROAD_BORIVALI,1042,Mira Road to Borivali,8,30
+ANDHERI_GOREGAON,1043,Andheri to Goregaon,7,25
+GOREGAON_ANDHERI,1044,Goregaon to Andheri,7,25
+GHATKOPAR_POWAI,1045,Ghatkopar to Powai,5,25
+POWAI_GHATKOPAR,1046,Powai to Ghatkopar,5,25
+CHURCHGATE_BANDRA,1047,Churchgate to Bandra,18,65
+BANDRA_CHURCHGATE,1048,Bandra to Churchgate,18,55
+SION_GHATKOPAR,1049,Sion to Ghatkopar,10,35
+GHATKOPAR_SION,1050,Ghatkopar to Sion,10,35
+MULUND_THANE_STATION,1051,Mulund to Thane Station,3,15
+THANE_STATION_MULUND,1052,Thane Station to Mulund,3,15
+DADAR_KURLA,1053,Dadar to Kurla,9,30
+KURLA_DADAR,1054,Kurla to Dadar,9,40
+THANE_STATION_KALYAN,1055,Thane Station to Kalyan,23,80
+KALYAN_THANE_STATION,1056,Kalyan to Thane Station,23,75
+THANE_STATION_VASHI,1057,Thane Station to Vashi,17,60
+VASHI_THANE_STATION,1058,Vashi to Thane Station,17,50
+VASHI_PANVEL,1059,Vashi to Panvel,21,75
+PANVEL_VASHI,1060,Panvel to Vashi,21,70
+KALYAN_DOMBIVLI,1061,Kalyan to Dombivli,7,25
+DOMBIVLI_KALYAN,1062,Dombivli to Kalyan,7,25
+VASHI_BELAPUR_CBD,1063,Vashi to Belapur CBD,10,35
+BELAPUR_CBD_VASHI,1064,Belapur CBD to Vashi,10,45
+BELAPUR_CBD_KHARGHAR,1065,Belapur CBD to Kharghar,6,25
+KHARGHAR_BELAPUR_CBD,1066,Kharghar to Belapur CBD,6,20
+PANVEL_NAVI_MUMBAI_AIRPORT,1067,Panvel to Navi Mumbai Airport,7,25
+NAVI_MUMBAI_AIRPORT_PANVEL,1068,Navi Mumbai Airport to Panvel,7,30
+KALYAN_BADLAPUR,1069,Kalyan to Badlapur,19,70
+BADLAPUR_KALYAN,1070,Badlapur to Kalyan,19,60
+THANE_STATION_BHIWANDI,1071,Thane Station to Bhiwandi,21,75
+BHIWANDI_THANE_STATION,1072,Bhiwandi to Thane Station,21,75
+NAGPUR_STATION_NAGPUR_AIRPORT,1073,Nagpur Station to Nagpur Airport,10,40
+NAGPUR_AIRPORT_NAGPUR_STATION,1074,Nagpur Airport to Nagpur Station,10,35
+NAGPUR_STATION_HINGNA,1075,Nagpur Station to Hingna,17,55
+HINGNA_NAGPUR_STATION,1076,Hingna to Nagpur Station,17,60
+NAGPUR_STATION_KAMPTEE,1077,Nagpur Station to Kamptee,20,75
+KAMPTEE_NAGPUR_STATION,1078,Kamptee to Nagpur Station,20,70
+SITABULDI_MANISH_NAGAR,1079,Sitabuldi to Manish Nagar,9,35
+MANISH_NAGAR_SITABULDI,1080,Manish Nagar to Sitabuldi,9,35
+NAGPUR_STATION_BUTIBORI,1081,Nagpur Station to Butibori,36,110
+BUTIBORI_NAGPUR_STATION,1082,Butibori to Nagpur Station,36,120
+SITABULDI_DHARAMPETH,1083,Sitabuldi to Dharampeth,3,20
+DHARAMPETH_SITABULDI,1084,Dharampeth to Sitabuldi,3,15
+NAGPUR_STATION_MIHAN,1085,Nagpur Station to MIHAN,18,55
+MIHAN_NAGPUR_STATION,1086,MIHAN to Nagpur Station,18,65
+ITWARI_KAMPTEE,1087,Itwari to Kamptee,18,55
+KAMPTEE_ITWARI,1088,Kamptee to Itwari,18,55
+NASHIK_DEPOT_NASHIK_ROAD,1089,Nashik Depot to Nashik Road,10,35
+NASHIK_ROAD_NASHIK_DEPOT,1090,Nashik Road to Nashik Depot,10,40
+CBS_NASHIK_SATPUR,1091,CBS Nashik to Satpur,7,25
+SATPUR_CBS_NASHIK,1092,Satpur to CBS Nashik,7,30
+NASHIK_DEPOT_DEOLALI,1093,Nashik Depot to Deolali,10,40
+DEOLALI_NASHIK_DEPOT,1094,Deolali to Nashik Depot,10,35
+CBS_NASHIK_PANCHAVATI,1095,CBS Nashik to Panchavati,2,15
+PANCHAVATI_CBS_NASHIK,1096,Panchavati to CBS Nashik,2,10
+NASHIK_ROAD_AMBAD,1097,Nashik Road to Ambad,13,45
+AMBAD_NASHIK_ROAD,1098,Ambad to Nashik Road,13,55
+NASHIK_DEPOT_TRIMBAKESHWAR,1099,Nashik Depot to Trimbakeshwar,38,140
+TRIMBAKESHWAR_NASHIK_DEPOT,1100,Trimbakeshwar to Nashik Depot,38,120
+CHHATRAPATI_SAMBHAJINAGAR_CBS_WALUJ_MIDC,1101,Chhatrapati Sambhajinagar CBS to Waluj MIDC,16,50
+WALUJ_MIDC_CHHATRAPATI_SAMBHAJINAGAR_CBS,1102,Waluj MIDC to Chhatrapati Sambhajinagar CBS,16,55
+CHHATRAPATI_SAMBHAJINAGAR_CBS_CIDCO_SAMBHAJINAGAR,1103,Chhatrapati Sambhajinagar CBS to CIDCO Sambhajinagar,4,15
+CIDCO_SAMBHAJINAGAR_CHHATRAPATI_SAMBHAJINAGAR_CBS,1104,CIDCO Sambhajinagar to Chhatrapati Sambhajinagar CBS,4,20
+CHHATRAPATI_SAMBHAJINAGAR_RAILWAY_CHIKALTHANA_AIRPORT,1105,Chhatrapati Sambhajinagar Railway to Chikalthana Airport,11,45
+CHIKALTHANA_AIRPORT_CHHATRAPATI_SAMBHAJINAGAR_RAILWAY,1106,Chikalthana Airport to Chhatrapati Sambhajinagar Railway,11,40
+CHHATRAPATI_SAMBHAJINAGAR_CBS_ELLORA,1107,Chhatrapati Sambhajinagar CBS to Ellora,32,105
+ELLORA_CHHATRAPATI_SAMBHAJINAGAR_CBS,1108,Ellora to Chhatrapati Sambhajinagar CBS,32,95
+KOLHAPUR_KOLHAPUR_AIRPORT,1109,Kolhapur to Kolhapur Airport,9,35
+KOLHAPUR_AIRPORT_KOLHAPUR,1110,Kolhapur Airport to Kolhapur,9,35
+KOLHAPUR_SHIROLI_MIDC,1111,Kolhapur to Shiroli MIDC,8,25
+SHIROLI_MIDC_KOLHAPUR,1112,Shiroli MIDC to Kolhapur,8,30
+SOLAPUR_STATION_SOLAPUR_AIRPORT,1113,Solapur Station to Solapur Airport,7,35
+SOLAPUR_AIRPORT_SOLAPUR_STATION,1114,Solapur Airport to Solapur Station,7,30
+SOLAPUR_STATION_HOTGI,1115,Solapur Station to Hotgi,15,55
+HOTGI_SOLAPUR_STATION,1116,Hotgi to Solapur Station,15,45

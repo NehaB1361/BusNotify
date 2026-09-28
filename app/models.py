@@ -85,7 +85,7 @@ class Stop(db.Model):
     __tablename__ = "stops"
 
     id = db.Column(db.Integer, primary_key=True)
-    stop_code = db.Column(db.String(32), unique=True, nullable=False, index=True)
+    stop_code = db.Column(db.String(64), unique=True, nullable=False, index=True)
     name = db.Column(db.String(128), nullable=False, index=True)
     name_mr = db.Column(db.String(128), nullable=True)
     landmark = db.Column(db.String(256), nullable=True)
@@ -111,7 +111,7 @@ class Route(db.Model):
     __tablename__ = "routes"
 
     id = db.Column(db.Integer, primary_key=True)
-    route_number = db.Column(db.String(32), unique=True, nullable=False, index=True)
+    route_number = db.Column(db.String(64), unique=True, nullable=False, index=True)
     name = db.Column(db.String(128), nullable=False)
     name_mr = db.Column(db.String(128), nullable=True)
     source = db.Column(db.String(128), nullable=False, index=True)
@@ -203,8 +203,8 @@ class Bus(db.Model):
     __tablename__ = "buses"
 
     id = db.Column(db.Integer, primary_key=True)
-    bus_number = db.Column(db.String(32), unique=True, nullable=False, index=True)
-    registration_number = db.Column(db.String(32), unique=True, nullable=False)
+    bus_number = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    registration_number = db.Column(db.String(64), unique=True, nullable=False)
     depot_name = db.Column(db.String(64), default="Pune Central Depot", nullable=False)
     capacity = db.Column(db.Integer, default=40, nullable=False)
     current_status = db.Column(
@@ -262,7 +262,7 @@ class Driver(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
-    driver_code = db.Column(db.String(32), unique=True, nullable=False, index=True)
+    driver_code = db.Column(db.String(64), unique=True, nullable=False, index=True)
     full_name = db.Column(db.String(128), nullable=False)
     mobile_number = db.Column(db.String(20), nullable=False)
     license_number = db.Column(db.String(64), unique=True, nullable=False)
@@ -299,7 +299,7 @@ class Trip(db.Model):
     __tablename__ = "trips"
 
     id = db.Column(db.Integer, primary_key=True)
-    trip_code = db.Column(db.String(32), unique=True, nullable=False, index=True)
+    trip_code = db.Column(db.String(128), unique=True, nullable=False, index=True)
     bus_id = db.Column(db.Integer, db.ForeignKey("buses.id", ondelete="CASCADE"), nullable=False, index=True)
     driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id", ondelete="SET NULL"), nullable=True, index=True)
     route_id = db.Column(db.Integer, db.ForeignKey("routes.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -482,7 +482,7 @@ class Incident(db.Model):
     __tablename__ = "incidents"
 
     id = db.Column(db.Integer, primary_key=True)
-    incident_number = db.Column(db.String(32), unique=True, nullable=False, index=True)
+    incident_number = db.Column(db.String(64), unique=True, nullable=False, index=True)
     trip_id = db.Column(db.Integer, db.ForeignKey("trips.id", ondelete="CASCADE"), nullable=False, index=True)
     bus_id = db.Column(db.Integer, db.ForeignKey("buses.id", ondelete="CASCADE"), nullable=False, index=True)
     route_id = db.Column(db.Integer, db.ForeignKey("routes.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -574,7 +574,7 @@ class DepotRequest(db.Model):
     __tablename__ = "depot_requests"
 
     id = db.Column(db.Integer, primary_key=True)
-    request_code = db.Column(db.String(32), unique=True, nullable=False, index=True)
+    request_code = db.Column(db.String(64), unique=True, nullable=False, index=True)
     incident_id = db.Column(db.Integer, db.ForeignKey("incidents.id", ondelete="CASCADE"), unique=True, nullable=False)
     failed_bus_id = db.Column(db.Integer, db.ForeignKey("buses.id", ondelete="CASCADE"), nullable=False, index=True)
     route_id = db.Column(db.Integer, db.ForeignKey("routes.id", ondelete="CASCADE"), nullable=False)
