@@ -244,3 +244,52 @@ def test_admin_crud_endpoints(client):
 
     client.post('/api/auth/logout')
 
+
+def test_passenger_routes_endpoints(client):
+    # Log in as passenger
+    login_res = client.post('/api/auth/login', json={
+        "identifier": "pax@test.com",
+        "password": "Password123!"
+    })
+    assert login_res.status_code == 200
+
+    # 1. Test listing routes API
+    routes_res = client.get('/api/passenger/routes?limit=10')
+    assert routes_res.status_code == 200
+    routes_data = routes_res.get_json()
+    assert routes_data["success"] is True
+    assert isinstance(routes_data["data"], list)
+    assert len(routes_data["data"]) > 0
+
+    # 2. Test route detail API by number and by ID
+    first_route = routes_data["data"][0]
+    detail_res = client.get(f'/api/passenger/routes/{first_route["route_number"]}')
+    assert detail_res.status_code == 200
+    detail_data = detail_res.get_json()["data"]
+    assert "route" in detail_data
+    assert "stops" in detail_data
+    assert "active_buses" in detail_data
+    assert "statistics" in detail_data
+
+    # 3. Test global API aliases
+    alias_res = client.get('/api/routes?limit=5')
+    assert alias_res.status_code == 200
+    alias_detail_res = client.get(f'/api/routes/{first_route["route_number"]}')
+    assert alias_detail_res.status_code == 200
+
+    # 4. Test Route frontend pages
+    view_list_res = client.get('/passenger/routes')
+    assert view_list_res.status_code == 200
+    assert b"Transit Routes Directory" in view_list_res.data
+
+    view_detail_res = client.get(f'/passenger/route/{first_route["route_number"]}')
+    assert view_detail_res.status_code == 200
+    assert b"Stop Sequence &amp; Itinerary" in view_detail_res.data or b"Stop Sequence & Itinerary" in view_detail_res.data
+
+    # 5. Test root /routes redirect
+    redirect_res = client.get('/routes')
+    assert redirect_res.status_code in (200, 302)
+
+    client.post('/api/auth/logout')
+
+

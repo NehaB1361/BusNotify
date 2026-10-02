@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from flask import Blueprint, request, session, redirect, url_for, jsonify, render_template, Response, g
 from sqlalchemy import or_, text, func
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.models import (
     db,
@@ -142,8 +143,14 @@ def search_buses():
     source = request.args.get("source", "").strip().lower()
     destination = request.args.get("destination", "").strip().lower()
     status_filter = request.args.get("status", "all").strip().upper()
+    limit = min(int(request.args.get("limit", 100)), 300)
 
-    trips_query = Trip.query.join(Bus).join(Route)
+    trips_query = Trip.query.options(
+        joinedload(Trip.bus),
+        joinedload(Trip.route),
+        joinedload(Trip.current_stop),
+        joinedload(Trip.next_stop)
+    ).join(Bus).join(Route)
 
     if query_str:
         trips_query = trips_query.filter(
@@ -176,21 +183,32 @@ def search_buses():
             trips_query = trips_query.filter(Trip.status == "RUNNING")
         else:
             trips_query = trips_query.filter(Trip.status == status_filter)
+    elif not (query_str or source or destination):
+        trips_query = trips_query.filter(
+            Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "DISPATCHED"])
+        )
 
-    trips = trips_query.all()
+    trips = trips_query.order_by(Trip.id.desc()).limit(limit).all()
     results = []
+    stats_cache = {}
+    now = datetime.utcnow()
 
     for trip in trips:
         bus = trip.bus
         route = trip.route
+        if not bus or not route:
+            continue
 
-        stats = DelayStatisticsService.get_stop_delay_stats(
-            route_id=route.id,
-            stop_id=trip.current_stop_id or (route.route_stops[0].stop_id if route.route_stops else 1)
-        )
+        stop_id = trip.current_stop_id or (route.route_stops[0].stop_id if route.route_stops else 1)
+        cache_key = (route.id, stop_id)
+        if cache_key not in stats_cache:
+            stats_cache[cache_key] = DelayStatisticsService.get_stop_delay_stats(
+                route_id=route.id,
+                stop_id=stop_id
+            )
+        stats = stats_cache[cache_key]
         expected_delay = stats.get("expected_delay", 0.0)
 
-        now = datetime.utcnow()
         latest_gps = trip.gps_records.first()
         if latest_gps and latest_gps.timestamp:
             delta_s = max(0, int((now - latest_gps.timestamp).total_seconds()))
@@ -226,6 +244,161 @@ def search_buses():
         })
 
     return api_success(data=results)
+
+
+@passenger_bp.route("/routes", methods=["GET"])
+def get_passenger_routes():
+    """List all transit routes with stop count, active bus count, and distance."""
+    q_str = request.args.get("q", "").strip().lower()
+    source = request.args.get("source", "").strip().lower()
+    destination = request.args.get("destination", "").strip().lower()
+    limit = min(int(request.args.get("limit", 100)), 500)
+
+    # Subquery for stops count per route
+    stops_sub = db.session.query(
+        RouteStop.route_id,
+        func.count(RouteStop.id).label("stops_count")
+    ).group_by(RouteStop.route_id).subquery()
+
+    # Subquery for active buses/trips count per route
+    trips_sub = db.session.query(
+        Trip.route_id,
+        func.count(Trip.id).label("active_buses_count")
+    ).filter(Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "DISPATCHED"])).group_by(Trip.route_id).subquery()
+
+    query = db.session.query(
+        Route,
+        func.coalesce(stops_sub.c.stops_count, 0),
+        func.coalesce(trips_sub.c.active_buses_count, 0)
+    ).outerjoin(stops_sub, Route.id == stops_sub.c.route_id)\
+     .outerjoin(trips_sub, Route.id == trips_sub.c.route_id)\
+     .filter(Route.is_active == True)
+
+    if q_str:
+        query = query.filter(
+            or_(
+                Route.route_number.ilike(f"%{q_str}%"),
+                Route.name.ilike(f"%{q_str}%"),
+                Route.source.ilike(f"%{q_str}%"),
+                Route.destination.ilike(f"%{q_str}%")
+            )
+        )
+    if source:
+        query = query.filter(
+            or_(
+                Route.source.ilike(f"%{source}%"),
+                Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{source}%")))
+            )
+        )
+    if destination:
+        query = query.filter(
+            or_(
+                Route.destination.ilike(f"%{destination}%"),
+                Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{destination}%")))
+            )
+        )
+
+    results = query.order_by(Route.id.asc()).limit(limit).all()
+
+    data = []
+    for r, stops_cnt, buses_cnt in results:
+        data.append({
+            "id": r.id,
+            "route_number": r.route_number,
+            "name": r.name,
+            "name_mr": r.name_mr or r.name,
+            "source": r.source,
+            "destination": r.destination,
+            "total_distance_km": r.total_distance_km,
+            "estimated_duration_min": r.estimated_duration_min,
+            "is_active": r.is_active,
+            "stops_count": int(stops_cnt),
+            "active_buses_count": int(buses_cnt),
+            "status": "OPERATIONAL" if r.is_active else "INACTIVE"
+        })
+
+    return api_success(data=data)
+
+
+@passenger_bp.route("/routes/<route_identifier>", methods=["GET"])
+def get_passenger_route_detail(route_identifier: str):
+    """Fetch complete route details including ordered stops sequence, live buses, and delay statistics."""
+    route = None
+    if str(route_identifier).isdigit():
+        route = Route.query.get(int(route_identifier))
+    if not route:
+        route = Route.query.filter(
+            or_(
+                Route.route_number == str(route_identifier),
+                Route.route_number.ilike(str(route_identifier))
+            )
+        ).first()
+
+    if not route:
+        return api_error(code="NOT_FOUND", message=f"Route '{route_identifier}' not found", status_code=404)
+
+    route_stops = RouteStop.query.filter_by(route_id=route.id)\
+        .order_by(RouteStop.sequence_order)\
+        .options(joinedload(RouteStop.stop))\
+        .all()
+
+    stops_data = []
+    for rs in route_stops:
+        if rs.stop:
+            stops_data.append({
+                "sequence_order": rs.sequence_order,
+                "stop_id": rs.stop.id,
+                "stop_code": rs.stop.stop_code,
+                "stop_name": rs.stop.name,
+                "stop_name_mr": rs.stop.name_mr or rs.stop.name,
+                "latitude": rs.stop.latitude,
+                "longitude": rs.stop.longitude,
+                "distance_from_prev_km": rs.distance_from_prev_km,
+                "avg_travel_time_min": rs.avg_travel_time_min,
+                "landmark": rs.stop.landmark
+            })
+
+    active_trips = Trip.query.filter(
+        Trip.route_id == route.id,
+        Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "DISPATCHED"])
+    ).options(
+        joinedload(Trip.bus),
+        joinedload(Trip.current_stop),
+        joinedload(Trip.next_stop)
+    ).all()
+
+    active_buses = []
+    for t in active_trips:
+        latest_gps = t.gps_records.first()
+        active_buses.append({
+            "trip_id": t.id,
+            "bus_id": t.bus.id if t.bus else None,
+            "bus_number": t.bus.bus_number if t.bus else "Unknown",
+            "registration_number": t.bus.registration_number if t.bus else "",
+            "status": t.status,
+            "current_stop": t.current_stop.name if t.current_stop else "En route",
+            "next_stop": t.next_stop.name if t.next_stop else "Terminus",
+            "available_seats": t.available_seats,
+            "capacity": t.bus.capacity if t.bus else 40,
+            "latitude": latest_gps.latitude if latest_gps else (route_stops[0].stop.latitude if route_stops and route_stops[0].stop else None),
+            "longitude": latest_gps.longitude if latest_gps else (route_stops[0].stop.longitude if route_stops and route_stops[0].stop else None),
+            "speed_kmh": latest_gps.speed_kmh if latest_gps else 0.0
+        })
+
+    first_stop_id = stops_data[0]["stop_id"] if stops_data else 1
+    stats = DelayStatisticsService.get_stop_delay_stats(
+        route_id=route.id,
+        stop_id=first_stop_id
+    )
+
+    return api_success(data={
+        "route": route.to_dict(),
+        "stops": stops_data,
+        "stops_count": len(stops_data),
+        "active_buses": active_buses,
+        "active_buses_count": len(active_buses),
+        "statistics": stats
+    })
 
 
 @passenger_bp.route("/bus/<bus_identifier>", methods=["GET"])
@@ -1360,8 +1533,12 @@ def handle_routes():
         db.session.commit()
         return api_success(data=route.to_dict(), message="Route created successfully", status_code=201)
 
+    include_stops = request.args.get("include_stops", "false").lower() == "true"
+    if include_stops:
+        routes = Route.query.options(selectinload(Route.route_stops).joinedload(RouteStop.stop)).all()
+        return api_success(data=[r.to_dict(include_stops=True) for r in routes])
     routes = Route.query.all()
-    return api_success(data=[r.to_dict(include_stops=True) for r in routes])
+    return api_success(data=[r.to_dict(include_stops=False) for r in routes])
 
 
 @admin_bp.route("/routes/<int:route_id>", methods=["PUT", "DELETE"])
@@ -1645,6 +1822,16 @@ def database_connection_test():
         )
 
 
+@system_bp.route("/api/routes", methods=["GET"])
+def system_routes_alias():
+    return get_passenger_routes()
+
+
+@system_bp.route("/api/routes/<route_identifier>", methods=["GET"])
+def system_route_detail_alias(route_identifier: str):
+    return get_passenger_route_detail(route_identifier)
+
+
 # ===========================================================================
 # 8. HTML VIEW CONTROLLERS (/ ...)
 # ===========================================================================
@@ -1722,10 +1909,34 @@ def unauthorized_page():
 # Passenger Views
 @view_bp.route("/passenger")
 def passenger_home():
-    routes = Route.query.filter_by(is_active=True).all()
-    stops = Stop.query.all()
     active_incident = Incident.query.filter_by(status="OPEN").order_by(Incident.id.desc()).first()
-    return render_template("passenger/home.html", routes=routes, stops=stops, active_incident=active_incident)
+    return render_template("passenger/home.html", active_incident=active_incident)
+
+
+@view_bp.route("/routes")
+def routes_redirect():
+    return redirect(url_for("views.passenger_routes"))
+
+
+@view_bp.route("/passenger/routes")
+def passenger_routes():
+    return render_template("passenger/routes.html")
+
+
+@view_bp.route("/passenger/route/<route_identifier>")
+@view_bp.route("/routes/<route_identifier>")
+def passenger_route_detail(route_identifier):
+    route = None
+    if str(route_identifier).isdigit():
+        route = Route.query.get(int(route_identifier))
+    if not route:
+        route = Route.query.filter(
+            or_(
+                Route.route_number == str(route_identifier),
+                Route.route_number.ilike(str(route_identifier))
+            )
+        ).first()
+    return render_template("passenger/route_detail.html", route_identifier=route_identifier, route=route)
 
 
 @view_bp.route("/passenger/search")

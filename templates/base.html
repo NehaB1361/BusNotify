@@ -190,6 +190,9 @@
         <a href="{{ url_for('views.passenger_search') }}" class="tf-nav-item {% if '/passenger/search' in request.path %}active{% endif %}">
           <i class="bi bi-search"></i> <span data-i18n="search_bus">Search Bus</span>
         </a>
+        <a href="{{ url_for('views.passenger_routes') }}" class="tf-nav-item {% if '/passenger/route' in request.path or request.path == '/routes' %}active{% endif %}">
+          <i class="bi bi-signpost-2"></i> <span>Routes</span>
+        </a>
         <a href="{{ url_for('views.passenger_favourites') }}" class="tf-nav-item {% if '/passenger/favourites' in request.path %}active{% endif %}">
           <i class="bi bi-star"></i> <span data-i18n="favourites">Favourites</span>
         </a>
@@ -245,6 +248,7 @@
         <div class="tf-sidebar-label mt-2">Passenger</div>
         <a href="{{ url_for('views.passenger_home') }}" class="tf-nav-item {% if request.path == '/passenger' or request.path == '/' %}active{% endif %}"><i class="bi bi-house-door"></i> Home</a>
         <a href="{{ url_for('views.passenger_search') }}" class="tf-nav-item {% if '/passenger/search' in request.path %}active{% endif %}"><i class="bi bi-search"></i> Search Bus</a>
+        <a href="{{ url_for('views.passenger_routes') }}" class="tf-nav-item {% if '/passenger/route' in request.path or request.path == '/routes' %}active{% endif %}"><i class="bi bi-signpost-2"></i> Routes</a>
         <a href="{{ url_for('views.passenger_favourites') }}" class="tf-nav-item {% if '/passenger/favourites' in request.path %}active{% endif %}"><i class="bi bi-star"></i> Favourites</a>
         <a href="{{ url_for('views.passenger_emergency') }}" class="tf-nav-item {% if '/passenger/emergency' in request.path %}active{% endif %}"><i class="bi bi-shield-exclamation"></i> Emergency Updates</a>
       {% endif %}

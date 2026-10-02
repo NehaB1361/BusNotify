@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Transit Routes – BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Header & Breadcrumb -->
+  <div class="tf-page-header mb-4">
+    <div class="tf-breadcrumb">
+      <a href="{{ url_for('views.passenger_home') }}">Home</a>
+      <span class="separator">/</span>
+      <span>Routes</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h1 class="page-title"><i class="bi bi-signpost-2 text-primary me-2"></i>Transit Routes Directory</h1>
+        <p class="page-subtitle">Explore city and intercity bus routes, stop sequences, and active operating units.</p>
+      </div>
+      <span class="tf-freshness fresh" id="routesFreshness">
+        <span class="tf-freshness-dot"></span> Live Transit Sync &bull; Auto-refreshes
+      </span>
+    </div>
+  </div>
+
+  <!-- Search & Filter Card -->
+  <div class="tf-card p-3 p-md-4 mb-4 shadow-sm">
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-5">
+        <label class="tf-form-label"><i class="bi bi-search text-primary me-1"></i> Search Route</label>
+        <div class="tf-input-icon">
+          <i class="bi bi-search input-icon"></i>
+          <input type="text" id="routeSearchInput" class="tf-input" placeholder="Search by route number, name, or terminal..." onkeyup="handleSearchKey(event)">
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="tf-form-label"><i class="bi bi-geo-alt text-primary me-1"></i> Origin (From)</label>
+        <input type="text" id="sourceFilter" class="tf-input" placeholder="e.g. Pune Station" onkeyup="handleSearchKey(event)">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="tf-form-label"><i class="bi bi-flag text-danger me-1"></i> Destination (To)</label>
+        <input type="text" id="destFilter" class="tf-input" placeholder="e.g. Hadapsar" onkeyup="handleSearchKey(event)">
+      </div>
+      <div class="col-12 col-md-1 d-flex align-items-end">
+        <button class="btn btn-tf-primary w-100 py-2 justify-content-center" onclick="fetchRoutes()">
+          <i class="bi bi-funnel"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="tf-filter-bar mb-0 pt-2 border-top" style="border-color: rgba(226, 232, 240, 0.7) !important;">
+      <span class="small fw-semibold text-muted me-2" style="font-size: 0.75rem;">Filter:</span>
+      <button class="tf-filter-pill active" data-filter="ALL" onclick="setFilter('ALL', this)">All Routes</button>
+      <button class="tf-filter-pill" data-filter="ACTIVE_BUSES" onclick="setFilter('ACTIVE_BUSES', this)">🟢 Buses Running Now</button>
+      <button class="tf-filter-pill" data-filter="INTERCITY" onclick="setFilter('INTERCITY', this)">🏙️ Intercity Routes</button>
+      <button class="tf-filter-pill" data-filter="LOCAL" onclick="setFilter('LOCAL', this)">🚌 City / Local</button>
+    </div>
+  </div>
+
+  <!-- Routes Meta Bar -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="small text-muted fw-semibold" id="routesCount">
+      <span class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></span> Loading transit routes...
+    </div>
+    <div class="small text-muted d-none d-sm-block">
+      <i class="bi bi-info-circle me-1"></i> Showing registered routes with live bus telemetry
+    </div>
+  </div>
+
+  <!-- Routes Result Grid -->
+  <div class="row g-3" id="routesGrid">
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="tf-card tf-skeleton-card tf-skeleton" style="height: 180px;"></div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="tf-card tf-skeleton-card tf-skeleton" style="height: 180px;"></div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="tf-card tf-skeleton-card tf-skeleton" style="height: 180px;"></div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let cachedRoutes = [];
+  let currentFilter = 'ALL';
+
+  function handleSearchKey(event) {
+    if (event.key === 'Enter') {
+      fetchRoutes();
+    }
+  }
+
+  function setFilter(filterType, btnEl) {
+    currentFilter = filterType;
+    document.querySelectorAll('.tf-filter-pill').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    renderRoutes();
+  }
+
+  async function fetchRoutes() {
+    const q = document.getElementById('routeSearchInput').value.trim();
+    const source = document.getElementById('sourceFilter').value.trim();
+    const dest = document.getElementById('destFilter').value.trim();
+
+    const params = new URLSearchParams();
+    if (q) params.append('q', q);
+    if (source) params.append('source', source);
+    if (dest) params.append('destination', dest);
+    params.append('limit', '120');
+
+    try {
+      const routes = await API.get(`/api/passenger/routes?${params.toString()}`);
+      cachedRoutes = routes || [];
+      renderRoutes();
+      updateFreshness();
+    } catch (err) {
+      console.error(err);
+      document.getElementById('routesGrid').innerHTML = `
+        <div class="col-12">
+          <div class="tf-error-state">
+            <i class="bi bi-exclamation-triangle-fill error-icon"></i>
+            <div class="error-title">Failed to load routes</div>
+            <div class="error-desc">${err.message || 'Unable to connect to transit route service.'}</div>
+            <button class="btn btn-tf-primary btn-sm" onclick="fetchRoutes()">
+              <i class="bi bi-arrow-clockwise me-1"></i> Retry
+            </button>
+          </div>
+        </div>
+      `;
+      document.getElementById('routesCount').textContent = 'Error loading routes.';
+    }
+  }
+
+  function renderRoutes() {
+    const grid = document.getElementById('routesGrid');
+    const countEl = document.getElementById('routesCount');
+
+    let list = cachedRoutes;
+    if (currentFilter === 'ACTIVE_BUSES') {
+      list = list.filter(r => (r.active_buses_count || 0) > 0);
+    } else if (currentFilter === 'INTERCITY') {
+      list = list.filter(r => (r.total_distance_km || 0) > 30 || (r.name || '').includes('to'));
+    } else if (currentFilter === 'LOCAL') {
+      list = list.filter(r => (r.total_distance_km || 0) <= 30);
+    }
+
+    countEl.textContent = `Showing ${list.length} route${list.length === 1 ? '' : 's'} matching criteria`;
+
+    if (!list || list.length === 0) {
+      grid.innerHTML = `
+        <div class="col-12">
+          <div class="tf-empty-state">
+            <i class="bi bi-signpost-split empty-icon"></i>
+            <div class="empty-title">No routes found</div>
+            <div class="empty-desc">Try clearing your search terms or checking different origin/destination stops.</div>
+            <button class="btn btn-tf-secondary btn-sm" onclick="clearFilters()">
+              Clear Filters
+            </button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = list.map(r => {
+      const hasActiveBuses = (r.active_buses_count || 0) > 0;
+      const busBadge = hasActiveBuses
+        ? `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-circle-fill me-1" style="font-size:0.4rem;"></i>${r.active_buses_count} Active Bus${r.active_buses_count > 1 ? 'es' : ''}</span>`
+        : `<span class="badge bg-light text-muted border px-2 py-1">Standby Fleet</span>`;
+
+      return `
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="tf-card h-100 d-flex flex-column p-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="tf-bus-number" style="font-size: 1.15rem;">Route ${r.route_number}</span>
+              </div>
+              ${busBadge}
+            </div>
+
+            <h6 class="fw-bold text-dark mb-1 text-truncate" title="${r.name}">${r.name}</h6>
+            <div class="small text-muted mb-3 text-truncate">
+              <i class="bi bi-geo-alt text-primary"></i> ${r.source} &rarr; <i class="bi bi-flag text-danger"></i> ${r.destination}
+            </div>
+
+            <!-- Route Metrics Chips -->
+            <div class="d-flex flex-wrap gap-2 mb-3 mt-auto">
+              <span class="badge bg-light text-secondary border px-2 py-1" style="font-size:0.75rem;">
+                <i class="bi bi-rulers me-1 text-primary"></i>${r.total_distance_km || 0} km
+              </span>
+              <span class="badge bg-light text-secondary border px-2 py-1" style="font-size:0.75rem;">
+                <i class="bi bi-clock me-1 text-warning"></i>~${r.estimated_duration_min || 45} min
+              </span>
+              <span class="badge bg-light text-secondary border px-2 py-1" style="font-size:0.75rem;">
+                <i class="bi bi-geo me-1 text-info"></i>${r.stops_count || 0} Stops
+              </span>
+            </div>
+
+            <div class="d-flex gap-2">
+              <a href="/passenger/route/${r.route_number || r.id}" class="btn btn-tf-primary btn-sm w-100 justify-content-center">
+                <i class="bi bi-map me-1"></i> View Route &amp; Stops
+              </a>
+              <a href="/passenger/search?q=${encodeURIComponent(r.route_number)}" class="btn btn-outline-secondary btn-sm" title="Search active buses on this route">
+                <i class="bi bi-search"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function clearFilters() {
+    document.getElementById('routeSearchInput').value = '';
+    document.getElementById('sourceFilter').value = '';
+    document.getElementById('destFilter').value = '';
+    setFilter('ALL', document.querySelector('.tf-filter-pill'));
+    fetchRoutes();
+  }
+
+  function updateFreshness() {
+    const el = document.getElementById('routesFreshness');
+    if (el) {
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      el.innerHTML = `<span class="tf-freshness-dot"></span> Live Sync &bull; Updated at ${now}`;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('q')) document.getElementById('routeSearchInput').value = urlParams.get('q');
+    if (urlParams.get('source')) document.getElementById('sourceFilter').value = urlParams.get('source');
+    if (urlParams.get('destination')) document.getElementById('destFilter').value = urlParams.get('destination');
+
+    fetchRoutes();
+    TransitUI.startPolling(fetchRoutes, 30000);
+  });
+</script>
+{% endblock %}

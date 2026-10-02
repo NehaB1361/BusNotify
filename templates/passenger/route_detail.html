@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block title %}Route {{ route.route_number if route else route_identifier }} – BusNotify{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Header & Breadcrumbs -->
+  <div class="tf-page-header mb-4">
+    <div class="tf-breadcrumb">
+      <a href="{{ url_for('views.passenger_home') }}">Home</a>
+      <span class="separator">/</span>
+      <a href="{{ url_for('views.passenger_routes') }}">Routes</a>
+      <span class="separator">/</span>
+      <span id="routeBreadcrumb">Route {{ route.route_number if route else route_identifier }}</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h1 class="page-title d-flex align-items-center gap-2">
+          <span class="tf-bus-number" id="headerRouteNum">Route {{ route.route_number if route else route_identifier }}</span>
+          <span id="headerRouteName" class="fs-4 text-dark fw-bold">{{ route.name if route else 'Loading Route...' }}</span>
+        </h1>
+        <p class="page-subtitle mb-0" id="headerRouteSub">
+          {{ (route.source ~ ' → ' ~ route.destination) if route else 'Connecting transit stops and live bus operations' }}
+        </p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('views.passenger_routes') }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i> All Routes
+        </a>
+        <button class="btn btn-tf-primary btn-sm rounded-pill" onclick="loadRouteData()">
+          <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="routeLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="text-muted small mt-2">Loading route itinerary and live telemetry...</div>
+  </div>
+
+  <!-- Route Content (hidden until loaded) -->
+  <div id="routeContent" class="d-none">
+
+    <!-- KPI Summary Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="tf-kpi">
+          <div class="tf-kpi-label"><i class="bi bi-rulers text-primary me-1"></i> Total Distance</div>
+          <div class="tf-kpi-value" id="kpiDistance">—</div>
+          <div class="small text-muted mt-1">One-way transit span</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="tf-kpi">
+          <div class="tf-kpi-label"><i class="bi bi-clock text-warning me-1"></i> Typical Duration</div>
+          <div class="tf-kpi-value" id="kpiDuration">—</div>
+          <div class="small text-muted mt-1">Standard travel time</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="tf-kpi">
+          <div class="tf-kpi-label"><i class="bi bi-geo me-1 text-info"></i> Transit Stops</div>
+          <div class="tf-kpi-value" id="kpiStops">—</div>
+          <div class="small text-muted mt-1">Boarding locations</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="tf-kpi">
+          <div class="tf-kpi-label"><i class="bi bi-bus-front text-success me-1"></i> Operating Buses</div>
+          <div class="tf-kpi-value text-success" id="kpiActiveBuses">—</div>
+          <div class="small text-muted mt-1">Units on active trips</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map & Active Buses Row -->
+    <div class="row g-4 mb-4">
+      <!-- Interactive Route Map -->
+      <div class="col-lg-8">
+        <div class="tf-card p-0 overflow-hidden shadow-sm h-100 position-relative" style="min-height: 420px;">
+          <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+            <div class="fw-bold small text-dark"><i class="bi bi-map-fill text-primary me-1"></i> Interactive Route Alignment &amp; Live Buses</div>
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" onclick="fitRouteBounds()" title="Fit alignment">
+                <i class="bi bi-arrows-fullscreen"></i>
+              </button>
+            </div>
+          </div>
+          <div id="routeMap" style="width: 100%; height: 380px;"></div>
+        </div>
+      </div>
+
+      <!-- Historical Delay & Performance Card -->
+      <div class="col-lg-4">
+        <div class="tf-card p-4 h-100 shadow-sm d-flex flex-column">
+          <h5 class="fw-bold mb-3"><i class="bi bi-graph-up text-primary me-2"></i>Statistical Delay Profile</h5>
+          
+          <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="small text-muted" style="font-size:0.75rem;">Expected Statistical Delay</div>
+            <div class="fs-2 fw-bold text-primary" id="statExpectedDelay">—</div>
+            <div class="small fw-semibold text-secondary mt-1" id="statLabel">—</div>
+          </div>
+
+          <div class="tf-stat-disclaimer mb-3">
+            <i class="bi bi-info-circle"></i>
+            <div id="statDisclaimer">Historical statistical estimate based on previous trip records. This is not a guarantee.</div>
+          </div>
+
+          <div class="mt-auto">
+            <a href="/passenger/search?q={{ route.route_number if route else route_identifier }}" class="btn btn-tf-primary w-100 justify-content-center">
+              <i class="bi bi-search me-1"></i> Search Trips on Route
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Buses Table -->
+    <div class="tf-card p-4 mb-4 shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h5 class="fw-bold mb-0"><i class="bi bi-broadcast text-success me-2"></i>Active Operating Buses</h5>
+          <div class="text-muted small">Vehicles currently on active service on this route</div>
+        </div>
+        <span class="badge bg-light text-secondary border px-3 py-1" id="activeBusesBadge">0 Buses</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small mb-0 tf-table">
+          <thead>
+            <tr>
+              <th>Bus Number</th>
+              <th>Status</th>
+              <th>Current Location</th>
+              <th>Next Stop</th>
+              <th>Available Seats</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody id="activeBusesTbody">
+            <tr><td colspan="6" class="text-center py-4 text-muted">No buses running at this moment.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Stops Sequence Timeline -->
+    <div class="tf-card p-4 shadow-sm mb-4">
+      <h5 class="fw-bold mb-1"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Stop Sequence &amp; Itinerary</h5>
+      <p class="text-muted small mb-4">Sequential stops from origin terminus to final destination</p>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small mb-0 tf-table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">Seq</th>
+              <th>Stop Code</th>
+              <th>Stop Name</th>
+              <th>Marathi Name</th>
+              <th>Distance from Prev</th>
+              <th>Transit Time</th>
+              <th>Landmark</th>
+            </tr>
+          </thead>
+          <tbody id="stopsTbody">
+            <tr><td colspan="7" class="text-center py-4 text-muted">No stops defined.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  const ROUTE_IDENTIFIER = "{{ route_identifier }}";
+  let map = null;
+  let stopsLayer = null;
+  let busesLayer = null;
+  let routePolyline = null;
+  let routeStopsCoordinates = [];
+
+  function initMap() {
+    if (map) return;
+    map = L.map('routeMap').setView([18.5204, 73.8567], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    stopsLayer = L.layerGroup().addTo(map);
+    busesLayer = L.layerGroup().addTo(map);
+  }
+
+  function fitRouteBounds() {
+    if (!map || routeStopsCoordinates.length === 0) return;
+    map.fitBounds(L.latLngBounds(routeStopsCoordinates), { padding: [40, 40] });
+  }
+
+  async function loadRouteData() {
+    try {
+      const data = await API.get(`/api/passenger/routes/${ROUTE_IDENTIFIER}`);
+      const r = data.route;
+      const stops = data.stops || [];
+      const buses = data.active_buses || [];
+      const stats = data.statistics || {};
+
+      document.getElementById('routeLoading').classList.add('d-none');
+      document.getElementById('routeContent').classList.remove('d-none');
+
+      // Update Header
+      document.getElementById('headerRouteNum').textContent = `Route ${r.route_number}`;
+      document.getElementById('headerRouteName').textContent = r.name;
+      document.getElementById('headerRouteSub').textContent = `${r.source} → ${r.destination}`;
+      document.getElementById('routeBreadcrumb').textContent = `Route ${r.route_number}`;
+
+      // KPIs
+      document.getElementById('kpiDistance').textContent = `${r.total_distance_km || 0} km`;
+      document.getElementById('kpiDuration').textContent = `${r.estimated_duration_min || 45} min`;
+      document.getElementById('kpiStops').textContent = `${stops.length}`;
+      document.getElementById('kpiActiveBuses').textContent = `${buses.length}`;
+
+      // Stats
+      document.getElementById('statExpectedDelay').textContent = `${stats.expected_delay || 0} min`;
+      document.getElementById('statLabel').textContent = stats.label || 'Historical Statistical Estimate';
+      document.getElementById('statDisclaimer').textContent = stats.disclaimer || 'Based on previous trip records.';
+
+      // Initialize map
+      initMap();
+      stopsLayer.clearLayers();
+      busesLayer.clearLayers();
+      if (routePolyline) map.removeLayer(routePolyline);
+
+      routeStopsCoordinates = [];
+
+      // Render Stops Table and Map Markers
+      const stopsTbody = document.getElementById('stopsTbody');
+      if (stops.length === 0) {
+        stopsTbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No stops registered for this route.</td></tr>';
+      } else {
+        stopsTbody.innerHTML = stops.map((s, idx) => {
+          if (s.latitude && s.longitude) {
+            const latLng = [s.latitude, s.longitude];
+            routeStopsCoordinates.push(latLng);
+
+            const isTerminal = idx === 0 || idx === stops.length - 1;
+            const markerColor = isTerminal ? '#E85D04' : '#2B6CB0';
+
+            const stopMarker = L.circleMarker(latLng, {
+              radius: isTerminal ? 8 : 6,
+              fillColor: markerColor,
+              color: '#ffffff',
+              weight: 2,
+              opacity: 1,
+              fillOpacity: 0.9
+            });
+            stopMarker.bindPopup(`<strong>Stop ${s.sequence_order}: ${s.stop_name}</strong><br><small>${s.landmark || ''}</small>`);
+            stopsLayer.addLayer(stopMarker);
+          }
+
+          return `
+            <tr>
+              <td><span class="badge bg-secondary rounded-pill">${s.sequence_order}</span></td>
+              <td><code>${s.stop_code}</code></td>
+              <td><strong>${s.stop_name}</strong></td>
+              <td class="text-secondary">${s.stop_name_mr || '—'}</td>
+              <td>${s.distance_from_prev_km ? s.distance_from_prev_km + ' km' : '—'}</td>
+              <td>${s.avg_travel_time_min ? s.avg_travel_time_min + ' min' : '—'}</td>
+              <td class="text-muted">${s.landmark || '—'}</td>
+            </tr>
+          `;
+        }).join('');
+
+        if (routeStopsCoordinates.length > 1) {
+          routePolyline = L.polyline(routeStopsCoordinates, {
+            color: '#E85D04',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '6, 6'
+          }).addTo(map);
+          fitRouteBounds();
+        }
+      }
+
+      // Render Active Buses Table & Markers
+      const busesTbody = document.getElementById('activeBusesTbody');
+      document.getElementById('activeBusesBadge').textContent = `${buses.length} Bus${buses.length === 1 ? '' : 'es'} Active`;
+
+      if (buses.length === 0) {
+        busesTbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-clock me-1"></i>No buses currently running on this route. Standby vehicles are available at the depot.</td></tr>';
+      } else {
+        busesTbody.innerHTML = buses.map(b => {
+          if (b.latitude && b.longitude) {
+            const busMarker = L.marker([b.latitude, b.longitude], {
+              icon: L.divIcon({
+                className: 'tf-map-bus-icon',
+                html: `<div style="background:#2B6CB0;color:white;padding:3px 6px;border-radius:12px;font-size:10px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.3);"><i class="bi bi-bus-front-fill me-1"></i>${b.bus_number}</div>`,
+                iconSize: [60, 20],
+                iconAnchor: [30, 10]
+              })
+            });
+            busMarker.bindPopup(`<strong>Bus ${b.bus_number}</strong><br>Status: ${b.status}<br>Current: ${b.current_stop}`);
+            busesLayer.addLayer(busMarker);
+          }
+
+          return `
+            <tr>
+              <td><strong>Bus ${b.bus_number}</strong> <small class="text-muted d-block">${b.registration_number}</small></td>
+              <td>${TransitUI.getStatusBadge(b.status)}</td>
+              <td><i class="bi bi-geo-alt text-primary me-1"></i>${b.current_stop}</td>
+              <td>${b.next_stop}</td>
+              <td>
+                <span class="badge ${b.available_seats > 10 ? 'bg-success' : 'bg-warning text-dark'}">
+                  ${b.available_seats} / ${b.capacity} Seats
+                </span>
+              </td>
+              <td class="text-end">
+                <a href="/passenger/bus/${b.bus_number}" class="btn btn-sm btn-tf-primary py-1 px-3 rounded-pill">
+                  <i class="bi bi-geo me-1"></i> Track Bus
+                </a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+    } catch (err) {
+      console.error(err);
+      document.getElementById('routeLoading').innerHTML = `
+        <div class="tf-error-state">
+          <i class="bi bi-exclamation-triangle-fill error-icon"></i>
+          <div class="error-title">Route not found or unavailable</div>
+          <div class="error-desc">${err.message || 'Unable to load route details.'}</div>
+          <a href="/passenger/routes" class="btn btn-tf-primary btn-sm mt-3">
+            <i class="bi bi-arrow-left me-1"></i> Return to Routes
+          </a>
+        </div>
+      `;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadRouteData();
+    TransitUI.startPolling(loadRouteData, 20000);
+  });
+</script>
+{% endblock %}
