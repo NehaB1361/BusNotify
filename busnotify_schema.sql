@@ -496,12 +496,37 @@ CREATE TABLE `audit_logs` (
 -- Password for all seed accounts: Password123!
 -- ============================================================================
 
--- 5.1 Default System Users
+-- 5.1 Default System Users & Driver Logins (Password for all: Password123!)
 INSERT INTO `users` (`id`, `username`, `email`, `mobile`, `password_hash`, `role`, `is_active`, `preferred_language`, `created_at`, `updated_at`) VALUES
 (1, 'admin', 'admin@busnotify.com', '9800000001', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'admin', 1, 'en', NOW(), NOW()),
 (2, 'depot', 'depot@busnotify.com', '9800000002', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'depot_operator', 1, 'en', NOW(), NOW()),
 (3, 'driver', 'driver@busnotify.com', '9800000003', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'mr', NOW(), NOW()),
-(4, 'passenger', 'passenger@busnotify.com', '9800000004', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'passenger', 1, 'en', NOW(), NOW());
+(4, 'passenger', 'passenger@busnotify.com', '9800000004', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'passenger', 1, 'en', NOW(), NOW()),
+(1000, 'drv_1', 'driver_1@busnotify.com', '9876543201', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1001, 'drv_2', 'driver_2@busnotify.com', '9876543202', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1002, 'drv_3', 'driver_3@busnotify.com', '9876543203', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1003, 'drv_4', 'driver_4@busnotify.com', '9876543204', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1004, 'drv_5', 'driver_5@busnotify.com', '9876543205', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1005, 'drv_6', 'driver_6@busnotify.com', '9876543206', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1006, 'drv_7', 'driver_7@busnotify.com', '9876543207', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1007, 'drv_8', 'driver_8@busnotify.com', '9876543208', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1008, 'drv_9', 'driver_9@busnotify.com', '9876543209', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1009, 'drv_10', 'driver_10@busnotify.com', '9876543210', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1010, 'drv_11', 'driver_11@busnotify.com', '9876543211', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1011, 'drv_12', 'driver_12@busnotify.com', '9876543212', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1012, 'drv_13', 'driver_13@busnotify.com', '9876543213', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1013, 'drv_14', 'driver_14@busnotify.com', '9876543214', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1014, 'drv_15', 'driver_15@busnotify.com', '9876543215', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1015, 'drv_16', 'driver_16@busnotify.com', '9876543216', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1016, 'drv_17', 'driver_17@busnotify.com', '9876543217', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1017, 'drv_18', 'driver_18@busnotify.com', '9876543218', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1018, 'drv_19', 'driver_19@busnotify.com', '9876543219', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1019, 'drv_20', 'driver_20@busnotify.com', '9876543220', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1020, 'drv_21', 'driver_21@busnotify.com', '9876543221', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1021, 'drv_22', 'driver_22@busnotify.com', '9876543222', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1022, 'drv_23', 'driver_23@busnotify.com', '9876543223', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1023, 'drv_24', 'driver_24@busnotify.com', '9876543224', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW()),
+(1024, 'drv_25', 'driver_25@busnotify.com', '9876543225', 'scrypt:32768:8:1$DlYtG4ToYn8jkaC7$d6d76901599508703b025a01e0541c586d1e24e604a03a717d2b07da94d93b405e7f039ddcea547bc9068537ae16cfdc041906bffda88f1a0d145f2b4914db0a', 'driver', 1, 'en', NOW(), NOW());
 
 -- 5.2 Core Pune Transit Stops
 INSERT INTO `stops` (`id`, `stop_code`, `name`, `name_mr`, `landmark`, `latitude`, `longitude`, `created_at`) VALUES
@@ -549,9 +574,34 @@ INSERT INTO `bus_capacity` (`bus_id`, `total_capacity`, `seated_capacity`, `stan
 (4, 40, 32, 8),
 (5, 45, 37, 8);
 
--- 5.7 Drivers
+-- 5.7 Drivers (Assigned & Available Drivers)
 INSERT INTO `drivers` (`id`, `user_id`, `driver_code`, `full_name`, `mobile_number`, `license_number`, `status`, `assigned_bus_id`) VALUES
-(1, 3, 'D104', 'Rajesh Patil', '9876543210', 'MH-12-2018-0004321', 'ON_TRIP', 1);
+(1, 3, 'D104', 'Rajesh Patil', '9876543210', 'MH-12-2018-0004321', 'ON_TRIP', 1),
+(2, 1000, 'DRV-0001', 'Driver 1', '9876543201', 'MH1220260001', 'AVAILABLE', NULL),
+(3, 1001, 'DRV-0002', 'Driver 2', '9876543202', 'MH1220260002', 'AVAILABLE', NULL),
+(4, 1002, 'DRV-0003', 'Driver 3', '9876543203', 'MH1220260003', 'AVAILABLE', NULL),
+(5, 1003, 'DRV-0004', 'Driver 4', '9876543204', 'MH1220260004', 'AVAILABLE', NULL),
+(6, 1004, 'DRV-0005', 'Driver 5', '9876543205', 'MH1220260005', 'AVAILABLE', NULL),
+(7, 1005, 'DRV-0006', 'Driver 6', '9876543206', 'MH1220260006', 'AVAILABLE', NULL),
+(8, 1006, 'DRV-0007', 'Driver 7', '9876543207', 'MH1220260007', 'AVAILABLE', NULL),
+(9, 1007, 'DRV-0008', 'Driver 8', '9876543208', 'MH1220260008', 'AVAILABLE', NULL),
+(10, 1008, 'DRV-0009', 'Driver 9', '9876543209', 'MH1220260009', 'AVAILABLE', NULL),
+(11, 1009, 'DRV-0010', 'Driver 10', '9876543210', 'MH1220260010', 'AVAILABLE', NULL),
+(12, 1010, 'DRV-0011', 'Driver 11', '9876543211', 'MH1220260011', 'AVAILABLE', NULL),
+(13, 1011, 'DRV-0012', 'Driver 12', '9876543212', 'MH1220260012', 'AVAILABLE', NULL),
+(14, 1012, 'DRV-0013', 'Driver 13', '9876543213', 'MH1220260013', 'AVAILABLE', NULL),
+(15, 1013, 'DRV-0014', 'Driver 14', '9876543214', 'MH1220260014', 'AVAILABLE', NULL),
+(16, 1014, 'DRV-0015', 'Driver 15', '9876543215', 'MH1220260015', 'AVAILABLE', NULL),
+(17, 1015, 'DRV-0016', 'Driver 16', '9876543216', 'MH1220260016', 'AVAILABLE', NULL),
+(18, 1016, 'DRV-0017', 'Driver 17', '9876543217', 'MH1220260017', 'AVAILABLE', NULL),
+(19, 1017, 'DRV-0018', 'Driver 18', '9876543218', 'MH1220260018', 'AVAILABLE', NULL),
+(20, 1018, 'DRV-0019', 'Driver 19', '9876543219', 'MH1220260019', 'AVAILABLE', NULL),
+(21, 1019, 'DRV-0020', 'Driver 20', '9876543220', 'MH1220260020', 'AVAILABLE', NULL),
+(22, 1020, 'DRV-0021', 'Sachin Pramod Kale', '9876543221', 'MH1220177687', 'AVAILABLE', NULL),
+(23, 1021, 'DRV-0022', 'Pravin Sagar Nalawade', '9876543222', 'MH1220123895', 'AVAILABLE', NULL),
+(24, 1022, 'DRV-0023', 'Ravindra Sanjay Sawant', '9876543223', 'MH1220125509', 'AVAILABLE', NULL),
+(25, 1023, 'DRV-0024', 'Harish Rajendra Salunkhe', '9876543224', 'MH1420131291', 'AVAILABLE', NULL),
+(26, 1024, 'DRV-0025', 'Deepak Prakash Chavan', '9876543225', 'MH1220091664', 'AVAILABLE', NULL);
 
 -- 5.8 Baseline Active Trip (Bus 123 on Route 123)
 INSERT INTO `trips` (`id`, `trip_code`, `bus_id`, `driver_id`, `route_id`, `scheduled_start_time`, `actual_start_time`, `current_stop_id`, `next_stop_id`, `status`, `passenger_count`, `created_at`) VALUES

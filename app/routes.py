@@ -1989,7 +1989,7 @@ def driver_start_trip():
     driver = Driver.query.filter_by(user_id=user_id).first() if user_id else None
 
     assigned_bus = driver.assigned_bus if driver and driver.assigned_bus else None
-    assigned_route = driver.assigned_route if driver and driver.assigned_route else None
+    assigned_route = assigned_bus.assigned_route if assigned_bus else None
 
     # Fetch active routes, prioritizing assigned route
     routes = Route.query.filter_by(is_active=True).limit(100).all()

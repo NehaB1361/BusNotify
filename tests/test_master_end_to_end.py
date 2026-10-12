@@ -25,6 +25,18 @@ from app.models.notification import Notification
 from app.models.trip import Trip, LiveGPS
 
 
+def test_driver_start_trip_page_loads_with_assigned_bus(client):
+    login_res = client.post('/api/auth/login', json={
+        "identifier": "drv@test.com",
+        "password": "Password123!"
+    })
+    assert login_res.status_code == 200
+
+    response = client.get('/driver/start-trip')
+
+    assert response.status_code == 200
+
+
 def test_complete_master_flow(client, app):
     # -------------------------------------------------------------
     # 1. PASSENGER REGISTRATION & LOGIN
