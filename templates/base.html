@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#E85D04">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="BusNotify">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icon.svg') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.svg') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <title>{% block title %}BusNotify – Know your bus. Know your time.{% endblock %}</title>
 
   <!-- Google Fonts: Inter -->
@@ -374,6 +380,9 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       TransitUI.startPolling(updateNotifications, 15000);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/sw.js').catch(err => console.debug('SW reg failed:', err));
+      }
     });
   </script>
   {% block extra_js %}{% endblock %}

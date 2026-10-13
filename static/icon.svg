@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="busGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E85D04"/>
+      <stop offset="100%" stop-color="#DC2F02"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Rect -->
+  <rect width="512" height="512" rx="112" fill="url(#busGrad)"/>
+  <!-- Bus Body -->
+  <g fill="#FFFFFF" transform="translate(96, 96)">
+    <!-- Bus Roof & Body -->
+    <path d="M40 0C17.9 0 0 17.9 0 40v200c0 17.7 14.3 32 32 32v24c0 13.3 10.7 24 24 24h16c13.3 0 24-10.7 24-24v-24h128v24c0 13.3 10.7 24 24 24h16c13.3 0 24-10.7 24-24v-24c17.7 0 32-14.3 32-32V40c0-22.1-17.9-40-40-40H40zm24 48h192c8.8 0 16 7.2 16 16v64c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16zm-8 160c13.3 0 24 10.7 24 24s-10.7 24-24 24-24-10.7-24-24 10.7-24 24-24zm208 0c13.3 0 24 10.7 24 24s-10.7 24-24 24-24-10.7-24-24 10.7-24 24-24z"/>
+    <!-- Destination Board -->
+    <rect x="80" y="16" width="160" height="20" rx="6" fill="#1A1A2E" opacity="0.3"/>
+  </g>
+</svg>

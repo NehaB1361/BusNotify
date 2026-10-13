@@ -1,0 +1,18 @@
+{
+  "name": "BusNotify Transit System",
+  "short_name": "BusNotify",
+  "description": "Smart Bus Delay Prediction and Real-Time Passenger Information System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1A1A2E",
+  "theme_color": "#E85D04",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

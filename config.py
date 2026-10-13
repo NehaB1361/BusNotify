@@ -46,10 +46,13 @@ class Config:
     encoded_password = urllib.parse.quote_plus(DB_PASSWORD) if DB_PASSWORD else ""
     auth_part = f"{DB_USER}:{encoded_password}" if encoded_password else DB_USER
 
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        f"mysql+pymysql://{auth_part}@{DB_HOST}:{active_port}/{DB_NAME}?charset=utf8mb4"
-    )
+    _raw_db_url = os.getenv("DATABASE_URL")
+    if _raw_db_url:
+        if _raw_db_url.startswith("mysql://"):
+            _raw_db_url = _raw_db_url.replace("mysql://", "mysql+pymysql://", 1)
+        SQLALCHEMY_DATABASE_URI = _raw_db_url
+    else:
+        SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{auth_part}@{DB_HOST}:{active_port}/{DB_NAME}?charset=utf8mb4"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_recycle": 280,
