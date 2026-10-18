@@ -328,7 +328,8 @@
     grid.innerHTML = displayList.map(b => {
       const isEmergency = b.status === 'PUNCTURED' || b.status === 'BREAKDOWN';
       const isDelayed = b.status === 'DELAYED';
-      const cardClass = isEmergency ? 'tf-card-emergency' : (isDelayed ? 'tf-card-warning' : '');
+      const isIdle = b.is_active_trip === false;
+      const cardClass = isEmergency ? 'tf-card-emergency' : (isDelayed ? 'tf-card-warning' : (isIdle ? 'opacity-75' : ''));
 
       return `
         <div class="col-12 col-md-6 col-lg-4">
@@ -337,8 +338,10 @@
               <div>
                 <span class="tf-bus-number">${b.bus_number}</span>
                 <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.72rem;">${b.route_number || 'Express'}</span>
+                ${b.registration_number ? `<span class="badge bg-light text-muted border ms-1" style="font-size: 0.70rem;" title="Vehicle Reg">${b.registration_number}</span>` : ''}
+                <span class="badge bg-light text-muted border ms-1" style="font-size: 0.68rem;" title="Bus ID">#${b.bus_id}</span>
               </div>
-              ${TransitUI.getStatusBadge(b.status)}
+              ${isIdle ? '<span class="tf-badge badge-info"><i class="bi bi-clock-history"></i> Idle</span>' : TransitUI.getStatusBadge(b.status)}
             </div>
 
             <div class="mb-2">
@@ -350,21 +353,21 @@
 
             <!-- Route Visual Indicator -->
             <div class="tf-route-indicator">
-              <div class="tf-route-dot completed" title="Origin"></div>
+              <div class="tf-route-dot completed" title="${b.source}"></div>
               <div class="tf-route-line completed"></div>
-              <div class="tf-route-dot current" title="${b.current_stop || 'En route'}"></div>
+              <div class="tf-route-dot current" title="${b.current_stop || 'In Transit'}"></div>
               <div class="tf-route-line"></div>
-              <div class="tf-route-dot" title="Destination"></div>
+              <div class="tf-route-dot" title="${b.destination}"></div>
             </div>
 
             <div class="bg-light p-2 rounded-3 mb-2" style="font-size: 0.8rem;">
               <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted">Current Stop:</span>
-                <strong class="text-dark">${b.current_stop || 'In Transit'}</strong>
+                <strong class="${isIdle ? 'text-secondary' : 'text-dark'}">${b.current_stop || 'In Transit'}</strong>
               </div>
               <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted">Next Stop:</span>
-                <strong>${b.next_stop || 'Terminal'}</strong>
+                <strong>${b.next_stop || '—'}</strong>
               </div>
               <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted">Available Seats:</span>
@@ -387,7 +390,7 @@
             </div>
 
             <div class="mt-auto d-flex gap-2">
-              <a href="/passenger/bus/${b.bus_number}" class="btn btn-tf-primary btn-sm w-100 justify-content-center">
+              <a href="/passenger/bus/${b.bus_id}" class="btn btn-tf-primary btn-sm w-100 justify-content-center">
                 <i class="bi bi-eye"></i> View Details
               </a>
               ${isEmergency ? `

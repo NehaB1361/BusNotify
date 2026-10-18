@@ -139,109 +139,177 @@ passenger_bp = Blueprint("passenger_api", __name__, url_prefix="/api/passenger")
 
 @passenger_bp.route("/search", methods=["GET"])
 def search_buses():
-    query_str = request.args.get("q", "").strip().lower()
-    source = request.args.get("source", "").strip().lower()
-    destination = request.args.get("destination", "").strip().lower()
+    query_str = request.args.get("q", "").strip()
+    source = request.args.get("source", "").strip()
+    destination = request.args.get("destination", "").strip()
     status_filter = request.args.get("status", "all").strip().upper()
     limit = min(int(request.args.get("limit", 100)), 300)
 
-    trips_query = Trip.query.options(
-        joinedload(Trip.bus),
-        joinedload(Trip.route),
-        joinedload(Trip.current_stop),
-        joinedload(Trip.next_stop)
-    ).join(Bus).join(Route)
+    ACTIVE_STATUSES = ["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "DISPATCHED", "SCHEDULED"]
+
+    buses_query = Bus.query.options(
+        joinedload(Bus.assigned_route)
+    ).filter(Bus.is_active == True)
 
     if query_str:
-        trips_query = trips_query.filter(
+        bus_filter_conditions = [
+            Bus.bus_number.ilike(f"%{query_str}%"),
+            Bus.registration_number.ilike(f"%{query_str}%")
+        ]
+        if query_str.isdigit():
+            bus_filter_conditions.append(Bus.id == int(query_str))
+
+        route_matches = Route.query.filter(
             or_(
-                Bus.bus_number.ilike(f"%{query_str}%"),
                 Route.route_number.ilike(f"%{query_str}%"),
                 Route.name.ilike(f"%{query_str}%"),
                 Route.source.ilike(f"%{query_str}%"),
-                Route.destination.ilike(f"%{query_str}%"),
+                Route.destination.ilike(f"%{query_str}%")
             )
-        )
+        ).all()
+        matching_route_ids = [r.id for r in route_matches]
 
-    if source:
-        trips_query = trips_query.filter(
+        active_trips_on_routes = Trip.query.filter(
+            Trip.status.in_(ACTIVE_STATUSES),
+            Trip.route_id.in_(matching_route_ids)
+        ).all() if matching_route_ids else []
+        route_bus_ids = [t.bus_id for t in active_trips_on_routes]
+
+        buses_query = buses_query.filter(
             or_(
-                Route.source.ilike(f"%{source}%"),
-                Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{source}%")))
+                *bus_filter_conditions,
+                Bus.assigned_route_id.in_(matching_route_ids),
+                Bus.id.in_(route_bus_ids)
             )
         )
-    if destination:
-        trips_query = trips_query.filter(
+
+    if source or destination:
+        route_q = Route.query
+        if source:
+            route_q = route_q.filter(
+                or_(
+                    Route.source.ilike(f"%{source}%"),
+                    Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{source}%")))
+                )
+            )
+        if destination:
+            route_q = route_q.filter(
+                or_(
+                    Route.destination.ilike(f"%{destination}%"),
+                    Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{destination}%")))
+                )
+            )
+        src_dest_routes = route_q.all()
+        src_dest_route_ids = [r.id for r in src_dest_routes]
+
+        active_trips_src_dest = Trip.query.filter(
+            Trip.status.in_(ACTIVE_STATUSES),
+            Trip.route_id.in_(src_dest_route_ids)
+        ).all() if src_dest_route_ids else []
+        src_dest_bus_ids = [t.bus_id for t in active_trips_src_dest]
+
+        buses_query = buses_query.filter(
             or_(
-                Route.destination.ilike(f"%{destination}%"),
-                Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{destination}%")))
+                Bus.id.in_(src_dest_bus_ids),
+                Bus.assigned_route_id.in_(src_dest_route_ids)
             )
         )
 
-    if status_filter != "ALL":
-        if status_filter == "ON TIME":
-            trips_query = trips_query.filter(Trip.status == "RUNNING")
-        else:
-            trips_query = trips_query.filter(Trip.status == status_filter)
-    elif not (query_str or source or destination):
-        trips_query = trips_query.filter(
-            Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "DISPATCHED"])
-        )
+    candidate_buses = buses_query.order_by(Bus.id.asc()).limit(limit * 2).all()
 
-    trips = trips_query.order_by(Trip.id.desc()).limit(limit).all()
     results = []
     stats_cache = {}
     now = datetime.utcnow()
 
-    for trip in trips:
-        bus = trip.bus
-        route = trip.route
-        if not bus or not route:
-            continue
+    for bus in candidate_buses:
+        # Fetch current active trip for THIS specific bus ID
+        active_trip = Trip.query.filter(
+            Trip.bus_id == bus.id,
+            Trip.status.in_(ACTIVE_STATUSES)
+        ).order_by(Trip.id.desc()).first()
 
-        stop_id = trip.current_stop_id or (route.route_stops[0].stop_id if route.route_stops else 1)
-        cache_key = (route.id, stop_id)
-        if cache_key not in stats_cache:
-            stats_cache[cache_key] = DelayStatisticsService.get_stop_delay_stats(
-                route_id=route.id,
-                stop_id=stop_id
-            )
-        stats = stats_cache[cache_key]
-        expected_delay = stats.get("expected_delay", 0.0)
+        effective_status = active_trip.status if active_trip else bus.current_status
+        if not active_trip and effective_status == "RUNNING":
+            effective_status = "AVAILABLE"
 
-        latest_gps = trip.gps_records.first()
+        # Apply status filter
+        if status_filter != "ALL":
+            if status_filter == "ON TIME":
+                if effective_status != "RUNNING":
+                    continue
+            else:
+                if effective_status != status_filter:
+                    continue
+        elif not (query_str or source or destination):
+            # Default browse view: prioritize active buses/trips
+            if not active_trip and effective_status not in ["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "DISPATCHED"]:
+                continue
+
+        # Route priority: ALWAYS prefer active_trip.route!
+        route = (active_trip.route if active_trip else None) or bus.assigned_route
+
+        expected_delay = 0.0
+        stats = {}
+        if active_trip and route:
+            stop_id = active_trip.current_stop_id or (route.route_stops[0].stop_id if route.route_stops else 1)
+            cache_key = (route.id, stop_id)
+            if cache_key not in stats_cache:
+                stats_cache[cache_key] = DelayStatisticsService.get_stop_delay_stats(
+                    route_id=route.id,
+                    stop_id=stop_id
+                )
+            stats = stats_cache[cache_key]
+            expected_delay = stats.get("expected_delay", 0.0)
+
+        # GPS & Freshness
+        latest_gps = active_trip.gps_records.first() if active_trip else None
         if latest_gps and latest_gps.timestamp:
             delta_s = max(0, int((now - latest_gps.timestamp).total_seconds()))
             last_update_str = f"{delta_s}s ago" if delta_s < 60 else (f"{delta_s // 60}m ago" if delta_s < 3600 else f"{delta_s // 3600}h ago")
         else:
-            last_update_str = "Just now"
+            last_update_str = "Just now" if active_trip else "Depot"
 
-        if trip.scheduled_start_time:
-            est_arrival_time = trip.scheduled_start_time + timedelta(minutes=int(35 + expected_delay))
-            expected_arrival_str = est_arrival_time.strftime("%I:%M %p")
+        if active_trip:
+            if active_trip.scheduled_start_time:
+                est_arrival_time = active_trip.scheduled_start_time + timedelta(minutes=int(35 + expected_delay))
+                expected_arrival_str = est_arrival_time.strftime("%I:%M %p")
+            else:
+                est_arrival_time = now + timedelta(minutes=int(15 + expected_delay))
+                expected_arrival_str = est_arrival_time.strftime("%I:%M %p")
+            current_stop_name = active_trip.current_stop.name if active_trip.current_stop else "In Transit"
+            next_stop_name = active_trip.next_stop.name if active_trip.next_stop else "Terminus"
+            avail_seats = active_trip.available_seats
         else:
-            est_arrival_time = now + timedelta(minutes=int(15 + expected_delay))
-            expected_arrival_str = est_arrival_time.strftime("%I:%M %p")
+            expected_arrival_str = "—"
+            current_stop_name = "Not currently on an active trip"
+            next_stop_name = "—"
+            avail_seats = bus.capacity
 
         results.append({
-            "trip_id": trip.id,
+            "trip_id": active_trip.id if active_trip else None,
             "bus_id": bus.id,
             "bus_number": bus.bus_number,
-            "route_number": route.route_number,
-            "route_name": route.name,
-            "source": route.source,
-            "destination": route.destination,
-            "status": trip.status,
-            "current_stop": trip.current_stop.name if trip.current_stop else "Depot",
-            "next_stop": trip.next_stop.name if trip.next_stop else "Terminus",
-            "available_seats": trip.available_seats,
+            "registration_number": bus.registration_number,
+            "route_id": route.id if route else None,
+            "route_number": route.route_number if route else ("Express" if active_trip else "N/A"),
+            "route_name": route.name if route else ("In Transit" if active_trip else "Not currently on an active trip"),
+            "source": route.source if route else "Origin",
+            "destination": route.destination if route else "Destination",
+            "status": effective_status,
+            "current_stop": current_stop_name,
+            "next_stop": next_stop_name,
+            "available_seats": avail_seats,
             "capacity": bus.capacity,
             "historical_average_delay": expected_delay,
-            "delay_label": stats.get("label"),
-            "delay_disclaimer": stats.get("disclaimer"),
+            "delay_label": stats.get("label", "On Schedule" if active_trip else "Stationary"),
+            "delay_disclaimer": stats.get("disclaimer", "Verified from past trip arrival logs" if active_trip else "Vehicle not in active service"),
             "expected_arrival": expected_arrival_str,
             "last_update": last_update_str,
+            "is_active_trip": bool(active_trip),
         })
+
+        if len(results) >= limit:
+            break
 
     return api_success(data=results)
 
@@ -403,24 +471,36 @@ def get_passenger_route_detail(route_identifier: str):
 
 @passenger_bp.route("/bus/<bus_identifier>", methods=["GET"])
 def get_bus_details(bus_identifier: str):
-    if bus_identifier.isdigit() and len(bus_identifier) < 6:
-        bus = Bus.query.filter_by(bus_number=bus_identifier).first()
-        if not bus:
-            bus = Bus.query.get(int(bus_identifier))
-    else:
-        bus = Bus.query.filter_by(bus_number=bus_identifier).first()
+    ACTIVE_STATUSES = ["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "SCHEDULED", "DISPATCHED"]
+    bus = None
+
+    if bus_identifier.isdigit():
+        bus = Bus.query.get(int(bus_identifier))
+
+    if not bus:
+        matching_buses = Bus.query.filter_by(bus_number=bus_identifier).all()
+        if matching_buses:
+            active_bus = None
+            for mb in matching_buses:
+                t = Trip.query.filter(
+                    Trip.bus_id == mb.id,
+                    Trip.status.in_(ACTIVE_STATUSES)
+                ).first()
+                if t:
+                    active_bus = mb
+                    break
+            bus = active_bus or matching_buses[0]
 
     if not bus:
         return api_error(code="NOT_FOUND", message=f"Bus '{bus_identifier}' not found.", status_code=404)
 
     active_trip = Trip.query.filter(
         Trip.bus_id == bus.id,
-        Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "SCHEDULED"])
+        Trip.status.in_(ACTIVE_STATUSES)
     ).order_by(Trip.id.desc()).first()
-    if not active_trip:
-        active_trip = Trip.query.filter_by(bus_id=bus.id).order_by(Trip.id.desc()).first()
 
-    route = bus.assigned_route or (active_trip.route if active_trip else None)
+    # Route priority: fetch actual active trip route selected by driver; do NOT use default static route
+    route = active_trip.route if active_trip else None
 
     stats = {}
     if route:
@@ -431,6 +511,15 @@ def get_bus_details(bus_identifier: str):
             stats = DelayStatisticsService.get_stop_delay_stats(route.id, stop_id)
         else:
             stats = DelayStatisticsService.calculate_stats([])
+
+    if not stats:
+        stats = {
+            "expected_delay": 0.0,
+            "mean": 0.0,
+            "count": 0,
+            "label": "Historical statistical estimate",
+            "disclaimer": "Based on historical trip observations." if active_trip else "Not currently on an active trip."
+        }
 
     active_incident = None
     depot_req = None
@@ -469,20 +558,26 @@ def get_bus_details(bus_identifier: str):
         delta_s = max(0, int((now - latest_gps.timestamp).total_seconds()))
         last_update_str = f"{delta_s}s ago" if delta_s < 60 else (f"{delta_s // 60}m ago" if delta_s < 3600 else f"{delta_s // 3600}h ago")
     else:
-        last_update_str = "Just now"
+        last_update_str = "Just now" if active_trip else f"Stationed at {bus.depot_name}"
 
     exp_delay = stats.get("expected_delay", 0.0) if stats else 0.0
     if active_trip and active_trip.scheduled_start_time:
         sch_arrival = active_trip.scheduled_start_time.strftime("%I:%M %p")
         exp_arrival = (active_trip.scheduled_start_time + timedelta(minutes=int(30 + exp_delay))).strftime("%I:%M %p")
-    else:
+    elif active_trip:
         sch_arrival = (now - timedelta(minutes=15)).strftime("%I:%M %p")
         exp_arrival = (now + timedelta(minutes=int(15 + exp_delay))).strftime("%I:%M %p")
+    else:
+        sch_arrival = "—"
+        exp_arrival = "—"
 
     data = {
         "bus": bus.to_dict(),
         "trip": active_trip.to_dict() if active_trip else None,
         "route": route.to_dict() if route else None,
+        "is_active_trip": bool(active_trip),
+        "trip_message": "Active trip in progress" if active_trip else "Not currently on an active trip.",
+        "message": "Active trip in progress" if active_trip else "Not currently on an active trip.",
         "statistics": stats,
         "timeline": route_timeline,
         "incident": active_incident.to_dict() if active_incident else None,
@@ -491,7 +586,7 @@ def get_bus_details(bus_identifier: str):
         "expected_arrival": exp_arrival,
         "last_update": last_update_str,
     }
-    return api_success(data=data)
+    return api_success(data=data, message="Active trip in progress" if active_trip else "Not currently on an active trip.")
 
 
 @passenger_bp.route("/live-status", methods=["GET"])
@@ -674,7 +769,7 @@ def get_driver_dashboard():
         active_trip = Trip.query.filter_by(bus_id=driver.assigned_bus_id).order_by(Trip.id.desc()).first()
 
     assigned_bus = driver.assigned_bus or (active_trip.bus if active_trip else None)
-    assigned_route = (assigned_bus.assigned_route if assigned_bus else None) or (active_trip.route if active_trip else None)
+    assigned_route = (active_trip.route if active_trip else None) or (assigned_bus.assigned_route if assigned_bus else None)
 
     route_stops = []
     if assigned_route:
@@ -723,6 +818,25 @@ def start_trip():
     if initial_passenger_count > bus.capacity:
         return api_error(code="CAPACITY_EXCEEDED", message=f"Passenger count ({initial_passenger_count}) exceeds bus capacity ({bus.capacity}).", status_code=400)
 
+    # Complete/supersede any existing active trips for this bus
+    active_bus_trips = Trip.query.filter(
+        Trip.bus_id == bus.id,
+        Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "SCHEDULED", "DISPATCHED"])
+    ).all()
+    for ot in active_bus_trips:
+        ot.status = "COMPLETED"
+        ot.actual_end_time = datetime.utcnow()
+
+    # Complete/supersede any existing active trips for this driver
+    if driver:
+        active_driver_trips = Trip.query.filter(
+            Trip.driver_id == driver.id,
+            Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "SCHEDULED", "DISPATCHED"])
+        ).all()
+        for odt in active_driver_trips:
+            odt.status = "COMPLETED"
+            odt.actual_end_time = datetime.utcnow()
+
     trip_count = Trip.query.count() + 1
     trip_code = f"TRIP-{bus.bus_number}-{trip_count:03d}"
 
@@ -738,8 +852,10 @@ def start_trip():
         passenger_count=initial_passenger_count
     )
     db.session.add(trip)
+    bus.assigned_route_id = route.id
     bus.current_status = "RUNNING"
     if driver:
+        driver.assigned_bus_id = bus.id
         driver.status = "ON_TRIP"
 
     db.session.commit()

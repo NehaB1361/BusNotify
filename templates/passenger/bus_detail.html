@@ -29,6 +29,8 @@
         <div>
           <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
             <h1 class="page-title mb-0">Bus <span id="busNumber">---</span></h1>
+            <span class="badge bg-light text-muted border px-2 py-1" id="busIdBadge">#---</span>
+            <span class="badge bg-light text-muted border px-2 py-1 d-none" id="busRegBadge"></span>
             <span class="badge bg-light text-secondary border px-2 py-1" id="routeNumberBadge">Route ---</span>
             <span id="statusBadgeContainer"></span>
           </div>
@@ -51,6 +53,15 @@
             <i class="bi bi-arrow-repeat"></i> Alternatives
           </a>
         </div>
+      </div>
+    </div>
+
+    <!-- Idle Bus Alert Banner if not on active trip -->
+    <div id="idleBusAlert" class="alert alert-info d-flex align-items-center gap-3 mb-4 shadow-sm d-none">
+      <i class="bi bi-info-circle-fill fs-4 text-info"></i>
+      <div>
+        <strong class="fs-6">Not currently on an active trip.</strong>
+        <div id="idleBusMessage" class="text-secondary small">This bus is stationed at depot.</div>
       </div>
     </div>
 
@@ -238,13 +249,43 @@
 
       // Update Header
       document.getElementById('busNumber').textContent = bus.bus_number;
-      document.getElementById('breadBusNum').textContent = bus.bus_number;
-      document.getElementById('routeNumberBadge').textContent = `Route ${route.route_number || 'N/A'}`;
-      document.getElementById('routeName').textContent = `${route.name || ''} (${route.source || ''} → ${route.destination || ''})`;
-      document.getElementById('scheduledArrival').textContent = data.scheduled_arrival || '—';
-      document.getElementById('expectedArrival').textContent = data.expected_arrival || (data.scheduled_arrival || '—');
+      document.getElementById('breadBusNum').textContent = `${bus.bus_number} (#${bus.id || bus.bus_id})`;
+      if (document.getElementById('busIdBadge')) {
+        document.getElementById('busIdBadge').textContent = `#${bus.id || bus.bus_id}`;
+      }
+      if (bus.registration_number && document.getElementById('busRegBadge')) {
+        const regBadge = document.getElementById('busRegBadge');
+        regBadge.textContent = bus.registration_number;
+        regBadge.classList.remove('d-none');
+      }
+
+      const isActive = data.is_active_trip !== false;
+      const idleAlert = document.getElementById('idleBusAlert');
+      if (!isActive) {
+        if (idleAlert) {
+          idleAlert.classList.remove('d-none');
+          const depotName = bus.depot_name || (bus.depot && bus.depot.name) || data.depot_name || 'Depot';
+          document.getElementById('idleBusMessage').textContent = `Not currently on an active trip. This bus is stationed at ${depotName}.`;
+        }
+        document.getElementById('routeNumberBadge').textContent = 'No Active Route';
+        document.getElementById('routeName').textContent = 'Not currently on an active trip';
+        document.getElementById('scheduledArrival').textContent = '—';
+        document.getElementById('expectedArrival').textContent = '—';
+        document.getElementById('statusBadgeContainer').innerHTML = '<span class="tf-badge badge-info"><i class="bi bi-clock-history"></i> Idle</span>';
+        document.getElementById('cardCurrentStop').textContent = `Stationed at ${bus.depot_name || 'Depot'}`;
+        document.getElementById('cardNextStop').textContent = '—';
+      } else {
+        if (idleAlert) idleAlert.classList.add('d-none');
+        document.getElementById('routeNumberBadge').textContent = `Route ${route.route_number || 'N/A'}`;
+        document.getElementById('routeName').textContent = `${route.name || ''} (${route.source || ''} → ${route.destination || ''})`;
+        document.getElementById('scheduledArrival').textContent = data.scheduled_arrival || '—';
+        document.getElementById('expectedArrival').textContent = data.expected_arrival || (data.scheduled_arrival || '—');
+        document.getElementById('statusBadgeContainer').innerHTML = TransitUI.getStatusBadge(trip.status || bus.current_status);
+        document.getElementById('cardCurrentStop').textContent = trip.current_stop_name || (route ? route.source : 'In Transit');
+        document.getElementById('cardNextStop').textContent = trip.next_stop_name || 'Terminus';
+      }
+
       document.getElementById('lastUpdate').textContent = `Updated ${data.last_update || 'just now'}`;
-      document.getElementById('statusBadgeContainer').innerHTML = TransitUI.getStatusBadge(trip.status || bus.current_status);
 
       // Incident check
       if (incident && incident.status === 'OPEN') {
@@ -284,10 +325,6 @@
         document.getElementById('limitedDataAlert').classList.remove('d-none');
       }
 
-      // Card stops
-      document.getElementById('cardCurrentStop').textContent = trip.current_stop_name || (route ? route.source : 'In Transit');
-      document.getElementById('cardNextStop').textContent = trip.next_stop_name || 'Terminus';
-
       // Render Map
       renderMap(data);
 
@@ -301,8 +338,39 @@
   }
 
   function renderMap(data) {
+    const bus = data.bus || {};
+    const trip = data.trip || {};
+    const isActive = data.is_active_trip !== false;
     const timeline = data.timeline || [];
-    if (timeline.length === 0) return;
+
+    if (!isActive || timeline.length === 0) {
+      const busLat = (bus.current_latitude != null) ? bus.current_latitude : 18.5204;
+      const busLon = (bus.current_longitude != null) ? bus.current_longitude : 73.8567;
+      if (!mapInstance) {
+        mapInstance = TransitMap.createMap('busMap', busLat, busLon, 13);
+      }
+      if (routeLine) {
+        mapInstance.removeLayer(routeLine);
+        routeLine = null;
+      }
+      if (busMarker) mapInstance.removeLayer(busMarker);
+      busMarker = L.marker([busLat, busLon], {
+        icon: TransitMap.createBusIcon('IDLE')
+      }).bindPopup(
+        '<div style="font-size: 0.85rem;">' +
+        '<strong>Bus ' + (bus.bus_number || '') + ' (#' + (bus.id || bus.bus_id || '') + ')</strong><br>' +
+        '<span class="text-muted">Stationed at ' + (bus.depot_name || 'Depot') + '</span><br>' +
+        'Status: <strong>Not currently on an active trip</strong>' +
+        '</div>'
+      ).addTo(mapInstance);
+      mapInstance.setView([busLat, busLon], 13);
+      const badge = document.getElementById('gpsFreshness');
+      if (badge) {
+        badge.className = 'tf-badge badge-info';
+        badge.innerHTML = '<i class="bi bi-clock-history"></i> No active trip';
+      }
+      return;
+    }
 
     if (!mapInstance) {
       mapInstance = TransitMap.createMap('busMap', timeline[0].latitude, timeline[0].longitude, 13);
@@ -320,7 +388,6 @@
     });
 
     // Prefer real GPS position if available
-    const trip = data.trip || {};
     const gps  = trip.latest_gps;
     let busLat, busLon, gpsPopupExtra = '';
 
@@ -369,7 +436,7 @@
       icon: TransitMap.createBusIcon(trip.status || (data.bus ? data.bus.current_status : 'RUNNING'))
     }).bindPopup(
       '<div style="font-size: 0.85rem;">' +
-      '<strong>Bus ' + data.bus.bus_number + '</strong><br>' +
+      '<strong>Bus ' + data.bus.bus_number + ' (#' + (data.bus.id || data.bus.bus_id) + ')</strong><br>' +
       '<span class="text-muted">' + (data.route ? data.route.name : '') + '</span><br>' +
       'Status: <strong>' + (trip.status || data.bus.current_status) + '</strong>' +
       gpsPopupExtra +
@@ -387,6 +454,15 @@
 
   function renderTimeline(timeline, currentStopId) {
     const container = document.getElementById('routeTimelineContainer');
+    if (!timeline || timeline.length === 0) {
+      container.innerHTML = `
+        <div class="p-3 text-center text-muted">
+          <i class="bi bi-info-circle text-secondary mb-2" style="font-size: 1.5rem;"></i>
+          <div>Not currently on an active trip. No active route progression timeline available.</div>
+        </div>
+      `;
+      return;
+    }
     let hasReachedCurrent = false;
 
     container.innerHTML = timeline.map(stop => {

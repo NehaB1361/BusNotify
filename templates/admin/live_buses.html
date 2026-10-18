@@ -137,6 +137,7 @@
         <tr class="${rowClass}">
           <td>
             <strong class="text-dark fs-6">${b.bus_number}</strong>
+            <span class="badge bg-light text-muted border ms-1" style="font-size: 0.68rem;">#${b.bus_id}</span>
             <div class="text-muted" style="font-size: 0.72rem;">${b.registration || 'MH-12'}</div>
           </td>
           <td>
@@ -168,7 +169,7 @@
             </span>
           </td>
           <td class="text-end">
-            <a href="/passenger/bus/${b.bus_number}" class="btn btn-sm btn-tf-secondary rounded-pill">
+            <a href="/passenger/bus/${b.bus_id || b.bus_number}" class="btn btn-sm btn-tf-secondary rounded-pill">
               <i class="bi bi-eye"></i> Details
             </a>
           </td>
@@ -204,7 +205,7 @@
           'Speed: <strong>' + speedStr + '</strong><br>' +
           'GPS: <span class="' + freshClass + '">' + freshStr + ' &bull; ' + timeStr + '</span><br>' +
           'Seats: ' + b.available_seats + ' / ' + b.capacity + '<br>' +
-          '<a href="/passenger/bus/' + b.bus_number + '" class="btn btn-tf-primary btn-sm mt-1 text-white py-0 px-2" style="font-size: 11px;">View Bus</a>' +
+          '<a href="/passenger/bus/' + (b.bus_id || b.bus_number) + '" class="btn btn-tf-primary btn-sm mt-1 text-white py-0 px-2" style="font-size: 11px;">View Bus</a>' +
           '</div>'
         ).addTo(adminMap);
         mapMarkers.push(marker);

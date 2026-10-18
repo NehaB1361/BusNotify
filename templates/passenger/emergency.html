@@ -290,7 +290,7 @@
           <td><span class="badge bg-light text-dark border">Direct Route</span></td>
           <td><small class="text-muted">${rationale}</small></td>
           <td>
-            <a href="/passenger/bus/${alt.bus_number}" class="btn btn-tf-primary btn-sm rounded-pill">
+            <a href="/passenger/bus/${alt.bus_id || alt.bus_number}" class="btn btn-tf-primary btn-sm rounded-pill">
               View Details
             </a>
           </td>
@@ -305,6 +305,7 @@
           <div class="d-flex justify-content-between align-items-start mb-2">
             <div>
               <span class="tf-bus-number">Bus ${alt.bus_number}</span>
+              ${alt.bus_id ? `<span class="badge bg-light text-muted border ms-1" style="font-size:0.7rem;">#${alt.bus_id}</span>` : ''}
               <span class="badge bg-light text-secondary border ms-1">Route ${alt.route_number || ''}</span>
             </div>
             ${alt.is_recommended ? '<span class="tf-badge badge-dispatched"><i class="bi bi-star-fill"></i> Recommended</span>' : TransitUI.getStatusBadge(alt.current_status)}
@@ -340,7 +341,7 @@
           </div>
 
           <div class="mt-auto d-flex gap-2">
-            <a href="/passenger/bus/${alt.bus_number}" class="btn btn-tf-primary btn-sm w-100 justify-content-center">
+            <a href="/passenger/bus/${alt.bus_id || alt.bus_number}" class="btn btn-tf-primary btn-sm w-100 justify-content-center">
               <i class="bi bi-check2-circle"></i> Select Bus
             </a>
             <button class="btn btn-tf-secondary btn-sm" onclick="shareBus('${alt.bus_number}', ${alt.eta_minutes})" title="Share">

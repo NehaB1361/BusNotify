@@ -162,7 +162,7 @@ CREATE TABLE `buses` (
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `ix_buses_bus_number` (`bus_number`),
+  KEY `ix_buses_bus_number` (`bus_number`),
   UNIQUE KEY `registration_number` (`registration_number`),
   KEY `assigned_route_id` (`assigned_route_id`),
   KEY `ix_buses_current_status` (`current_status`),

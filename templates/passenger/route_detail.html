@@ -314,7 +314,7 @@
 
           return `
             <tr>
-              <td><strong>Bus ${b.bus_number}</strong> <small class="text-muted d-block">${b.registration_number}</small></td>
+              <td><strong>Bus ${b.bus_number}</strong> <span class="badge bg-light text-muted border ms-1" style="font-size:0.7rem;">#${b.bus_id}</span> <small class="text-muted d-block">${b.registration_number}</small></td>
               <td>${TransitUI.getStatusBadge(b.status)}</td>
               <td><i class="bi bi-geo-alt text-primary me-1"></i>${b.current_stop}</td>
               <td>${b.next_stop}</td>
@@ -324,7 +324,7 @@
                 </span>
               </td>
               <td class="text-end">
-                <a href="/passenger/bus/${b.bus_number}" class="btn btn-sm btn-tf-primary py-1 px-3 rounded-pill">
+                <a href="/passenger/bus/${b.bus_id || b.bus_number}" class="btn btn-sm btn-tf-primary py-1 px-3 rounded-pill">
                   <i class="bi bi-geo me-1"></i> Track Bus
                 </a>
               </td>

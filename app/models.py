@@ -203,7 +203,7 @@ class Bus(db.Model):
     __tablename__ = "buses"
 
     id = db.Column(db.Integer, primary_key=True)
-    bus_number = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    bus_number = db.Column(db.String(64), unique=False, nullable=False, index=True)
     registration_number = db.Column(db.String(64), unique=True, nullable=False)
     depot_name = db.Column(db.String(64), default="Pune Central Depot", nullable=False)
     capacity = db.Column(db.Integer, default=40, nullable=False)
@@ -225,6 +225,7 @@ class Bus(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
+            "bus_id": self.id,
             "bus_number": self.bus_number,
             "registration_number": self.registration_number,
             "depot_name": self.depot_name,
