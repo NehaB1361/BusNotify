@@ -245,8 +245,8 @@ def search_buses():
             if not active_trip and effective_status not in ["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "DISPATCHED"]:
                 continue
 
-        # Route priority: ALWAYS prefer active_trip.route!
-        route = (active_trip.route if active_trip else None) or bus.assigned_route
+        # Route priority: active trip route selected by driver; idle buses have no active route
+        route = active_trip.route if active_trip else None
 
         expected_delay = 0.0
         stats = {}
@@ -281,20 +281,22 @@ def search_buses():
             avail_seats = active_trip.available_seats
         else:
             expected_arrival_str = "—"
-            current_stop_name = "Not currently on an active trip"
+            depot_name = bus.depot_name or "Depot"
+            current_stop_name = f"Stationed at {depot_name}"
             next_stop_name = "—"
             avail_seats = bus.capacity
 
+        depot_location = bus.depot_name or "Depot"
         results.append({
             "trip_id": active_trip.id if active_trip else None,
             "bus_id": bus.id,
             "bus_number": bus.bus_number,
             "registration_number": bus.registration_number,
             "route_id": route.id if route else None,
-            "route_number": route.route_number if route else ("Express" if active_trip else "N/A"),
+            "route_number": route.route_number if route else ("Express" if active_trip else "—"),
             "route_name": route.name if route else ("In Transit" if active_trip else "Not currently on an active trip"),
-            "source": route.source if route else "Origin",
-            "destination": route.destination if route else "Destination",
+            "source": route.source if route else depot_location,
+            "destination": route.destination if route else depot_location,
             "status": effective_status,
             "current_stop": current_stop_name,
             "next_stop": next_stop_name,
@@ -766,7 +768,10 @@ def get_driver_dashboard():
         ).order_by(Trip.id.desc()).first()
 
     if not active_trip and driver.assigned_bus_id:
-        active_trip = Trip.query.filter_by(bus_id=driver.assigned_bus_id).order_by(Trip.id.desc()).first()
+        active_trip = Trip.query.filter(
+            Trip.bus_id == driver.assigned_bus_id,
+            Trip.status.in_(["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "SCHEDULED"])
+        ).order_by(Trip.id.desc()).first()
 
     assigned_bus = driver.assigned_bus or (active_trip.bus if active_trip else None)
     assigned_route = (active_trip.route if active_trip else None) or (assigned_bus.assigned_route if assigned_bus else None)
@@ -837,8 +842,10 @@ def start_trip():
             odt.status = "COMPLETED"
             odt.actual_end_time = datetime.utcnow()
 
-    trip_count = Trip.query.count() + 1
-    trip_code = f"TRIP-{bus.bus_number}-{trip_count:03d}"
+    max_id = db.session.query(func.coalesce(func.max(Trip.id), 0)).scalar() or 0
+    trip_code = f"TRIP-{bus.id}-{max_id + 1:04d}"
+    if Trip.query.filter_by(trip_code=trip_code).first():
+        trip_code = f"TRIP-{bus.id}-{max_id + 1:04d}-{int(time.time() * 1000) % 100000:05d}"
 
     trip = Trip(
         trip_code=trip_code,
@@ -1220,8 +1227,8 @@ def get_request_detail(request_id: int):
 def assign():
     data = request.get_json() or {}
     request_id = data.get("request_id")
-    bus_id = data.get("bus_id")
-    driver_id = data.get("driver_id")
+    bus_id = data.get("bus_id") or data.get("replacement_bus_id")
+    driver_id = data.get("driver_id") or data.get("replacement_driver_id")
     eta_minutes = int(data.get("eta_minutes", 12))
 
     if not request_id or not bus_id or not driver_id:
@@ -1278,7 +1285,7 @@ def arrive():
 def record_transfer():
     data = request.get_json() or {}
     request_id = data.get("request_id")
-    transferred_count = data.get("transferred_count")
+    transferred_count = data.get("transferred_count") if data.get("transferred_count") is not None else (data.get("transferred_passengers") if data.get("transferred_passengers") is not None else data.get("passenger_count"))
 
     if not request_id or transferred_count is None:
         return api_error(code="VALIDATION_ERROR", message="Request ID and transferred count are required.", status_code=400)
@@ -1300,7 +1307,7 @@ def record_transfer():
 def resolve():
     data = request.get_json() or {}
     request_id = data.get("request_id")
-    resolution_notes = data.get("resolution_notes", "All passengers transferred successfully. Trip resumed.")
+    resolution_notes = data.get("resolution_notes") or data.get("notes", "All passengers transferred successfully. Trip resumed.")
 
     if not request_id:
         return api_error(code="VALIDATION_ERROR", message="Request ID is required.", status_code=400)
@@ -1806,15 +1813,17 @@ def import_csv():
         return api_error(code="IMPORT_ERROR", message=str(e), status_code=400)
 
 
+@admin_bp.route("/csv-export", methods=["GET"])
 @admin_bp.route("/csv-export/<table_name>", methods=["GET"])
 @role_required("admin")
-def export_csv(table_name: str):
+def export_csv(table_name: str = None):
     try:
-        csv_data = CSVService.export_csv(table_name)
+        resolved_table = table_name or request.args.get("type") or request.args.get("table_name", "buses")
+        csv_data = CSVService.export_csv(resolved_table)
         return Response(
             csv_data,
             mimetype="text/csv",
-            headers={"Content-disposition": f"attachment; filename={table_name}.csv"}
+            headers={"Content-disposition": f"attachment; filename={resolved_table}.csv"}
         )
     except Exception as e:
         return api_error(code="EXPORT_ERROR", message=str(e), status_code=400)

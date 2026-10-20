@@ -135,18 +135,27 @@ a:hover { color: var(--tf-primary-dark); }
 }
 .tf-brand-logo:hover { opacity: 0.85; color: var(--tf-text); }
 
-.tf-brand-logo .logo-icon {
-  background: linear-gradient(135deg, var(--tf-primary), var(--tf-secondary));
-  color: white;
+.tf-brand-logo .logo-icon,
+.tf-brand-logo .logo-img {
   width: 38px;
   height: 38px;
   border-radius: 10px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(232, 93, 4, 0.25);
+}
+
+.tf-brand-logo .logo-icon {
+  background: linear-gradient(135deg, var(--tf-primary), var(--tf-secondary));
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(232, 93, 4, 0.25);
+}
+
+.tf-brand-logo .logo-img {
+  object-fit: cover;
+  background-color: white;
 }
 
 .tf-brand-tagline {

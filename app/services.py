@@ -420,7 +420,8 @@ class IncidentService:
             raise ValueError(f"Trip with ID {trip_id} not found.")
 
         bus = trip.bus
-        bus_status = "PUNCTURED" if "PUNCTURE" in incident_type.upper() else "BREAKDOWN"
+        inc_upper = incident_type.upper()
+        bus_status = "PUNCTURED" if "PUNCTURE" in inc_upper else ("CANCELLED" if "CANCEL" in inc_upper else "BREAKDOWN")
         
         trip.status = bus_status
         if current_stop_id:

@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="BusNotify">
-  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icon.svg') }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.svg') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <title>{% block title %}BusNotify – Know your bus. Know your time.{% endblock %}</title>
 
@@ -44,7 +44,7 @@
       </button>
 
       <a href="{{ url_for('views.index') }}" class="tf-brand-logo">
-        <div class="logo-icon"><i class="bi bi-bus-front-fill"></i></div>
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="BusNotify Logo" class="logo-img">
         <div class="d-none d-sm-block">
           <div>BusNotify</div>
           <span class="tf-brand-tagline" data-i18n="brand_tagline">Know your bus. Know your time.</span>
@@ -222,9 +222,7 @@
   <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" style="width: 280px;">
     <div class="offcanvas-header" style="border-bottom: 1px solid var(--tf-border);">
       <div class="d-flex align-items-center gap-2">
-        <div class="logo-icon" style="background: linear-gradient(135deg, var(--tf-primary), var(--tf-secondary)); color: white; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
-          <i class="bi bi-bus-front-fill"></i>
-        </div>
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="BusNotify Logo" style="width: 34px; height: 34px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 6px rgba(232, 93, 4, 0.2);">
         <div>
           <div class="fw-bold" style="font-size: 1.1rem;">BusNotify</div>
           <div style="font-size: 0.65rem; color: var(--tf-text-light);">Know your bus. Know your time.</div>

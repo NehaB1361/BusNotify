@@ -405,6 +405,7 @@ class LiveGPS(db.Model):
             "speed_kmh": self.speed_kmh,
             "source": self.source,
             "freshness": self.freshness_status,
+            "freshness_status": self.freshness_status,
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
         }
 
