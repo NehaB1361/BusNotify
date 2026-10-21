@@ -11,10 +11,12 @@ Includes:
 import sys
 import json
 import time
+import re
+import difflib
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from flask import Blueprint, request, session, redirect, url_for, jsonify, render_template, Response, g
-from sqlalchemy import or_, text, func
+from sqlalchemy import or_, and_, text, func
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.models import (
@@ -137,6 +139,140 @@ def get_current_user():
 passenger_bp = Blueprint("passenger_api", __name__, url_prefix="/api/passenger")
 
 
+def resolve_place_query(term: str) -> str:
+    """Resolves colloquial, misspelled, or repeated-letter city/stop names (e.g. kolhapppur -> Kolhapur)."""
+    if not term:
+        return ""
+    t = term.strip()
+    if not t:
+        return ""
+
+    # Clean consecutive repeating letters (e.g. 'kolhapppur' -> 'kolhapur')
+    cleaned = re.sub(r'([a-zA-Z])\1+', r'\1', t.lower())
+
+    try:
+        places = set()
+        routes_places = db.session.query(Route.source, Route.destination).distinct().all()
+        for src_val, dst_val in routes_places:
+            if src_val:
+                places.add(src_val.strip())
+            if dst_val:
+                places.add(dst_val.strip())
+        stops_places = db.session.query(Stop.name).distinct().all()
+        for st_val, in stops_places:
+            if st_val:
+                places.add(st_val.strip())
+
+        place_list = list(places)
+        matches = difflib.get_close_matches(t, place_list, n=1, cutoff=0.6)
+        if matches:
+            return matches[0]
+        matches_clean = difflib.get_close_matches(cleaned, place_list, n=1, cutoff=0.6)
+        if matches_clean:
+            return matches_clean[0]
+    except Exception:
+        pass
+
+    return cleaned if len(cleaned) < len(t) else t
+
+
+def find_directional_routes(source_term: str = "", dest_term: str = ""):
+    """
+    Finds routes matching source and/or destination with strict forward directionality.
+    If both source and destination are provided, guarantees:
+    1. Direct endpoint routes (source -> destination) are prioritized.
+    2. Any intermediate-stop routes must have sequence(source) < sequence(destination).
+    3. Reverse routes (e.g. Kolhapur to Pune when searching Pune to Kolhapur) are strictly excluded.
+    """
+    if not source_term and not dest_term:
+        return []
+
+    src_res = resolve_place_query(source_term) if source_term else ""
+    dst_res = resolve_place_query(dest_term) if dest_term else ""
+
+    # Case 1: Both source and destination provided
+    if (source_term or src_res) and (dest_term or dst_res):
+        s_terms = list(filter(None, set([source_term.lower(), src_res.lower()])))
+        d_terms = list(filter(None, set([dest_term.lower(), dst_res.lower()])))
+
+        # 1A. Direct endpoint match: Route starts at source and ends at destination
+        direct_conditions = []
+        for s in s_terms:
+            for d in d_terms:
+                direct_conditions.append(
+                    and_(
+                        Route.source.ilike(f"%{s}%"),
+                        Route.destination.ilike(f"%{d}%")
+                    )
+                )
+        direct_routes = Route.query.filter(
+            Route.is_active == True,
+            or_(*direct_conditions)
+        ).all()
+
+        if direct_routes:
+            return direct_routes
+
+        # 1B. If no direct endpoint routes exist, check intermediate stop sequences
+        cand_conditions_src = [Route.source.ilike(f"%{s}%") for s in s_terms] + [
+            Route.route_stops.any(RouteStop.stop.has(or_(*[Stop.name.ilike(f"%{s}%") for s in s_terms])))
+        ]
+        cand_conditions_dst = [Route.destination.ilike(f"%{d}%") for d in d_terms] + [
+            Route.route_stops.any(RouteStop.stop.has(or_(*[Stop.name.ilike(f"%{d}%") for d in d_terms])))
+        ]
+        candidates = Route.query.filter(
+            Route.is_active == True,
+            or_(*cand_conditions_src),
+            or_(*cand_conditions_dst)
+        ).options(joinedload(Route.route_stops).joinedload(RouteStop.stop)).all()
+
+        ordered_routes = []
+        for r in candidates:
+            src_seq = None
+            dst_seq = None
+            if any(s in r.source.lower() for s in s_terms):
+                src_seq = 0
+            if any(d in r.destination.lower() for d in d_terms):
+                dst_seq = 999999
+
+            for rs in r.route_stops:
+                stop_name_lower = rs.stop.name.lower() if rs.stop else ""
+                if src_seq is None and any(s in stop_name_lower for s in s_terms):
+                    src_seq = rs.sequence_order
+                if (dst_seq is None or dst_seq == 999999) and any(d in stop_name_lower for d in d_terms):
+                    dst_seq = rs.sequence_order
+
+            # STRICT INVARIANT: Source MUST precede destination!
+            if src_seq is not None and dst_seq is not None and src_seq < dst_seq:
+                ordered_routes.append(r)
+
+        return ordered_routes
+
+    # Case 2: Only source provided
+    if source_term or src_res:
+        s_terms = list(filter(None, set([source_term.lower(), src_res.lower()])))
+        return Route.query.filter(
+            Route.is_active == True,
+            or_(
+                *[Route.source.ilike(f"%{s}%") for s in s_terms],
+                Route.route_stops.any(RouteStop.stop.has(or_(*[Stop.name.ilike(f"%{s}%") for s in s_terms])))
+            )
+        ).all()
+
+    # Case 3: Only destination provided
+    if dest_term or dst_res:
+        d_terms = list(filter(None, set([dest_term.lower(), dst_res.lower()])))
+        return Route.query.filter(
+            Route.is_active == True,
+            or_(
+                *[Route.destination.ilike(f"%{d}%") for d in d_terms],
+                Route.route_stops.any(RouteStop.stop.has(or_(*[Stop.name.ilike(f"%{d}%") for d in d_terms])))
+            )
+        ).all()
+
+    return []
+
+
 @passenger_bp.route("/search", methods=["GET"])
 def search_buses():
     query_str = request.args.get("q", "").strip()
@@ -147,73 +283,44 @@ def search_buses():
 
     ACTIVE_STATUSES = ["RUNNING", "DELAYED", "PUNCTURED", "BREAKDOWN", "DISPATCHED", "SCHEDULED"]
 
+    # 1. Parse directional search in q if source/destination not passed
+    if query_str and not (source and destination):
+        lower_q = query_str.lower()
+        for sep in [" to ", " -> ", " towards ", " - ", " पासून ", " ते "]:
+            if sep in lower_q:
+                parts = lower_q.split(sep, 1)
+                if not source:
+                    source = parts[0].strip()
+                if not destination:
+                    destination = parts[1].strip()
+                query_str = ""
+                break
+
     buses_query = Bus.query.options(
         joinedload(Bus.assigned_route)
     ).filter(Bus.is_active == True)
 
     if query_str:
-        bus_filter_conditions = [
-            Bus.bus_number.ilike(f"%{query_str}%"),
-            Bus.registration_number.ilike(f"%{query_str}%")
-        ]
-        if query_str.isdigit():
-            bus_filter_conditions.append(Bus.id == int(query_str))
+        buses_query = buses_query.filter(func.lower(Bus.bus_number) == query_str.lower())
 
-        route_matches = Route.query.filter(
-            or_(
-                Route.route_number.ilike(f"%{query_str}%"),
-                Route.name.ilike(f"%{query_str}%"),
-                Route.source.ilike(f"%{query_str}%"),
-                Route.destination.ilike(f"%{query_str}%")
-            )
-        ).all()
-        matching_route_ids = [r.id for r in route_matches]
-
-        active_trips_on_routes = Trip.query.filter(
-            Trip.status.in_(ACTIVE_STATUSES),
-            Trip.route_id.in_(matching_route_ids)
-        ).all() if matching_route_ids else []
-        route_bus_ids = [t.bus_id for t in active_trips_on_routes]
-
-        buses_query = buses_query.filter(
-            or_(
-                *bus_filter_conditions,
-                Bus.assigned_route_id.in_(matching_route_ids),
-                Bus.id.in_(route_bus_ids)
-            )
-        )
-
+    src_dest_route_ids = []
     if source or destination:
-        route_q = Route.query
-        if source:
-            route_q = route_q.filter(
-                or_(
-                    Route.source.ilike(f"%{source}%"),
-                    Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{source}%")))
-                )
-            )
-        if destination:
-            route_q = route_q.filter(
-                or_(
-                    Route.destination.ilike(f"%{destination}%"),
-                    Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{destination}%")))
-                )
-            )
-        src_dest_routes = route_q.all()
+        src_dest_routes = find_directional_routes(source, destination)
         src_dest_route_ids = [r.id for r in src_dest_routes]
+
+        if not src_dest_route_ids:
+            return api_success(data=[])
 
         active_trips_src_dest = Trip.query.filter(
             Trip.status.in_(ACTIVE_STATUSES),
             Trip.route_id.in_(src_dest_route_ids)
-        ).all() if src_dest_route_ids else []
+        ).all()
         src_dest_bus_ids = [t.bus_id for t in active_trips_src_dest]
 
-        buses_query = buses_query.filter(
-            or_(
-                Bus.id.in_(src_dest_bus_ids),
-                Bus.assigned_route_id.in_(src_dest_route_ids)
-            )
-        )
+        if src_dest_bus_ids:
+            buses_query = buses_query.filter(Bus.id.in_(src_dest_bus_ids))
+        else:
+            buses_query = buses_query.filter(Bus.assigned_route_id.in_(src_dest_route_ids))
 
     candidate_buses = buses_query.order_by(Bus.id.asc()).limit(limit * 2).all()
 
@@ -247,6 +354,11 @@ def search_buses():
 
         # Route priority: active trip route selected by driver; idle buses have no active route
         route = active_trip.route if active_trip else None
+
+        # When searching with source or destination, enforce that the bus is actually on a matching route
+        if src_dest_route_ids:
+            if not route or route.id not in src_dest_route_ids:
+                continue
 
         expected_delay = 0.0
         stats = {}
@@ -353,20 +465,12 @@ def get_passenger_routes():
                 Route.destination.ilike(f"%{q_str}%")
             )
         )
-    if source:
-        query = query.filter(
-            or_(
-                Route.source.ilike(f"%{source}%"),
-                Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{source}%")))
-            )
-        )
-    if destination:
-        query = query.filter(
-            or_(
-                Route.destination.ilike(f"%{destination}%"),
-                Route.route_stops.any(RouteStop.stop.has(Stop.name.ilike(f"%{destination}%")))
-            )
-        )
+    if source or destination:
+        dir_routes = find_directional_routes(source, destination)
+        dir_route_ids = [r.id for r in dir_routes]
+        if not dir_route_ids:
+            return api_success(data=[])
+        query = query.filter(Route.id.in_(dir_route_ids))
 
     results = query.order_by(Route.id.asc()).limit(limit).all()
 

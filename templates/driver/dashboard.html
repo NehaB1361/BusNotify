@@ -162,6 +162,7 @@
 
   // ---- GPS Tracking State ----
   let gpsWatchId = null;
+  let gpsStartPending = false;
   let lastGpsSentAt = 0;       // epoch ms of last successful POST
   const GPS_THROTTLE_MS = 15000; // minimum 15 s between transmissions
 
@@ -230,9 +231,18 @@
   }
 
   function onGpsError(err) {
+    if (gpsStartPending) {
+      gpsStartPending = false;
+      renderGpsButtons(false);
+    }
+    if (err.code === err.PERMISSION_DENIED && gpsWatchId !== null) {
+      navigator.geolocation.clearWatch(gpsWatchId);
+      gpsWatchId = null;
+      renderGpsButtons(false);
+    }
     if (err.code === err.PERMISSION_DENIED) {
       setGpsStatusBadge('permission');
-      TransitUI.showToast('Location permission is required to share your live bus location.', 'warning');
+      TransitUI.showToast('Location permission is required. Allow location access in your browser site settings, then try again.', 'warning');
     } else if (err.code === err.POSITION_UNAVAILABLE) {
       setGpsStatusBadge('unavailable');
       TransitUI.showToast('GPS signal unavailable. Please check your device location settings.', 'warning');
@@ -246,24 +256,49 @@
   }
 
   function startGpsTracking() {
+    if (!window.isSecureContext) {
+      setGpsStatusBadge('unavailable');
+      TransitUI.showToast('Live location requires a secure HTTPS connection (or localhost).', 'danger');
+      return;
+    }
     if (!navigator.geolocation) {
       setGpsStatusBadge('unavailable');
       TransitUI.showToast('This browser does not support Geolocation.', 'danger');
       return;
     }
-    if (gpsWatchId !== null) return; // already tracking
+    if (gpsWatchId !== null || gpsStartPending) return;
 
-    gpsWatchId = navigator.geolocation.watchPosition(
-      onGpsPosition,
-      onGpsError,
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-    setGpsStatusBadge('active');
-    renderGpsButtons(true);
-    TransitUI.showToast('GPS tracking started. Sharing location every ~15 seconds.', 'success');
+    gpsStartPending = true;
+    TransitUI.showToast('Requesting your current location. Allow access when your browser asks.', 'info');
+    try {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        if (!gpsStartPending) return;
+        gpsStartPending = false;
+        onGpsPosition(pos);
+        try {
+          gpsWatchId = navigator.geolocation.watchPosition(
+            onGpsPosition,
+            onGpsError,
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+          );
+          renderGpsButtons(true);
+          TransitUI.showToast('Location received. Live GPS tracking is now active.', 'success');
+        } catch (err) {
+          setGpsStatusBadge('error');
+          renderGpsButtons(false);
+          TransitUI.showToast('Unable to start GPS tracking: ' + err.message, 'danger');
+        }
+      }, onGpsError, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    } catch (err) {
+      gpsStartPending = false;
+      setGpsStatusBadge('error');
+      renderGpsButtons(false);
+      TransitUI.showToast('Unable to request your location: ' + err.message, 'danger');
+    }
   }
 
   function stopGpsTracking() {
+    gpsStartPending = false;
     if (gpsWatchId !== null) {
       navigator.geolocation.clearWatch(gpsWatchId);
       gpsWatchId = null;

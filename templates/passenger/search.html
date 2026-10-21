@@ -66,7 +66,7 @@
   <!-- Search Meta Bar -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div class="small text-muted fw-semibold" id="resultsCount">
-      <span class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></span> Loading buses...
+      Enter search criteria and click Search Bus to see matching buses.
     </div>
     <div class="d-flex gap-2 align-items-center">
       <div class="small text-muted d-none d-sm-block">
@@ -76,17 +76,7 @@
   </div>
 
   <!-- Buses Result Grid -->
-  <div class="row g-3" id="busesGrid">
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="tf-card tf-skeleton-card tf-skeleton"></div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="tf-card tf-skeleton-card tf-skeleton"></div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="tf-card tf-skeleton-card tf-skeleton"></div>
-    </div>
-  </div>
+  <div class="row g-3" id="busesGrid"></div>
 
 </div>
 {% endblock %}
@@ -95,6 +85,7 @@
 <script>
   let currentStatus = 'ALL';
   let cachedBuses = [];
+  let activeSearch = null;
 
   function setStatusFilter(status, btnEl) {
     currentStatus = status;
@@ -104,15 +95,52 @@
   }
 
   async function fetchBuses() {
-    const source = document.getElementById('sourceInput').value.trim();
-    const dest = document.getElementById('destInput').value.trim();
-    const busNum = document.getElementById('busNumberInput').value.trim();
+    let src = document.getElementById('sourceInput').value.trim();
+    let dest = document.getElementById('destInput').value.trim();
+    let busNum = document.getElementById('busNumberInput').value.trim();
+
+    // Smart splitting if user types e.g. "pune to kolhapur" in bus number or single field
+    if (!src && !dest && busNum) {
+      const lower = busNum.toLowerCase();
+      for (const sep of [' to ', ' -> ', ' - ', ' towards ']) {
+        if (lower.includes(sep)) {
+          const parts = busNum.split(new RegExp(sep, 'i'));
+          src = parts[0].trim();
+          dest = parts[1].trim();
+          document.getElementById('sourceInput').value = src;
+          document.getElementById('destInput').value = dest;
+          document.getElementById('busNumberInput').value = '';
+          busNum = '';
+          break;
+        }
+      }
+    }
+
+    const search = {
+      source: src,
+      destination: dest,
+      busNumber: busNum
+    };
+
+    if (!search.source && !search.destination && !search.busNumber) {
+      activeSearch = null;
+      cachedBuses = [];
+      renderResults();
+      return;
+    }
+
+    activeSearch = search;
+    await refreshBuses();
+  }
+
+  async function refreshBuses() {
+    if (!activeSearch) return;
 
     const params = new URLSearchParams();
     if (currentStatus !== 'ALL') params.append('status', currentStatus);
-    if (source) params.append('source', source);
-    if (dest) params.append('destination', dest);
-    if (busNum) params.append('q', busNum);
+    if (activeSearch.source) params.append('source', activeSearch.source);
+    if (activeSearch.destination) params.append('destination', activeSearch.destination);
+    if (activeSearch.busNumber) params.append('q', activeSearch.busNumber);
 
     try {
       const buses = await API.get(`/api/passenger/search?${params.toString()}`);
@@ -126,7 +154,7 @@
             <i class="bi bi-exclamation-triangle-fill error-icon"></i>
             <div class="error-title">Search failed</div>
             <div class="error-desc">${err.message || 'Unable to connect to transit services.'}</div>
-            <button class="btn btn-tf-primary btn-sm" onclick="fetchBuses()">Retry Search</button>
+            <button class="btn btn-tf-primary btn-sm" onclick="refreshBuses()">Retry Search</button>
           </div>
         </div>
       `;
@@ -137,6 +165,12 @@
   function renderResults() {
     const grid = document.getElementById('busesGrid');
     const countEl = document.getElementById('resultsCount');
+
+    if (!activeSearch) {
+      countEl.textContent = 'Enter search criteria and click Search Bus to see matching buses.';
+      grid.innerHTML = '';
+      return;
+    }
 
     let list = cachedBuses;
     if (currentStatus !== 'ALL') {
@@ -245,8 +279,9 @@
     document.getElementById('sourceInput').value = '';
     document.getElementById('destInput').value = '';
     document.getElementById('busNumberInput').value = '';
+    activeSearch = null;
+    cachedBuses = [];
     setStatusFilter('ALL', document.querySelector('.tf-filter-pill'));
-    fetchBuses();
   }
 
   // Pre-fill from URL query params if any
@@ -261,8 +296,10 @@
       if (targetBtn) setStatusFilter(s, targetBtn);
     }
 
-    fetchBuses();
-    TransitUI.startPolling(fetchBuses, 15000);
+    if (urlParams.get('q') || urlParams.get('source') || urlParams.get('destination')) {
+      fetchBuses();
+    }
+    TransitUI.startPolling(refreshBuses, 15000);
   });
 </script>
 {% endblock %}

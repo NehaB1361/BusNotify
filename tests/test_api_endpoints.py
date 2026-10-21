@@ -26,6 +26,19 @@ def test_passenger_search_api(client):
     assert data["data"][0]["bus_number"] == "123"
 
 
+def test_passenger_search_bus_number_only_matches_bus_numbers(client):
+    route_number_search = client.get('/api/passenger/search?q=101')
+    registration_search = client.get('/api/passenger/search?q=MH-12-1234')
+    partial_bus_number_search = client.get('/api/passenger/search?q=12')
+
+    assert route_number_search.status_code == 200
+    assert registration_search.status_code == 200
+    assert partial_bus_number_search.status_code == 200
+    assert route_number_search.get_json()["data"] == []
+    assert registration_search.get_json()["data"] == []
+    assert partial_bus_number_search.get_json()["data"] == []
+
+
 def test_passenger_bus_details_api(client):
     res = client.get('/api/passenger/bus/123')
     assert res.status_code == 200
@@ -291,5 +304,4 @@ def test_passenger_routes_endpoints(client):
     assert redirect_res.status_code in (200, 302)
 
     client.post('/api/auth/logout')
-
 
