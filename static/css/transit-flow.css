@@ -154,8 +154,9 @@ a:hover { color: var(--tf-primary-dark); }
 }
 
 .tf-brand-logo .logo-img {
-  object-fit: cover;
+  object-fit: contain;
   background-color: white;
+  padding: 2px;
 }
 
 .tf-brand-tagline {
